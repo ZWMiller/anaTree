@@ -200,8 +200,6 @@ void makeAnaTree(const Int_t runnumber=15094070,
 	}
 	if(prodMod==2){
 		treeMaker->setVzCut(-100,100);
-      treeMaker->addTrigger(490600);
-      treeMaker->addTrigger(490602);
       //treeMaker->setDoEvtPlane(false); //default is true
       //treeMaker->setInputRunList("./runNumberList_run14AuAu200");
       //treeMaker->setInputRecenterFile("./recenter_correction.root");

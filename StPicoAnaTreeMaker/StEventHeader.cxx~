@@ -369,7 +369,6 @@ bool StEventHeader::isCentral() const  // continue to be updated
      if(fabs(energy()-200.)<1.e-4){
         return (mTriggerWord>>18 &0x1);
      }
-   }
 	return kFALSE;
 }
 

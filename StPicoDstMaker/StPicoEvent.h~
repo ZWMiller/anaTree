@@ -27,7 +27,7 @@ public:
   UShort_t              nBTOFMatch() const;
 
   std::vector<unsigned int> triggerIds() const;
-  bool                      isTrigger(unsigned int) const;
+  bool                      isTrigger(int) const;
 
   Int_t    refMultPos() const;
   Int_t    refMultNeg() const;

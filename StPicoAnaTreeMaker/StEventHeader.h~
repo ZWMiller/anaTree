@@ -18,7 +18,7 @@ class StEventHeader : public TObject {
 	public:
 		StEventHeader();
 		~StEventHeader();
-		StEventHeader(const StPicoDst& picoDst) ;
+		StEventHeader(const StPicoDst& picoDst, const Float_t *recenterCor, Bool_t doEvtPlane) ;
 		void Clear(const Option_t*) {}
 
 		Int_t    runId() const            { return mRunId; }

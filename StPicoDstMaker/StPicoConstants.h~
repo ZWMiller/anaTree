@@ -20,8 +20,6 @@ public:
   static Float_t mRatioMin;// = 0; //0.52;  -> removed for Run14 AuAu200GeV
   static Float_t mGDcaMax;// = 10.;
 
-  static UShort_t USHORTMAX;// = 65535;
-  static UChar_t UCHARMAX;  // = 255;
   ClassDef(Pico, 1)
 };
 #endif
