@@ -19,6 +19,8 @@ class StEventHeader : public TObject {
 		StEventHeader();
 		~StEventHeader();
 		StEventHeader(const StPicoDst& picoDst) ;
+		StEventHeader(const StPicoDst& picoDst, const int trigWord) ;
+      void prepareEventInfo(const StPicoDst& picoDst) ; // shared by different constructors
 		void Clear(const Option_t*) {}
 
 		Int_t    runId() const            { return mRunId; }

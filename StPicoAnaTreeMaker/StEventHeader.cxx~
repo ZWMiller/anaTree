@@ -25,13 +25,30 @@ StEventHeader::StEventHeader()
 
 StEventHeader::StEventHeader(const StPicoDst& picoDst)
 {
-	TRandom3 *mRandom = new TRandom3();
+  prepareEventInfo(picoDst);
+  StPicoEvent* ev = &picoDst.event() ;
+  mTriggerWord = ev->triggerWord();
+  mTriggerWordMtd = ev->triggerWordMtd();
+}
+
+StEventHeader::StEventHeader(const StPicoDst& picoDst, const int trigWord)
+{
+  prepareEventInfo(picoDst);
+  mTriggerWord = trigWord;
+  mTriggerWordMtd = 0;
+}
+
+StEventHeader::~StEventHeader()
+{ }
+
+void StEventHeader::prepareEventInfo(const StPicoDst& picoDst)
+{
+  TRandom3 *mRandom = new TRandom3();
 	StPicoEvent* ev = picoDst.event() ;
 
 	mRunId = ev->runId();
 	mEventId = ev->eventId();
 	mBField = ev->bField();
-	
 
 	StThreeVectorF mPrimaryVertex = ev->primaryVertex();
 	if( mPrimaryVertex.x()==mPrimaryVertex.y()&&mPrimaryVertex.y()==mPrimaryVertex.z() ){
@@ -44,9 +61,6 @@ StEventHeader::StEventHeader(const StPicoDst& picoDst)
 		mVz = mPrimaryVertex.z();
 	}
 	mVzVpd = ev->vzVpd();
-
-	mTriggerWord = ev->triggerWord();
-	mTriggerWordMtd = ev->triggerWordMtd();
 
 	mRefMultNeg = (UShort_t)(ev->refMultNeg());
 	mRefMult = (UShort_t)(ev->refMultNeg()) + (UShort_t)(ev->refMultPos());
@@ -251,10 +265,9 @@ StEventHeader::StEventHeader(const StPicoDst& picoDst)
 		if(eventPlane2<0.0) eventPlane2 += TMath::Pi();
 		mEventplane2 = eventPlane2*100;
 	}*/
-}
 
-StEventHeader::~StEventHeader()
-{ }
+
+}
 
 int StEventHeader::year() const
 {
@@ -369,6 +382,7 @@ bool StEventHeader::isCentral() const  // continue to be updated
      if(fabs(energy()-200.)<1.e-4){
         return (mTriggerWord>>18 &0x1);
      }
+   }
 	return kFALSE;
 }
 

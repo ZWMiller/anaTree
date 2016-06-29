@@ -27,7 +27,7 @@ public:
   UShort_t              nBTOFMatch() const;
 
   std::vector<unsigned int> triggerIds() const;
-  bool                      isTrigger(int) const;
+  bool                      isTrigger(unsigned int) const;
 
   Int_t    refMultPos() const;
   Int_t    refMultNeg() const;
@@ -103,6 +103,11 @@ public:
 
 // set functions for trigger thresholds
   void     setHT_Th(const Int_t i, const Int_t th);
+// For Compatibility with Run 14 AnaTree Maker (Legacy)
+// If these are ever used for real, someone screwed up their flags.
+  Bool_t isMinBias() { return false; }
+  Bool_t isHT()      { return false; }
+  Bool_t isMtdTrig   { return false; }
 
 protected:
   Int_t    mRunId;

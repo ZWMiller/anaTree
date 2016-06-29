@@ -169,6 +169,7 @@ void makeAnaTree(const Int_t runnumber=15094070,
 	
 	StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(1,outputFile,picoMaker);
 	treeMaker->setTriggerSelection(prodMod); //0-mb, 1-ht, 2-mtd
+   treeMaker->SetPicoMode(0); //0-Run14 PicoDstMaker, 1-Run15+ PicoDstMaker
 	if(prodMod==0){
 		treeMaker->setVzCut(-8,8);
 		treeMaker->setVzDiffCut(-4,4);
@@ -200,6 +201,8 @@ void makeAnaTree(const Int_t runnumber=15094070,
 	}
 	if(prodMod==2){
 		treeMaker->setVzCut(-100,100);
+      treeMaker->addTrigger(490600);
+      treeMaker->addTrigger(490602);
       //treeMaker->setDoEvtPlane(false); //default is true
       //treeMaker->setInputRunList("./runNumberList_run14AuAu200");
       //treeMaker->setInputRecenterFile("./recenter_correction.root");

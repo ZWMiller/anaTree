@@ -152,9 +152,9 @@ class StPicoAnaTreeMaker : public StMaker {
 		void setDoEvtPlane(Bool_t doIt){mDoEvtPlane = doIt;}
 		void setInputRunList(const char *input){ mRunList = input; }
 		void setInputRecenterFile(const char *input){ mRecenterFile = input; }
+      void setPicoMode(int val) { mPicoMode = val;}
 
 		Bool_t isGoodTrack(StPicoTrack* ); 
-		Bool_t isDesiredTrigger(StPicoEvent* ); 
 		Bool_t isTofElectron(StPicoTrack* );
 		Bool_t isEmcElectron(StPicoTrack* );
 		Bool_t isPartE(StPicoTrack* );
@@ -172,6 +172,8 @@ class StPicoAnaTreeMaker : public StMaker {
 		TChain*  chain();
 		TTree*   tree();
 		void    printCuts();
+		Int_t makeTriggerWord(StPicoEvent* ); 
+      void printTriggerWords();
 
 		enum ioMode {ioRead, ioWrite};
 	private:
@@ -286,6 +288,8 @@ class StPicoAnaTreeMaker : public StMaker {
 		Int_t	    mNMaxRunId;
 		Int_t	    mNMaxCentrality;
 		Int_t 	 mTriggerSelection; 	//! 0 = minbias; 1 = ht; 2 = st_mtd;
+      Int_t     mPicoMode;          //! 0 = Run14 pico, 1 = Run15 pico;
+      Int_t     mTriggerWord;
 
 		Bool_t	 mCalcRecenter; //! calculate Recenter 
 		Bool_t	 mDoEvtPlane; //! do Eventplane 
