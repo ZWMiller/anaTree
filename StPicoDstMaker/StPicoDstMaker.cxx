@@ -62,6 +62,7 @@
 #include "StTriggerUtilities/Emc/StEmcTriggerSimu.h"
 #include "StEvent/StTriggerData.h"
 #include "StEvent/StDcaGeometry.h"
+//#include "StPicoV0.h"
 
 ClassImp(StPicoDstMaker)
 

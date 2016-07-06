@@ -8,7 +8,7 @@ class StMuDstMaker;
 
 
 StChain *chain;
-void makeAnaTree(const Int_t runnumber=15094070,
+void makeAnaTree(const Int_t runnumber=16086001,
 		//    const Char_t *inputFile="/star/data54/reco/AuAu200_production_2011/FullField/P11id/2011/169/12169026/st_physics_adc_12169026_raw_4510001.MuDst.root",
 		//    const Char_t *inputFile="/star/data78/reco/pp200_production_2012/ReversedFullField/P12id/2012/040/13040016/st_physics_13040016_raw_1010001.MuDst.root",
 		//    const Char_t *inputFile="/star/data43/reco/pp500_production_2013/ReversedFullField/P14ia/2013/115/14115072/st_physics_14115072_raw_3690004.MuDst.root",
@@ -17,8 +17,9 @@ void makeAnaTree(const Int_t runnumber=15094070,
 		//    const Char_t *inputFile="st_physics_15166010_raw_3000054.MuDst.root",
 		//    const Char_t *inputFile="/star/data79/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/145/15145024/st_physics_15145024_raw_1000048.MuDst.root",
 		//    const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/166/15166010/st_physics_15166010_raw_4500060.MuDst.root",
-		const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_mid_2014/ReversedFullField/P15ic/2014/094/15094070/st_physics_15094070_raw_0000007.MuDst.root",
-		const bool creatingPhiWgt = kFALSE, const int prodMod = 0, const int emcMode=1, const int prodType = 0
+	//	const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_mid_2014/ReversedFullField/P15ic/2014/094/15094070/st_physics_15094070_raw_0000007.MuDst.root",
+		const Char_t *inputFile="st_physics_adc_16086001_raw_4000030.MuDst.root",
+		const bool creatingPhiWgt = kFALSE, const int prodMod = 1, const int emcMode=1, const int prodType = 0
 		){
 	Int_t nEvents = 10000000;
 	//Int_t nEvents = 100;
@@ -75,13 +76,13 @@ void makeAnaTree(const Int_t runnumber=15094070,
 	gSystem->Load("StMagF");
 	gSystem->Load("StMtdUtil");
 	gSystem->Load("StMtdMatchMaker");
-	gSystem->Load("StMtdCalibMaker");
+	//gSystem->Load("StMtdCalibMaker");
 
 	gSystem->Load("StPicoDstMaker");
 	gSystem->Load("StPicoAnaTreeMaker");
 	gSystem->Load("StPicoQAMaker");
 	gSystem->Load("StRefMultCorr");
-   gSystem->Load("StPicoElecPurityMaker");
+//   gSystem->Load("StPicoElecPurityMaker");
 
 	chain = new StChain();
 
@@ -140,13 +141,13 @@ void makeAnaTree(const Int_t runnumber=15094070,
 	picoMaker->setEmcMode(emcMode); // 0-No EMC, 1-EMC ON
 	//picoMaker->SetDebug(1);
 
-	StPicoMtdCalibMaker *calibMaker;
+	/*StPicoMtdCalibMaker *calibMaker;
 	if(prodMod==0 || prodMod==1){
 		calibMaker = new StPicoMtdCalibMaker();
 		calibMaker->setInitFromFile(kTRUE);
 		calibMaker->setApplyT0(kTRUE);
 		calibMaker->setCalibFileT0("StRoot/StPicoDstMaker/Run14_AuAu200_CalibDtof.offline.dat");
-	}
+	}*/
 	
 	TString inputFileName = inputFile;
 	Int_t index = inputFileName.Index("st_");
@@ -160,44 +161,45 @@ void makeAnaTree(const Int_t runnumber=15094070,
 	outQAFile.ReplaceAll("MuDst.root","qa.root");
    StPicoQAMaker *qaMaker = new StPicoQAMaker("ana",picoMaker,outQAFile);
    
-   TString outPurityFile=mInputFileName;
-   outPurityFile.ReplaceAll("MuDst.root","purity.root");
-   StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
+   //TString outPurityFile=mInputFileName;
+   //outPurityFile.ReplaceAll("MuDst.root","purity.root");
+   //StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
 	
    outputFile=mInputFileName;
 	outputFile.ReplaceAll("MuDst.root","anaTree.root");
 	
 	StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(1,outputFile,picoMaker);
 	treeMaker->setTriggerSelection(prodMod); //0-mb, 1-ht, 2-mtd
-   treeMaker->SetPicoMode(0); //0-Run14 PicoDstMaker, 1-Run15+ PicoDstMaker
+   treeMaker->setPicoMode(1); //0-Run14 PicoDstMaker, 1-Run15+ PicoDstMaker
 	if(prodMod==0){
 		treeMaker->setVzCut(-8,8);
 		treeMaker->setVzDiffCut(-4,4);
-      treeMaker->setInputRunList("./runNumberList_run14AuAu200mb");
-      treeMaker->addTrigger(490007);
+      treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
+      treeMaker->addTrigger(480202);
    //   treeMaker->setInputRecenterFile("./recenter_correction.root");
       treeMaker->setPhoEPairMassCut(0.2);
 	}	
 	if(prodMod==1){
 		treeMaker->setVzCut(-100,100);
+      treeMaker->setPhoEPairMassCut(0.24);
+      treeMaker->setSaveHadron(true);
       //treeMaker->setDoEvtPlane(false); //default is true
       if(prodType==0){ // prod low and mid
-         treeMaker->setInputRunList("./runNumberList_run14AuAu200mb");
-         treeMaker->addTrigger(490201);
-         treeMaker->addTrigger(490202);
-         treeMaker->addTrigger(490203);
-         treeMaker->addTrigger(490204);
-         treeMaker->addTrigger(490205);
-     //    treeMaker->setInputRecenterFile("./recenter_correction.root");
+        treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
+         treeMaker->addTrigger(480201);
+         treeMaker->addTrigger(480202);
+         treeMaker->addTrigger(480203);
+         treeMaker->addTrigger(480204);
+         treeMaker->addTrigger(480205);
+         treeMaker->addTrigger(480206);
+         //    treeMaker->setInputRecenterFile("./recenter_correction.root");
          treeMaker->setMaxRunId(1700);
       }
       if(prodType==1){ // prod high
-         treeMaker->setInputRunList("./runNumberList_run14AuAu200ht_high");
+      treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
       //   treeMaker->setInputRecenterFile("./recenter_correction_ht_high.root");
          treeMaker->setMaxRunId(1000); //need to check
       }
-      treeMaker->setPhoEPairMassCut(0.24);
-      treeMaker->setSaveHadron(false)//true);
 	}
 	if(prodMod==2){
 		treeMaker->setVzCut(-100,100);

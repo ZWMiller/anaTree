@@ -29,6 +29,23 @@ StEventHeader::StEventHeader(const StPicoDst& picoDst)
   StPicoEvent* ev = picoDst.event() ;
   mTriggerWord = ev->triggerWord();
   mTriggerWordMtd = ev->triggerWordMtd();
+
+  //do the refmult correction
+  StRefMultCorr* grefmultCorrUtil = CentralityMaker::instance()->getgRefMultCorr() ;
+  grefmultCorrUtil->init(mRunId);
+  grefmultCorrUtil->initEvent(mGRefMult, mVz, mZDCx) ;
+
+  const Int_t cent16_grefmult = grefmultCorrUtil->getCentralityBin16() ;
+  const Int_t cent9_grefmult  = grefmultCorrUtil->getCentralityBin9() ;
+  const Double_t reweight = grefmultCorrUtil->getWeight() ;
+  // NOTE: type should be double or float, not integer
+  const Double_t grefmultCor = grefmultCorrUtil->getRefMultCorr() ;
+
+  mGRefMultCorr = (UShort_t)grefmultCor;
+  mReweight_GRefMult = (float)reweight;
+  mCentrality9 = (UShort_t) cent9_grefmult ;
+  mCentrality16  = (UShort_t) cent16_grefmult;
+
 }
 
 StEventHeader::StEventHeader(const StPicoDst& picoDst, const int trigWord)
@@ -81,24 +98,7 @@ void StEventHeader::prepareEventInfo(const StPicoDst& picoDst)
 	mNHitsHFT[3] = ev->numberOfSsdHits();
 	
 	mRandom->SetSeed(mEventId*100000+mZDCx);
-
-	//do the refmult correction
-	StRefMultCorr* grefmultCorrUtil = CentralityMaker::instance()->getgRefMultCorr() ;
-	grefmultCorrUtil->init(mRunId);
-	grefmultCorrUtil->initEvent(mGRefMult, mVz, mZDCx) ;
-
-	const Int_t cent16_grefmult = grefmultCorrUtil->getCentralityBin16() ;
-	const Int_t cent9_grefmult  = grefmultCorrUtil->getCentralityBin9() ;
-	const Double_t reweight = grefmultCorrUtil->getWeight() ;
-	// NOTE: type should be double or float, not integer
-	const Double_t grefmultCor = grefmultCorrUtil->getRefMultCorr() ;
-
-	mGRefMultCorr = (UShort_t)grefmultCor;
-	mReweight_GRefMult = (float)reweight;
-	mCentrality9 = (UShort_t) cent9_grefmult ;
-	mCentrality16  = (UShort_t) cent16_grefmult;
-
-	//--------------------------
+//--------------------------
 	for(int i=0;i<4;i++) {
 		setHT_Th(i,0);
 	}

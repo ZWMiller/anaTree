@@ -48,7 +48,7 @@ class StPicoQAMaker : public StMaker {
       TH2F*      mVxy;
       TH2F*      mVRvsVZ;
 
-      /*
+      
       TH2F*      mRanking_nPtrks;
       TH2F*      mnPtrks_nGtrks;
       TH2F*      mnRefMult_nGRefMult;
@@ -158,8 +158,8 @@ class StPicoQAMaker : public StMaker {
       TH2F*      mBEMCneta_P;
       TH2F*      mBEMCnphi_P;
       TH2F*      mBEMCneta_nphi;
-      */
-
+      
+/*
       //======run by run QA=====
 
       TH2F *hTPCVzvsRunIndex;
@@ -229,7 +229,7 @@ class StPicoQAMaker : public StMaker {
       TH2F *hNtofElectronOVnRvsRunIndex;
       TH2F *hNbemcElectronOVnRvsRunIndex;
       TH2F *hNmuonOVnRvsRunIndex;
-
+*/
       //-----------BEMC end-------------------
 
       //----------after pid------------

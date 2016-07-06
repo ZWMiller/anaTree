@@ -172,7 +172,7 @@ class StPicoAnaTreeMaker : public StMaker {
 		TChain*  chain();
 		TTree*   tree();
 		void    printCuts();
-		Bool_t makeTriggerWord(StPicoEvent* ); 
+		Int_t makeTriggerWord(StPicoEvent* ); 
       void printTriggerWords();
 
 		enum ioMode {ioRead, ioWrite};

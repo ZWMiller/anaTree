@@ -1,6 +1,6 @@
 #include "StRoot/StPicoDstMaker/StPicoDst.h"
 #include "StRoot/StPicoDstMaker/StPicoTrack.h"
-#include "StRoot/StPicoDstMaker/StPicoV0.h"
+//#include "StRoot/StPicoDstMaker/StPicoV0.h"
 #include "StRoot/StPicoDstMaker/StPicoDstMaker.h"
 #include "StRoot/StPicoDstMaker/StPicoEvent.h"
 #include "StRoot/StPicoDstMaker/StPicoMtdHit.h"
@@ -58,7 +58,7 @@ ClassImp(StPicoAnaTreeMaker)
   //-----------------------------------------------------------------------------
   StPicoAnaTreeMaker::StPicoAnaTreeMaker(Int_t mode, const char* fileName, StPicoDstMaker *picoMaker, const char *name)
 : StMaker(name),
-  mIoMode(mode), mOutputFile(0), mOutputHistFile(0), mChain(0), mTTree(0), mSplit(99), mCompression(9), mBufferSize(65536*4), mSaveHadron(false)
+  mIoMode(mode), mOutputFile(0), mOutputHistFile(0), mChain(0), mTTree(0), mSplit(99), mCompression(9), mBufferSize(65536*4), mSaveHadron(true)
 {
   assignArrays();
   streamerOff();
@@ -86,7 +86,7 @@ ClassImp(StPicoAnaTreeMaker)
   mTriggerSelection = 0; 
   //mCalcRecenter = kFALSE;
   mDoEvtPlane = kTRUE;
-  mRunList = "./runNumberList_run14AuAu200";
+  mRunList = "./runNumberList_run15pp_transverse";
   //	mRecenterFile = "./recenter_correction.root";
 
   mVzCut[0] = -6; mVzCut[1] = 6;
@@ -99,11 +99,11 @@ ClassImp(StPicoAnaTreeMaker)
   mRatioCut[0] = 0.52; mRatioCut[1] = 1.02;
 
   //mEPtCut[0] = 0.2; mEPtCut[1] = 100;
-  mEDcaCut[0] = 0.; mEDcaCut[1] = 1.5;
+  mEDcaCut[0] = 0.; mEDcaCut[1] = 3.0;
   mEInvBetaCut[0] = 0.97; mEInvBetaCut[1] = 1.03;
   //mELocalYCut[0] = -2; mELocalYCut[1] = 2;
   //mELocalZCut[0] = -3; mELocalZCut[1] = 3;
-  mEnSigECut[0] = -1.5; mEnSigECut[1] = 3;
+  mEnSigECut[0] = -2.5; mEnSigECut[1] = 3;
 
   mPartEnSigECut[0] = -3.5; mPartEnSigECut[1] = 3.;
   mPhoEPairDcaCut = 1;
@@ -688,7 +688,7 @@ bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
   if(mPicoMode == 0) // run 14 mode
   {
     if(mTriggerSelection==minbias){
-      if(isDesiredTrigger(pico->event())){
+      if(pico->event()->isMinBias()){
         int triggerWord = pico->event()->triggerWord();
         mhnEvents->Fill(1);
         if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return false;
@@ -711,7 +711,7 @@ bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
         return true;
       }else return false;
     }else if(mTriggerSelection==ht){
-      if(isDesiredTrigger(pico->event())){
+      if(pico->event()->isHT()){
         mhnEvents->Fill(1);
         if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return false;
         mhnEvents->Fill(2);
@@ -729,7 +729,7 @@ bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
         return true;
       }else return false;
     }else if(mTriggerSelection==mtd){
-      if(isDesiredTrigger(pico->event())){
+      if(pico->event()->isMtdTrig()){
         mhnEvents->Fill(1);
         if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return false;
         mhnEvents->Fill(2);
@@ -759,12 +759,15 @@ bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
 
     if(trigFound){
       for(int i=0;i<32;i++){
-        if(triggerWord>>i & 0x1) mhnEvents->Fill(4+i);
+        if(mTriggerWord>>i & 0x1) mhnEvents->Fill(4+i);
       }
+      LOG_INFO<<"Trigger Found in Event #" << pico->event()->eventId()<<". TriggerWord: " << mTriggerWord <<endm;
+      return true;
     }
     else{
       LOG_ERROR<<"No Trigger Found in Event #" << pico->event()->eventId()<<" that matches requested trigs." <<endm;
     }
+    return false;
   }
 }
 
@@ -802,6 +805,7 @@ void StPicoAnaTreeMaker::fillEventHeader() {
   //	new((*(mAnaTreeArrays[anaTreeEvent]))[counter]) StEventHeader(*mPicoDst, mRecenterCor);
 
   //new((*(mAnaTreeArrays[anaTreeEvent]))[counter]) StEventHeader(*mPicoDst, getRecenterCor(runIndex, centrality), mDoEvtPlane);
+  cout << "picoMode: "<< mPicoMode << endl;
   if(mPicoMode == 0) new((*(mAnaTreeArrays[anaTreeEvent]))[counter]) StEventHeader(*mPicoDst);
   if(mPicoMode == 1) new((*(mAnaTreeArrays[anaTreeEvent]))[counter]) StEventHeader(*mPicoDst,mTriggerWord);
 
@@ -832,7 +836,7 @@ void StPicoAnaTreeMaker::fillTracks() {
       new((*(mAnaTreeArrays[anaTreeETrack]))[counter]) StElectronTrack(mPicoDst,t,i);
     }
 
-    //partener e
+    //partner e
     if(isPartE(t)){
       partEidx.push_back(i); 
     }
@@ -1637,6 +1641,7 @@ Int_t StPicoAnaTreeMaker::makeTriggerWord(StPicoEvent* ev){
   mTriggerWord = 0;
   for(auto trg = triggers.begin(); trg < triggers.end(); ++trg)
   {
+    cout << "Trigger Comparison Input: " << *trg << endl;
     if(ev->isTrigger(*trg))
       mTriggerWord |= (1U << bitCount);
     bitCount++;
