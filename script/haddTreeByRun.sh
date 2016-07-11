@@ -9,7 +9,8 @@ if [ $# -lt 2 ]; then
 	exit
 fi
 
-path=/star/u/huangbc/data01/pico/anaTree/20151125_v4/prod
+#path=/star/u/huangbc/data01/pico/anaTree/20151125_v4/prod
+path=/gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v1_070616
 target=$(pwd)
 
 if [ ! -d ${target}/out ]; then

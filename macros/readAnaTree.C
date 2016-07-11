@@ -6,7 +6,7 @@ class StPicoDstMaker;
 
 
 StChain *chain;
-void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="test.list", const Char_t *outputFile="test.root", int trigSelect = 2)
+void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRuns.list", const Char_t *outputFile="anaTree.hists.root", int trigSelect = 2, bool mixedEvent=false)
 {
 
 	//  Int_t nEvents = 1000;	
@@ -20,9 +20,9 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="test.list", 
 	gSystem->Load("StMyAnaTreeMaker");
 
 	chain = new StChain();
-
-	StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(0,inputFile,0);
-	StMyAnaTreeMaker *anaMaker = new StMyAnaTreeMaker("ana",treeMaker,outputFile);
+   
+   StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(0,inputFile,0);
+	StMyAnaTreeMaker *anaMaker = new StMyAnaTreeMaker("ana",treeMaker,outputFile,mixedEvent);
 	//-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
 	cout<<"Trigger chosen: "<<trigSelect<<endl;
 	anaMaker->setTrigSelect(trigSelect);

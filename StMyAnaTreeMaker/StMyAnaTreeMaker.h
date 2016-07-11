@@ -32,7 +32,7 @@ class TLorentzVector;
 
 class StMyAnaTreeMaker : public StMaker {
 	public:
-		StMyAnaTreeMaker(const Char_t *name, StPicoAnaTreeMaker *treeMaker, const Char_t *outName);
+		StMyAnaTreeMaker(const Char_t *name, StPicoAnaTreeMaker *treeMaker, const Char_t *outName, bool mixedEvent);
 		virtual ~StMyAnaTreeMaker();
 
 		virtual Int_t Init();
@@ -63,6 +63,15 @@ class StMyAnaTreeMaker : public StMaker {
 		void 	makeEMuMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer);
 		void 	makeMuMuMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer);
 		void 	copyCurrentToBuffer(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer);
+
+      void determineTriggers();
+      void clearTriggers();
+      bool isHT0;
+      bool isHT1;
+      bool isHT2;
+      bool isHT3;
+      bool isMB;
+      bool makeMixedEvent;
 
 		StPicoAnaTreeMaker *mPicoAnaTreeMaker;
 		StAnaTree          *mAnaTree;

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<job maxFilesPerProcess="1" fileListSyntax="paths" simulateSubmission="false" filesPerHour="0.3" >
+
+<command>
+<!-- Set tags file directory -->
+setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log 
+setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/out
+
+<!-- Print out EMYEAR and EMDAY and EMLOGS -->
+echo EMLOGS   : $EMLOGS
+echo EMOUTPUT : $EMOUTPUT
+cp ${INPUTFILE0} .
+ls *.anaTree.root > processedRuns.list
+
+root4star -l -b -q 'StRoot/macros/readAnaTree.C(2000000,"processedRuns.list","${FILEBASENAME}.hists.root",2,false)'
+ls -la .
+
+<!-- Move LOG files and csh to star disk, remove list files -->
+mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
+
+</command>
+
+<SandBox installer="ZIP">
+  <Package name="MyAnaTreeMaker2">
+    <File>file:./.sl64_gcc482</File>
+    <File>file:./.sl64_gcc477</File>
+    <File>file:./StRoot</File>
+    <File>file:./runNumberList_run15pp_transverse</File>
+	</Package>
+</SandBox>
+
+
+<!-- Define locations of ROOT files -->
+<output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
+
+<!-- Define locations of log/elog files -->
+<stdout URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/$JOBID.log"/>
+<stderr URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/$JOBID.elog"/>
+
+<!-- Input daq files -->
+<input URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/out/out_pp200_Transverse_HT_anaTree/*.anaTree.root"/>
+<!-- csh/list files -->
+<Generator>
+  <Location>/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/list</Location>
+</Generator>
+
+</job>

@@ -91,6 +91,7 @@ class StPicoAnaTreeMaker : public StMaker {
 		void fillMtdTrigger();
 
 		const float *getRecenterCor(int runId, int centrality);
+      const int getTriggerWord() { return mTriggerWord; }
 
 		TClonesArray* clonesArray(TClonesArray*& p, const char* type, int size, int& counter);
 

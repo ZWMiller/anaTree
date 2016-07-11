@@ -13,7 +13,7 @@ if [ ! -d out/out_$1_anaTree ]; then
    mkdir out/out_$1_anaTree
 fi
 
-for run in `cat runNumberList_run14AuAu200mb`
+for run in `cat runNumberList_run15pp_transverse`
 do
    if [ ! -d out/out_$1/${run} ]; then
       continue;
