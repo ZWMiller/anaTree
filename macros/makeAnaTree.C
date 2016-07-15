@@ -18,11 +18,11 @@ void makeAnaTree(const Int_t runnumber=16086001,
 		//    const Char_t *inputFile="/star/data79/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/145/15145024/st_physics_15145024_raw_1000048.MuDst.root",
 		//    const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/166/15166010/st_physics_15166010_raw_4500060.MuDst.root",
 	//	const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_mid_2014/ReversedFullField/P15ic/2014/094/15094070/st_physics_15094070_raw_0000007.MuDst.root",
-		const Char_t *inputFile="st_physics_adc_16086001_raw_4000030.MuDst.root",
+		const Char_t *inputFile="testFiles/st_physics_adc_16086001_raw_4000030.MuDst.root",
 		const bool creatingPhiWgt = kFALSE, const int prodMod = 1, const int emcMode=1, const int prodType = 0
 		){
 	Int_t nEvents = 10000000;
-	//Int_t nEvents = 100;
+	//Int_t nEvents = 10;
 	//Int_t nEvents = 1000;	
 	//Load all the System libraries
 
@@ -82,7 +82,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
 	gSystem->Load("StPicoAnaTreeMaker");
 	gSystem->Load("StPicoQAMaker");
 	gSystem->Load("StRefMultCorr");
-//   gSystem->Load("StPicoElecPurityMaker");
+   gSystem->Load("StPicoElecPurityMaker");
 
 	chain = new StChain();
 
@@ -161,9 +161,16 @@ void makeAnaTree(const Int_t runnumber=16086001,
 	outQAFile.ReplaceAll("MuDst.root","qa.root");
    StPicoQAMaker *qaMaker = new StPicoQAMaker("ana",picoMaker,outQAFile);
    
-   //TString outPurityFile=mInputFileName;
-   //outPurityFile.ReplaceAll("MuDst.root","purity.root");
-   //StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
+   TString outPurityFile=mInputFileName;
+   outPurityFile.ReplaceAll("MuDst.root","purity.root");
+   StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
+   ePurMaker->setRunMode(0); // 0 - pp (no centrality), 1- AuAu (centrality on)
+   ePurMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   ePurMaker->addTrigger(480203,0);
+   ePurMaker->addTrigger(480202,1);
+   ePurMaker->addTrigger(480204,1);
+   ePurMaker->addTrigger(480206,1);
+   ePurMaker->addTrigger(480205,2);
 	
    outputFile=mInputFileName;
 	outputFile.ReplaceAll("MuDst.root","anaTree.root");

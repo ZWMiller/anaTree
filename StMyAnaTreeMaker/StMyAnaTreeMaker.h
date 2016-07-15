@@ -21,6 +21,7 @@ class StEMuPair;
 class StMuMuPair;
 class StEmcTrigger;
 class StPicoAnaTreeMaker;
+class StHadronTrack;
 
 class TString;
 class TH1F;
@@ -43,11 +44,13 @@ class StMyAnaTreeMaker : public StMaker {
 		void    declareHistograms();
 		bool	passHTEIDCuts(StElectronTrack *);
 		bool	passEIDCuts(StElectronTrack *);
+		bool	passETrackQualityCuts(StElectronTrack *);
 		bool	isHTTrigE(StElectronTrack *);
 		bool	passMuIDCuts(StMuonTrack *);
 		bool	passEEPairCuts(double );
 		bool	passEMuPairCuts(double );
 		bool	passMuMuPairCuts(double );
+      bool  isElectronInValidPair(StElectronTrack*);
 		int		getCentrality();
 		void	printCuts();
 		void	setTrigSelect(int val){ mTrigSelect = val; }
@@ -66,12 +69,21 @@ class StMyAnaTreeMaker : public StMaker {
 
       void determineTriggers();
       void clearTriggers();
+      bool passHadronCuts(StHadronTrack*);
+      double delPhiCorrect(double);
       bool isHT0;
       bool isHT1;
       bool isHT2;
       bool isHT3;
       bool isMB;
       bool makeMixedEvent;
+
+      void fillElectronHists(StElectronTrack*);
+      void fillHadronHists(StHadronTrack*);
+      void fillMuonHists(StMuonTrack*);
+      void fillEEHists(StEEPair*);
+      void fillEMuHists(StEMuPair*);
+      void fillMuMuHists(StMuMuPair*);
 
 		StPicoAnaTreeMaker *mPicoAnaTreeMaker;
 		StAnaTree          *mAnaTree;
@@ -80,10 +92,10 @@ class StMyAnaTreeMaker : public StMaker {
 
 		TFile*	   fout;
 		TF1 	*fPhiVm;
-		TF1		*fEDcaCut;
-		TF1		*fMuDcaCut;
-		TF1		*fMudTCutLow;
-		TF1		*fMudTCutHigh;
+		TF1   *fEDcaCut;
+		TF1	*fMuDcaCut;
+		TF1	*fMudTCutLow;
+		TF1	*fMudTCutHigh;
 		TH1F *hnEvents;
 		TH1F *hnTracks;
 		TH2F *hVzVpdVz;
@@ -95,6 +107,7 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hNemu;
 		TH2F *hNmu;
 		
+		TH1F *hEPt_eff[4];
 		TH2F *hEEtavsPhi;
 		TH2F *hEPhivsPt;
 		TH2F *hEEtavsPt;
@@ -224,6 +237,24 @@ class StMyAnaTreeMaker : public StMaker {
 		TH3F *hMuMuDenInvMassvsPtMixLikePoswHft;
 		TH3F *hMuMuDenInvMassvsPtMixLikeNegwHft;
 
+      //hadron branches
+      TH1F *hHadPt;
+      TH1F *hHadDca;
+      TH1F *hHadDcaXY;
+      TH1F *hHadDcaZ;
+      TH1F *hHadPhi;
+      TH1F *hEPt;
+      TH1F *hEEPt_US;
+      TH1F *hEEPt_LS;
+
+      TH2F *hHadEtaPhi;
+      TH2F *hHadEDelPhiPt;
+      TH2F *hHadEDelPhiPt_high;
+      TH2F *hHadMuDelPhiPt;
+      TH2F *hHadDcaPt;
+      TH2F *hHadEEDelPhiPt_LS;
+      TH2F *hHadEEDelPhiPt_US;
+      TH2F *hHadPtEPt;
 
 		//TH2F *hDenInvMassvsPtMixLikePosMB;
 		//TH2F *hDenInvMassvsPtMixLikeNegMB;
@@ -298,6 +329,10 @@ class StMyAnaTreeMaker : public StMaker {
         Float_t     mEEYCut[2];
         Float_t     mEMuYCut[2];
         Float_t     mMuMuYCut[2];
+
+        Float_t     mHadPtCut[2];
+        Float_t     mHadEtaCut[2];
+        Float_t     mHadDcaCut[2];
         
 		Float_t     mPEMassCut[2];
 		Short_t	    nMassBins;
@@ -306,6 +341,7 @@ class StMyAnaTreeMaker : public StMaker {
 		Float_t     massMax;
 		Float_t     ptMin;
 		Float_t     ptMax;
+      int         centrality;
 		
 		UChar_t	    current_nePlus;
 		UChar_t	    current_neMinus;
