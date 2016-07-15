@@ -41,6 +41,7 @@ class StMyAnaTreeMaker : public StMaker {
 		virtual void  Clear(Option_t *opt="");
 		virtual Int_t Finish();
 
+      void addTrigger(int tr, int id) { triggers[id].push_back(tr); };
 		void    declareHistograms();
 		bool	passHTEIDCuts(StElectronTrack *);
 		bool	passEIDCuts(StElectronTrack *);
@@ -71,12 +72,19 @@ class StMyAnaTreeMaker : public StMaker {
       void clearTriggers();
       bool passHadronCuts(StHadronTrack*);
       double delPhiCorrect(double);
+      Bool_t checkTriggers(StPicoEvent*, int);
+      Bool_t isMB(StPicoEvent*);
+      Bool_t isBHT0(StPicoEvent*);
+      Bool_t isBHT1(StPicoEvent*);
+      Bool_t isBHT2(StPicoEvent*);
+      Bool_t isBHT3(StPicoEvent*);
       bool isHT0;
       bool isHT1;
       bool isHT2;
       bool isHT3;
       bool isMB;
       bool makeMixedEvent;
+      vector<int> triggers[5]; //0-HT0, 1-HT1 ... 4-MB
 
       void fillElectronHists(StElectronTrack*);
       void fillHadronHists(StHadronTrack*);

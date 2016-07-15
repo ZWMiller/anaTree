@@ -33,6 +33,7 @@ class StEventHeader : public TObject {
 		Int_t    refMultNeg() const       { return (Int_t)mRefMultNeg; }
 		Int_t    refMult() const          { return (Int_t)(mRefMult); }
 		Int_t    grefMult() const           { return (Int_t)(mGRefMult); }
+      std::vector<unsigned int> triggerIds() const;
 	
 	
 		Float_t     grefMultCorr() const      { return (Float_t)mGRefMultCorr;}
@@ -123,6 +124,7 @@ class StEventHeader : public TObject {
 		UShort_t       mRefMultNeg;      // TPC refMult neg
 		UShort_t       mRefMult;// TPC refMult neg+pos 
 		UShort_t       mGRefMult;// 
+      std::vector<unsigned int> mTriggerIds;
 
 		UShort_t       mGRefMultCorr;
 		UChar_t        mCentrality9;

@@ -66,6 +66,7 @@ void StEventHeader::prepareEventInfo(const StPicoDst& picoDst)
 	mRunId = ev->runId();
 	mEventId = ev->eventId();
 	mBField = ev->bField();
+   mTriggerIds = ev->triggerIds();
 
 	StThreeVectorF mPrimaryVertex = ev->primaryVertex();
 	if( mPrimaryVertex.x()==mPrimaryVertex.y()&&mPrimaryVertex.y()==mPrimaryVertex.z() ){

@@ -1650,3 +1650,42 @@ double StMyAnaTreeMaker::delPhiCorrect(double p)
   if(p >  3.*PI/2.)  p-=2.*PI;
   return p;
 }
+
+Bool_t StMyAnaTreeMaker::checkTriggers(StPicoEvent *ev, int trigType)
+{
+  for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
+  {
+    if(ev->isTrigger(*trg))
+      return true;
+  }
+  return false;
+}
+
+
+Bool_t StMyAnaTreeMaker::isBHT0(StPicoEvent *event)
+{ 
+  return checkTriggers(event,0);
+}
+
+
+Bool_t StMyAnaTreeMaker::isBHT1(StPicoEvent *event)
+{ 
+  return checkTriggers(event,1);
+}
+
+//-----------------------------------------                                              
+Bool_t StMyAnaTreeMaker::isBHT2(StPicoEvent *event)
+{
+  return checkTriggers(event,2);
+}
+
+//---------------------------------------------------  
+Bool_t StMyAnaTreeMaker::isBHT3(StPicoEvent *event)
+{
+  return checkTriggers(event,3);
+}
+
+Bool_t StMyAnaTreeMaker::isMB(StPicoEvent *event)
+{ 
+  return checkTriggers(event,4);
+}
