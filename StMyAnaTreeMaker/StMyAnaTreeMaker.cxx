@@ -93,7 +93,7 @@ ClassImp(StMyAnaTreeMaker)
 	mEMuYCut[0] = -1.; mEMuYCut[1] = 1.;
 	mMuMuYCut[0] = -0.65; mMuMuYCut[1] = 0.65;
 
-	mPEMassCut[0] = 0.; mPEMassCut[1] = 0.02;
+	mPEMassCut[0] = 0.; mPEMassCut[1] = 0.2;
 
    mHadPtCut[0]  = 0.3;  mHadPtCut[1] = 20.0;
    mHadEtaCut[0] = -0.7; mHadEtaCut[1]= 0.7;
@@ -248,35 +248,42 @@ void StMyAnaTreeMaker::declareHistograms() {
   hMuDcaXYvsPtwHft = new TH2F("hMuDcaXYvsPtwHft","hMuDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
   hMuDcaZvsPtwHft = new TH2F("hMuDcaZvsPtwHft","hMuDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
 
+  hEEUSEtavsPhi = new TH2F("hEEUSEtavsPhi","Electron Pair Eta vs Phi US; #phi; #eta",300,-3.2,3.2,200,-1,1);
+  hEELSPosEtavsPhi = new TH2F("hEELSPosEtavsPhi","Electron Pair Eta vs Phi LS Pos; #phi; #eta",300,-3.2,3.2,200,-1,1);
+  hEELSNegEtavsPhi = new TH2F("hEELSNegEtavsPhi","Electron Pair Eta vs Phi LS Neg; #phi; #eta",300,-3.2,3.2,200,-1,1);
 
-  hEENumInvMassvsPtMB = new TH2F("hEENumInvMassvsPtMB","same event mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikePosMB = new TH2F("hEEDenInvMassvsPtLikePosMB","like-sign pos mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikeNegMB = new TH2F("hEEDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEUSPairDcavsPt = new TH2F("hEEUSPairDcavsPt","EE Pair DCA vs Pt US; p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,4);
+  hEELSPosPairDcavsPt = new TH2F("hEELSPosPairDcavsPt","EE Pair DCA vs Pt LS Pos; p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,4);
+  hEELSNegPairDcavsPt = new TH2F("hEELSNegPairDcavsPt","EE Pair DCA vs Pt LS Neg; p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,4);
 
-  hEMuNumInvMassvsPtMB = new TH2F("hEMuNumInvMassvsPtMB","same event mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEMuDenInvMassvsPtLikePosMB = new TH2F("hEMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEMuDenInvMassvsPtLikeNegMB = new TH2F("hEMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEENumInvMassvsPtMB = new TH2F("hEENumInvMassvsPtMB","same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikePosMB = new TH2F("hEEDenInvMassvsPtLikePosMB","like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikeNegMB = new TH2F("hEEDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-  hMuMuNumInvMassvsPtMB = new TH2F("hMuMuNumInvMassvsPtMB","same event mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hMuMuDenInvMassvsPtLikePosMB = new TH2F("hMuMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hMuMuDenInvMassvsPtLikeNegMB = new TH2F("hMuMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuNumInvMassvsPtMB = new TH2F("hEMuNumInvMassvsPtMB","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikePosMB = new TH2F("hEMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikeNegMB = new TH2F("hEMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-   hEENumInvMassvsPtMBwHft = new TH2F("hEENumInvMassvsPtMBwHft","same event mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikePosMBwHft = new TH2F("hEEDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikeNegMBwHft = new TH2F("hEEDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuNumInvMassvsPtMB = new TH2F("hMuMuNumInvMassvsPtMB","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikePosMB = new TH2F("hMuMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikeNegMB = new TH2F("hMuMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-   hEMuNumInvMassvsPtMBwHft = new TH2F("hEMuNumInvMassvsPtMBwHft","same event mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEMuDenInvMassvsPtLikePosMBwHft = new TH2F("hEMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hEMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEENumInvMassvsPtMBwHft = new TH2F("hEENumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEEDenInvMassvsPtLikePosMBwHft = new TH2F("hEEDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEEDenInvMassvsPtLikeNegMBwHft = new TH2F("hEEDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-   hMuMuNumInvMassvsPtMBwHft = new TH2F("hMuMuNumInvMassvsPtMBwHft","same event mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hMuMuDenInvMassvsPtLikePosMBwHft = new TH2F("hMuMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hMuMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hMuMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum in MBwHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEMuNumInvMassvsPtMBwHft = new TH2F("hEMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEMuDenInvMassvsPtLikePosMBwHft = new TH2F("hEMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hEMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+   hMuMuNumInvMassvsPtMBwHft = new TH2F("hMuMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hMuMuDenInvMassvsPtLikePosMBwHft = new TH2F("hMuMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hMuMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hMuMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
 
-   hEENumInvMassvsPtMBnophiv = new TH2F("hEENumInvMassvsPtMBnophiv","same event mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikePosMBnophiv = new TH2F("hEEDenInvMassvsPtLikePosMBnophiv","like-sign pos mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikeNegMBnophiv = new TH2F("hEEDenInvMassvsPtLikeNegMBnophiv","like-sign neg mass spectrum in MB;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEENumInvMassvsPtMBnophiv = new TH2F("hEENumInvMassvsPtMBnophiv","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEEDenInvMassvsPtLikePosMBnophiv = new TH2F("hEEDenInvMassvsPtLikePosMBnophiv","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+   hEEDenInvMassvsPtLikeNegMBnophiv = new TH2F("hEEDenInvMassvsPtLikeNegMBnophiv","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
 
    hUSphivM = new TH2F("hUSphivM","unlike-sign phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
@@ -418,8 +425,8 @@ Int_t StMyAnaTreeMaker::Make() {
 	int eventPass = 0;
 	if(mTrigSelect<0) eventPass = 1;
 	else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
-	else if(mTrigSelect==1&& isHT0){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 1.5;} //HT0 180
-	else if(mTrigSelect==2&& isHT1){ eventPass = 1; mHTth = 15; mHTAdc0th = 250; mEmcPtth = 2.5;} //HT1 240
+	else if(mTrigSelect==1&& isHT0){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 180
+	else if(mTrigSelect==2&& isHT1){ eventPass = 1; mHTth = 15; mHTAdc0th = 250; mEmcPtth = 2.5;}  //HT1 240
 	else if(mTrigSelect==3&& isHT2){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 3.0;}  //HT2 300
 	else if(mTrigSelect==4&& isHT3){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 400
 	else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
@@ -599,7 +606,7 @@ bool StMyAnaTreeMaker::passEIDCuts(StElectronTrack *eTrk) {
 	if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
 	if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
 	//if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
-	if(invBeta<mEInvBetaCut[0] || invBeta>mEInvBetaCut[1]) return false;
+	//if(invBeta<mEInvBetaCut[0] || invBeta>mEInvBetaCut[1]) return false;
 	if(localY<mELocalYCut[0] || localY>mELocalYCut[1]) return false;
 	//if(localZ<mELocalZCut[0] || localZ>mELocalZCut[1]) return false;
 	if(p<1.0){
@@ -1318,6 +1325,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   }
   if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5){
     int htTrkFlag = 0,eTrkFlag = 0;
+    if(!passETrackQualityCuts(eTrk1) || !passETrackQualityCuts(eTrk2)) return; 
     if(isHTTrigE(eTrk1)&&passHTEIDCuts(eTrk1)) htTrkFlag += 1;
     //if(isHTTrigE(eTrk1)&&isHTTrigE(eTrk2)) return;
     if(isHTTrigE(eTrk2)&&passHTEIDCuts(eTrk2)) htTrkFlag +=1;
@@ -1337,9 +1345,11 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
 
   double pt = pair.perp();
   double y = pair.rapidity();
-  if(!passEEPairCuts(y)) return;
+  double eta = pair.pseudoRapidity();
+  double phi = pair.phi();
   double pmass = pair.m();
   double mass = pair.m();
+  if(!passEEPairCuts(y)) return;
   double phiV = ee->pairPhiV();
   double dauDcaDist = ee->pairDca();
   int dauIsHft1 = eTrk1->isHFTTrack();
@@ -1358,6 +1368,8 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     //}
     hEENumInvMassvsPtMB->Fill(pt,mass);
     hEENumInvMassvsPt->Fill(pt,mass,centrality);
+    hEEUSEtavsPhi->Fill(phi,eta);
+    hEEUSPairDcavsPt->Fill(dauDcaDist,pt);
     if(dauIsHft1&&dauIsHft2){ 
       hEENumInvMassvsPtMBwHft->Fill(pt,mass);
       hEENumInvMassvsPtwHft->Fill(pt,mass,centrality);
@@ -1366,6 +1378,8 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   if(charge1==1&&charge2==1){ 
     hEEDenInvMassvsPtLikePosMB->Fill(pt,mass);
     hEEDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
+    hEELSPosEtavsPhi->Fill(phi,eta);
+    hEELSPosPairDcavsPt->Fill(dauDcaDist,pt);
     if(dauIsHft1&&dauIsHft2){ 
       hEEDenInvMassvsPtLikePosMBwHft->Fill(pt,mass);
       hEEDenInvMassvsPtLikePoswHft->Fill(pt,mass,centrality);
@@ -1374,6 +1388,8 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   if(charge1==-1&&charge2==-1){ 
     hEEDenInvMassvsPtLikeNegMB->Fill(pt,mass);
     hEEDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
+    hEELSNegEtavsPhi->Fill(phi,eta);
+    hEELSNegPairDcavsPt->Fill(dauDcaDist,pt);
     if(dauIsHft1&&dauIsHft2){ 
       hEEDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
       hEEDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
@@ -1389,7 +1405,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   }
   double vcut = fPhiVm->Eval(mass);
   StThreeVectorF origin = ee->pairOrigin();
-  if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]&&phiV<vcut){
+  if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]){//&&phiV<vcut){
     //if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]&&dauDcaDist>mDauEDcaDistCut[0]&&dauDcaDist<mDauEDcaDistCut[1])
     double pt1 = eTrk1->pMom().perp();
     double dca1 = eTrk1->dca();
@@ -1450,36 +1466,34 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
         hPELSDcaZvsPtwHft->Fill(pt2*charge2,dcaZ2);
       }
     }
-  }
 
-  // Loop over hadrons for Eh correlation
-  double phi1 = eTrk1->pMom().phi();
-  double phi2 = eTrk2->pMom().phi();
-  double pt1 = eTrk1->pMom().perp();
-  double pt2 = eTrk2->pMom().perp();
+    // Loop over hadrons for Eh correlation
+    double phi1 = eTrk1->pMom().phi();
+    double phi2 = eTrk2->pMom().phi();
 
-  int nHad = mAnaTree->numberOfHTracks(); 
-  for(int j=0; j < nHad; j++)
-  {
-    StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
-    if(!passHadronCuts(hTrk) || hTrk->id() == eTrk1->id() || hTrk->id() == eTrk2->id()) return;
-    int charge = hTrk->charge();
-    double hpt = hTrk->gMom().perp();
-    double heta = hTrk->gMom().pseudoRapidity();
-    double hphi = hTrk->gMom().phi();
-    double hdca = hTrk->dca();
-
-    double dphi = hphi - phi1;
-    dphi = delPhiCorrect(dphi);
-    if(charge1==charge2) 
+    int nHad = mAnaTree->numberOfHTracks(); 
+    for(int j=0; j < nHad; j++)
     {
-      hEEPt_LS->Fill(pt1); // need for normalization
-      hHadEEDelPhiPt_LS->Fill(pt1,dphi); // Electron pt
-    }
-    if(charge1!=charge2) 
-    {
-      hEEPt_US->Fill(pt1); // need for normalization
-      hHadEEDelPhiPt_US->Fill(pt1,dphi); // Muon pt
+      StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
+      if(!passHadronCuts(hTrk) || hTrk->id() == eTrk1->id() || hTrk->id() == eTrk2->id()) return;
+      int charge = hTrk->charge();
+      double hpt = hTrk->gMom().perp();
+      double heta = hTrk->gMom().pseudoRapidity();
+      double hphi = hTrk->gMom().phi();
+      double hdca = hTrk->dca();
+
+      double dphi = hphi - phi1;
+      dphi = delPhiCorrect(dphi);
+      if(charge1==charge2) 
+      {
+        hEEPt_LS->Fill(pt1); // need for normalization
+        hHadEEDelPhiPt_LS->Fill(pt1,dphi); // Electron pt
+      }
+      if(charge1!=charge2) 
+      {
+        hEEPt_US->Fill(pt1); // need for normalization
+        hHadEEDelPhiPt_US->Fill(pt1,dphi); // Muon pt
+      }
     }
   }
 }
@@ -1651,41 +1665,41 @@ double StMyAnaTreeMaker::delPhiCorrect(double p)
   return p;
 }
 
-Bool_t StMyAnaTreeMaker::checkTriggers(StPicoEvent *ev, int trigType)
+Bool_t StMyAnaTreeMaker::checkTriggers(int trigType)
 {
   for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
   {
-    if(ev->isTrigger(*trg))
+    if(mAnaTree->event()->isTrigger(*trg))
       return true;
   }
   return false;
 }
 
 
-Bool_t StMyAnaTreeMaker::isBHT0(StPicoEvent *event)
+Bool_t StMyAnaTreeMaker::isBHT0()
 { 
-  return checkTriggers(event,0);
+  return checkTriggers(0);
 }
 
 
-Bool_t StMyAnaTreeMaker::isBHT1(StPicoEvent *event)
+Bool_t StMyAnaTreeMaker::isBHT1()
 { 
-  return checkTriggers(event,1);
+  return checkTriggers(1);
 }
 
 //-----------------------------------------                                              
-Bool_t StMyAnaTreeMaker::isBHT2(StPicoEvent *event)
+Bool_t StMyAnaTreeMaker::isBHT2()
 {
-  return checkTriggers(event,2);
+  return checkTriggers(2);
 }
 
 //---------------------------------------------------  
-Bool_t StMyAnaTreeMaker::isBHT3(StPicoEvent *event)
+Bool_t StMyAnaTreeMaker::isBHT3()
 {
-  return checkTriggers(event,3);
+  return checkTriggers(3);
 }
 
-Bool_t StMyAnaTreeMaker::isMB(StPicoEvent *event)
+Bool_t StMyAnaTreeMaker::isMinBias()
 { 
-  return checkTriggers(event,4);
+  return checkTriggers(4);
 }

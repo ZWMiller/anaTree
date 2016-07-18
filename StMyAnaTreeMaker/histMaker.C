@@ -1,6 +1,6 @@
 #include "histMaker.h"
 
-bool DEBUG = kTRUE;
+bool DEBUG = !kTRUE;
 
 void histMaker(const char* fileName="test")
 {
@@ -39,6 +39,92 @@ void drawQAHists()
   ptCompare->cd();
   gPad->SetLogz(1);
   hadPtEPt->Draw("colz");
+  
+  drawHadQA();
+  drawElecQA();
+  drawEEQA();
+}
+
+void drawEEQA()
+{
+
+  TString title[2] = {"Unlike Sign","Like Sign"};
+  for(int i=0; i<2; i++)
+  {
+    pretty1DHist(eeEta[i],kRed,20);
+    pretty1DHist(eePhi[i],kRed,20);
+    pretty1DHist(eeDca[i],kRed,20);
+    setTitleAndAxisLabels(eeDca[i],"Electron Pair DCA","DCA (cm)","Counts");
+    setTitleAndAxisLabels(eeEtaPhi[i],title[i],"#phi","#eta");
+    eeQA[i]->cd(1);
+    eeEtaPhi[i]->Draw("colz");
+    eeQA[i]->cd(2);
+    eePhi[i]->Draw("colz");
+    eeQA[i]->cd(3);
+    eeEta[i]->Draw("colz");
+    eeQA[i]->cd(4);
+    eeDca[i]->Draw("colz");
+  }
+
+  for(int i=0;i<3;i++)
+  {
+    eePhivMass[i]->GetXaxis()->SetRangeUser(0,1.0);
+    eePhivMass[i]->Rebin2D(8,8);
+  }
+  eeQAPhiv->cd(1);
+  eePhivMass[0]->Draw("colz");
+  eeQAPhiv->cd(2);
+  eePhivMass[1]->Draw("colz");
+  eeQAPhiv->cd(3);
+  eePhivMass[2]->Draw("colz");
+  TH2F* eePhivMassLS = (TH2F*)eePhivMass[1]->Clone();
+  eePhivMassLS->SetTitle("Like Sign Combined phiv vs m_{ee}");
+  eePhivMassLS->Add(eePhivMass[2]);
+  eeQAPhiv->cd(4);
+  eePhivMassLS->Draw("colz");
+
+  
+}
+
+void drawElecQA()
+{
+  pretty1DHist(elecEta,kRed,20);
+  pretty1DHist(elecPhi,kRed,20);
+  pretty1DHist(elecDca,kRed,20);
+  setTitleAndAxisLabels(elecEtaPhi,"Semi-Inclusive Electrons","#phi","#eta");
+  elecQA->cd(1);
+  gPad->SetLogz(0);
+  elecEtaPhi->Draw("colz");
+  elecQA->cd(2);
+  elecPhi->Draw("pe");
+  elecQA->cd(3);
+  elecEta->Draw("pe");
+  elecQA->cd(4);
+  elecDca->Draw("pe");
+}
+
+void drawHadQA()
+{
+  pretty1DHist(hadEta,kRed,20);
+  pretty1DHist(hadPhi,kRed,20);
+  pretty1DHist(hadDca,kRed,20);
+  hadQA->cd(1);
+  gPad->SetLogz(0);
+  hadEtaPhi->Draw("colz");
+  hadQA->cd(2);
+  hadPhi->Draw("pe");
+  hadQA->cd(3);
+  hadEta->Draw("pe");
+  hadQA->cd(4);
+  hadDca->Draw("pe");
+}
+
+void pretty1DHist(TH1* h, int col, int style)
+{
+  h->SetMarkerColor(col);
+  h->SetLineColor(col);
+  h->SetMarkerStyle(style);
+  h->SetMarkerSize(0.8);
 }
 
 void prepareLabels()
@@ -109,14 +195,55 @@ void doProjections()
 
     // No pT dependence projections
     eeInvMassAll[etype] = (TH1D*)eeInvMassPt[etype]->ProjectionY(Form("eeInvMassAll_%i",etype)); 
+    eeEta[etype] = (TH1D*)eeEtaPhi[etype]->ProjectionY(Form("eeEta_%i",etype));
+    eePhi[etype] = (TH1D*)eeEtaPhi[etype]->ProjectionX(Form("eePhi_%i",etype));
+    eeDca[etype] = (TH1D*)eeDcaPt[etype] ->ProjectionY(Form("eeDca_%i",etype));
     if(etype==2)
     {
       eeInvMassAll[1]->Add(eeInvMassAll[2]); // combine ++ and -- to form LS
       eeInvMassAll[2]->Add(eeInvMassAll[0],eeInvMassAll[1],1.,-1.);
+
+      eeEta[1]->Add(eeEta[2]);
+      eePhi[1]->Add(eePhi[2]);
+      eeDca[1]->Add(eeDca[2]);
+      eeEtaPhi[1]->Add(eeEtaPhi[2]);
+      eeEtaPhi[1]->Add(eeEtaPhi[2]);
+    }
+     
+  }
+  for(int ptbin = 0; ptbin < numPtBins; ptbin++){
+    eHadNorm[ptbin] = 0;
+    for(int etype=0; etype<3; etype++)
+    {
+      eHadNorm[ptbin] += trigCount[etype][ptbin];
     }
   }
 
+  hadEta = (TH1D*)hadEtaPhi->ProjectionX();
+  setTitleAndAxisLabels(hadEta,"Hadron Eta","#eta","Counts");
+  hadPhi = (TH1D*)hadEtaPhi->ProjectionY();
+  setTitleAndAxisLabels(hadPhi,"Hadron Phi","#phi (rad)","Counts");
 
+  elecEta = (TH1D*)elecEtaPhi->ProjectionY();
+  setTitleAndAxisLabels(elecEta,"Semi-Inclusive Electron Eta","#eta","Counts");
+  elecPhi = (TH1D*)elecEtaPhi->ProjectionX();
+  setTitleAndAxisLabels(elecPhi,"Semi-Inclusive Electron Phi","#phi (rad)","Counts");
+  elecDca = (TH1D*)elecDcaPt->ProjectionY();
+  setTitleAndAxisLabels(elecPhi,"Semi-Inclusive Electron Phi","DCA (cm)","Counts");
+}
+
+void setTitleAndAxisLabels(TH1* h, TString title, TString xLbl, TString yLbl)
+{
+  h->SetTitle(title);
+  h->GetXaxis()->SetTitle(xLbl);
+  h->GetYaxis()->SetTitle(yLbl);
+}
+
+void setTitleAndAxisLabels(TH2* h, TString title, TString xLbl, TString yLbl)
+{
+  h->SetTitle(title);
+  h->GetXaxis()->SetTitle(xLbl);
+  h->GetYaxis()->SetTitle(yLbl);
 }
 
 void prepareCanvas()
@@ -140,6 +267,16 @@ void prepareCanvas()
   ptCompare     = new TCanvas("ptCompare","pT Comparison",50,50,1050,1050);
   cutEfficiency = new TCanvas("cutEfficiency","Cut Efficiency",50,50,1050,1050);
   cutEfficiency -> Divide(2,2);
+  hadQA = new TCanvas("hadQA","Hadron Based QA",50,50,1050,1050);
+  hadQA -> Divide(2,2);
+  elecQA = new TCanvas("elecQA","Electron Based QA",50,50,1050,1050);
+  elecQA -> Divide(2,2);
+  for(int i=0;i<2;i++){
+    eeQA[i] = new TCanvas(Form("eeQA_%i",i),"Elec Pair Based QA",50,50,1050,1050);
+    eeQA[i] -> Divide(2,2);
+  }
+  eeQAPhiv = new TCanvas("eeQAPhiv","Elec Pair Based QA",50,50,1050,1050);
+  eeQAPhiv -> Divide(2,2);
 
   if(DEBUG) cout << "Canvas made." << endl;
 }
@@ -212,6 +349,25 @@ void getHistograms(TFile* f)
   eeInvMassPt[1] = (TH2F*)f->Get("hEEDenInvMassvsPtLikePosMB"); // Like ++ invmass 
   eeInvMassPt[2] = (TH2F*)f->Get("hEEDenInvMassvsPtLikeNegMB"); // Like -- invmass 
 
+  //Electron QA
+  elecEtaPhi = (TH2F*)f->Get("hEEtavsPhi");
+  elecDcaPt  = (TH2F*)f->Get("hEDcavsPt");
+
+  //Pair Hists QA
+  eePhivMass[0] = (TH2F*)f->Get("hUSphivM");
+  eePhivMass[1] = (TH2F*)f->Get("hLSPosphivM");
+  eePhivMass[2] = (TH2F*)f->Get("hLSNegphivM");
+  eeEtaPhi[0]   = (TH2F*)f->Get("hEEUSEtavsPhi");
+  eeEtaPhi[1]   = (TH2F*)f->Get("hEELSPosEtavsPhi");
+  eeEtaPhi[2]   = (TH2F*)f->Get("hEELSNegEtavsPhi");
+  eeDcaPt[0]   = (TH2F*)f->Get("hEEUSPairDcavsPt");
+  eeDcaPt[1]   = (TH2F*)f->Get("hEELSPosPairDcavsPt");
+  eeDcaPt[2]   = (TH2F*)f->Get("hEELSNegPairDcavsPt");
+
+  // Hadron Hists
+  hadEtaPhi = (TH2F*)f->Get("hHadEtaPhi");
+  hadDca =   (TH1F*)f->Get("hHadDca");
+
   if(DEBUG) cout << "Get Hist." << endl;
 }
 
@@ -277,6 +433,17 @@ void makePDF(const char* fileName)
   temp = cutEfficiency;
   temp->Print(name);
   temp = ptCompare;
+  temp->Print(name);
+  temp = hadQA;
+  temp->Print(name);
+  temp = elecQA;
+  temp->Print(name);
+  for(int i=0;i<2;i++)
+  {
+    temp = eeQA[i];
+    temp->Print(name);
+  }
+  temp = eeQAPhiv;
   temp->Print(name);
 
   sprintf(name, "%s.pdf]", fileName);

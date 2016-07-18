@@ -546,4 +546,8 @@ bool StEventHeader::isEMuon() const    // continue to be updated
 	return kFALSE;
 }
 
+bool StEventHeader::isTrigger(unsigned int id) const
+{
+  return std::find(mTriggerIds.begin(), mTriggerIds.end(), id) != mTriggerIds.end();
+}
 

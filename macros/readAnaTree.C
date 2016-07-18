@@ -6,7 +6,7 @@ class StPicoDstMaker;
 
 
 StChain *chain;
-void readAnaTree(Int_t nEvents = 2000000, const Char_t *inputFile="processedRuns.list", const Char_t *outputFile="anaTree.hists.root", int trigSelect = 2, bool mixedEvent=false)
+void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRuns.list", const Char_t *outputFile="anaTree.hists.root", int trigSelect = 2, bool mixedEvent=false)
 {
 
 	//  Int_t nEvents = 1000;	
@@ -26,6 +26,12 @@ void readAnaTree(Int_t nEvents = 2000000, const Char_t *inputFile="processedRuns
 	//-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
 	cout<<"Trigger chosen: "<<trigSelect<<endl;
 	anaMaker->setTrigSelect(trigSelect);
+   anaMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   anaMaker->addTrigger(480203,0);
+   anaMaker->addTrigger(480202,1);
+   anaMaker->addTrigger(480204,1);
+   anaMaker->addTrigger(480206,1);
+   anaMaker->addTrigger(480205,2);
 	if(trigSelect==0){
 		anaMaker->setVzCut(-6,6);
 		anaMaker->setVzDiffCut(-3,3);

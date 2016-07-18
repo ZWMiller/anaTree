@@ -106,6 +106,7 @@ class StEventHeader : public TObject {
 		bool     isDiMuonHFT() const;
 		bool     isSingleMuon() const;
 		bool     isEMuon() const;
+      bool     isTrigger(unsigned int) const;
 
 		// set functions for trigger thresholds
 		void     setHT_Th(const Int_t i, const Int_t th) { mHT_Th[i] = (UChar_t)th; }

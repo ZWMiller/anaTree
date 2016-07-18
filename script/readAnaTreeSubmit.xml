@@ -2,6 +2,7 @@
 <job maxFilesPerProcess="1" fileListSyntax="paths" simulateSubmission="false" filesPerHour="0.3" >
 
 <command>
+  starver SL16d
 <!-- Set tags file directory -->
 setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log 
 setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/out
@@ -11,7 +12,7 @@ echo EMLOGS   : $EMLOGS
 echo EMOUTPUT : $EMOUTPUT
 
 <!--root4star -l -b -q 'StRoot/macros/readAnaTree.C'-->
-root4star -l -b -q 'StRoot/macros/readAnaTree.C(2000000,"processedRuns.list","anaTree15.hists.root",2,false)'
+root4star -l -b -q 'StRoot/macros/readAnaTree.C(20000000,"processedRuns.list","anaTree15.hists.root",2,false)'
 ls -la .
 
 <!-- Move LOG files and csh to star disk, remove list files -->

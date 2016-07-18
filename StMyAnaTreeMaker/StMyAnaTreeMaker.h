@@ -72,12 +72,12 @@ class StMyAnaTreeMaker : public StMaker {
       void clearTriggers();
       bool passHadronCuts(StHadronTrack*);
       double delPhiCorrect(double);
-      Bool_t checkTriggers(StPicoEvent*, int);
-      Bool_t isMB(StPicoEvent*);
-      Bool_t isBHT0(StPicoEvent*);
-      Bool_t isBHT1(StPicoEvent*);
-      Bool_t isBHT2(StPicoEvent*);
-      Bool_t isBHT3(StPicoEvent*);
+      Bool_t checkTriggers(int);
+      Bool_t isMinBias();
+      Bool_t isBHT0();
+      Bool_t isBHT1();
+      Bool_t isBHT2();
+      Bool_t isBHT3();
       bool isHT0;
       bool isHT1;
       bool isHT2;
@@ -163,6 +163,13 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hMuDcavsPtwHft;
 		TH2F *hMuDcaXYvsPtwHft;
 		TH2F *hMuDcaZvsPtwHft;
+
+      TH2F *hEEUSEtavsPhi;
+      TH2F *hEELSPosEtavsPhi;
+      TH2F *hEELSNegEtavsPhi;
+      TH2F *hEEUSPairDcavsPt;
+      TH2F *hEELSPosPairDcavsPt;
+      TH2F *hEELSNegPairDcavsPt;
 
 		TH2F *hEENumInvMassvsPtMB;
 		TH2F *hEEDenInvMassvsPtLikePosMB;
