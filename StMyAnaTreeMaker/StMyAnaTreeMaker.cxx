@@ -1,3 +1,17 @@
+/////////////////////////////////////////////////
+/// Haichuan/Saoteng:
+/// Comments added in blocks like these to help
+/// Guide you in terms of writing analysis software
+/// 
+/// The main things you will want to do are add 
+/// histograms (both in .h and .cxx) and then use
+/// the fillXXXHistograms() functions to properly
+/// access the right types of tracks
+///
+/// Cheers, Zach
+/////////////////////////////////////////////////
+
+
 #include "StRoot/StPicoAnaTreeMaker/StAnaTree.h"
 #include "StRoot/StPicoAnaTreeMaker/StPicoAnaTreeMaker.h"
 #include "StRoot/StPicoAnaTreeMaker/StEventHeader.h"
@@ -43,6 +57,10 @@ ClassImp(StMyAnaTreeMaker)
   mHTAdc0th = 0;
   mEmcPtth = 2.5;
 
+/////////////////////////////////////////////////
+/// Basic Cuts are set here, feel free to use
+/// these and edit as needed
+/////////////////////////////////////////////////
   mVzCut[0] = -100; mVzCut[1] = 100;
   mVzDiffCut[0] = -3; mVzDiffCut[1] = 3;
   mnHitsFitCut[0] = 20; mnHitsFitCut[1] = 50;
@@ -131,6 +149,9 @@ StMyAnaTreeMaker::~StMyAnaTreeMaker()
 //----------------------------------------------------------------------------- 
 Int_t StMyAnaTreeMaker::Init() {
 
+/////////////////////////////////////////////////
+/// Do not edit without knowing what you're doing
+/////////////////////////////////////////////////
   if(mOutName!="") {
     fout = new TFile(mOutName.Data(),"RECREATE");
   }else{
@@ -186,6 +207,9 @@ Int_t StMyAnaTreeMaker::Init() {
 
 //----------------------------------------------------------------------------- 
 Int_t StMyAnaTreeMaker::Finish() {
+/////////////////////////////////////////////////
+/// Do not edit without knowing what you're doing
+/////////////////////////////////////////////////
   fout->cd();
   fout->Write();
   fout->Close();
@@ -196,6 +220,9 @@ Int_t StMyAnaTreeMaker::Finish() {
 //-----------------------------------------------------------------------------
 void StMyAnaTreeMaker::declareHistograms() {
 
+/////////////////////////////////////////////////
+/// Here is where you will add histograms you want
+/////////////////////////////////////////////////
   fout->cd();
   hnEvents = new TH1F("hnEvents","hnEvents",10,0,10);
   hnTracks = new TH1F("hnTracks","hnTracks",10,0,10);
@@ -427,6 +454,9 @@ void StMyAnaTreeMaker::Clear(Option_t *opt) {
 //----------------------------------------------------------------------------- 
 Int_t StMyAnaTreeMaker::Make() {
 
+/////////////////////////////////////////////////
+/// Do not edit without knowing what you're doing
+/////////////////////////////////////////////////
   if(!mPicoAnaTreeMaker) {
     LOG_WARN << " No PicoAnaTreeMaker! Skip! " << endm;
     return kStOK;
@@ -489,6 +519,19 @@ Int_t StMyAnaTreeMaker::Make() {
   int vzBufferPointer=int((Vz-mVzCut[0])/(mVzCut[1]-mVzCut[0])*nVzBin);
 
 
+/////////////////////////////////////////////////
+/// All of the "fillXXXHists" functions are where
+/// You will want to do your analysis. These functions
+/// already receive the proper tracks, you just need
+/// to decide what to do with them. Each function
+/// takes a certain class of input (example:
+/// StElectronTrack). You can learn more about these
+/// classes in StRoot/StPicoAnaTreeMaker/. Each class
+/// has a .cxx and .h file. The .h file will list
+/// all of the functions you can access. You must use
+/// these functions when available to decode the data
+/// you are accessing.
+/////////////////////////////////////////////////
 
   int current_nePlus = 0, current_neMinus = 0;
   int current_nmuPlus = 0, current_nmuMinus = 0;
@@ -557,6 +600,13 @@ Int_t StMyAnaTreeMaker::Make() {
   }
   return kStOK;
 }//end of main fucntion
+
+
+/////////////////////////////////////////////////
+/// The following are a series of pre-made cut
+/// check functions. You can change these by 
+/// editing the cuts in the Init() function
+/////////////////////////////////////////////////
 
 bool StMyAnaTreeMaker::passHTEIDCuts(StElectronTrack *eTrk) {
   double pt = eTrk->gMom().perp();
@@ -802,6 +852,11 @@ Double_t StMyAnaTreeMaker::mtddTCor(double dT, int channel){
 
 }
 
+/////////////////////////////////////////////////
+/// Do not change "Mixed" functions without 
+/// a) knowing why
+/// b) double checking about how to do Mixing
+/////////////////////////////////////////////////
 void StMyAnaTreeMaker::makeEEMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer){
 
   int htFlag = 0;
