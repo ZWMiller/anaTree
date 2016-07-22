@@ -20,7 +20,11 @@
     TCanvas* cutEfficiency;
     TCanvas* hadQA;
     TCanvas* eeQA[2];
+    TCanvas* eeOriginQA;
     TCanvas* elecQA;
+    TCanvas* pElecCuts[6];
+    TCanvas* eIDCutEffic[4];
+    TCanvas* efficOverlay;
 
     TPaveText* lbl[numPtBins];
 
@@ -39,7 +43,8 @@
     TH1D* eeEta[3];
     TH1D* eePhi[3];
     TH1D* eeDca[3];
-    
+
+    TH2F *hPEOrigins[6];
 
     TH2F* hadEtaPhi;
     TH1D* hadEta;
@@ -52,6 +57,19 @@
     TH1D* elecEta;
     TH1D* elecPhi;
 
+    TH2F* nSigEPartE[3];
+    TH2F* pvePartE[3];
+    TH2F* nEtaPartE[3];
+    TH2F* nPhiPartE[3];
+    TH2F* phiDistPartE[3];
+    TH2F* zDistPartE[3];
+    TH1F* TPCTracks[3];
+    TH1F* EMCMatchedTracks[3];
+    TH1F* EMCIdTracks[3];
+    TH1F* SMDMatchedTracks[3];
+    TH1F* SMDIdTracks[3];
+    TH1F* partECutEfficiency[4];
+
     float trigCount[3][numPtBins];
     float eHadNorm;
 
@@ -60,12 +78,16 @@
     void prepareLabels();
     void getHistograms(TFile*);
     void pretty1DHist(TH1*, int, int);
+    void makeUnlikeMinusLikePartnerElectron();
 
     void drawQAHists();
     void drawHadQA();
     void drawElecQA();
     void drawEEQA();
     void drawInvMassHists();
+    void drawPartECutEffic();
+    void overlayEfficiencies();
+    void drawPartEQA();
     void drawDeltaPhi(TH1D*, TCanvas*, float, int, TPaveText*);
     void drawCutEfficiencyHists();
     void computeEfficiencyAndDraw(int, TH1F*, TH1F*);

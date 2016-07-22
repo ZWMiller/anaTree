@@ -20,6 +20,7 @@ class StPicoQAMaker : public StMaker {
       Int_t Make();
       void  Clear(Option_t *opt="");
       Int_t Finish();
+      void  setRunList(TString name) {mRunFileName = name;};
    private:
       Bool_t Isgoodtrack(StPicoTrack* ); 
       Bool_t Ismuontrack(StPicoTrack* );
@@ -34,6 +35,7 @@ class StPicoQAMaker : public StMaker {
       StPicoDst      *mPicoDst;
       TString    mOutName;
       Int_t   mNBadRuns;       
+      TString mRunFileName;
 
       map<Int_t,Int_t> mTotalRunId;
       TFile*	   fout;
@@ -159,7 +161,7 @@ class StPicoQAMaker : public StMaker {
       TH2F*      mBEMCnphi_P;
       TH2F*      mBEMCneta_nphi;
       
-/*
+
       //======run by run QA=====
 
       TH2F *hTPCVzvsRunIndex;
@@ -229,7 +231,7 @@ class StPicoQAMaker : public StMaker {
       TH2F *hNtofElectronOVnRvsRunIndex;
       TH2F *hNbemcElectronOVnRvsRunIndex;
       TH2F *hNmuonOVnRvsRunIndex;
-*/
+
       //-----------BEMC end-------------------
 
       //----------after pid------------

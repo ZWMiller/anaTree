@@ -15,8 +15,10 @@
 class StAnaTree;
 class StEventHeader;
 class StElectronTrack;
+class StPartElectronTrack;
 class StMuonTrack;
 class StEEPair;
+class StPhoEEPair;
 class StEMuPair;
 class StMuMuPair;
 class StEmcTrigger;
@@ -41,22 +43,22 @@ class StMyAnaTreeMaker : public StMaker {
 		virtual void  Clear(Option_t *opt="");
 		virtual Int_t Finish();
 
-      void addTrigger(int tr, int id) { triggers[id].push_back(tr); };
-		void    declareHistograms();
+      void  addTrigger(int tr, int id) { triggers[id].push_back(tr); };
+		void  declareHistograms();
 		bool	passHTEIDCuts(StElectronTrack *);
 		bool	passEIDCuts(StElectronTrack *);
 		bool	passETrackQualityCuts(StElectronTrack *);
 		bool	isHTTrigE(StElectronTrack *);
 		bool	passMuIDCuts(StMuonTrack *);
-		bool	passEEPairCuts(double );
+		bool	passEEPairCuts(double, double);
 		bool	passEMuPairCuts(double );
 		bool	passMuMuPairCuts(double );
       bool  isElectronInValidPair(StElectronTrack*);
-		int		getCentrality();
+		int	getCentrality();
 		void	printCuts();
 		void	setTrigSelect(int val){ mTrigSelect = val; }
-		void  	setVzCut(double min, double max){ mVzCut[0] = min; mVzCut[1] = max; }
-		void  	setVzDiffCut(double min, double max){ mVzDiffCut[0] = min; mVzDiffCut[1] = max; }
+		void  setVzCut(double min, double max){ mVzCut[0] = min; mVzCut[1] = max; }
+		void  setVzDiffCut(double min, double max){ mVzDiffCut[0] = min; mVzDiffCut[1] = max; }
 		Double_t	mtddTCor(double dT, int channel);
 		
 		void  	setMassBinning(int nBins, double min, double max){ nMassBins = nBins; massMin = min, massMax = max; }
@@ -90,8 +92,14 @@ class StMyAnaTreeMaker : public StMaker {
       void fillHadronHists(StHadronTrack*);
       void fillMuonHists(StMuonTrack*);
       void fillEEHists(StEEPair*);
+      void fillPhoEEHists(StPhoEEPair*);
       void fillEMuHists(StEMuPair*);
       void fillMuMuHists(StMuMuPair*);
+
+      bool passPartEQuality(double, int, int, double);
+      bool partEIDCuts(StPartElectronTrack*);
+      bool tagEEMCCuts(StElectronTrack*);
+      bool tagEIDCuts(StElectronTrack*);
 
 		StPicoAnaTreeMaker *mPicoAnaTreeMaker;
 		StAnaTree          *mAnaTree;
@@ -264,12 +272,24 @@ class StMyAnaTreeMaker : public StMaker {
 
       TH2F *hHadEtaPhi;
       TH2F *hHadEDelPhiPt;
-      TH2F *hHadEDelPhiPt_high;
       TH2F *hHadMuDelPhiPt;
       TH2F *hHadDcaPt;
       TH2F *hHadEEDelPhiPt_LS;
       TH2F *hHadEEDelPhiPt_US;
       TH2F *hHadPtEPt;
+
+      //Partner Electron Hists for Pure Electron Sample
+      TH2F *hNSigEPartElec[2];
+      TH2F *hPvePartElec[2];
+      TH2F *hnEtaPartElec[2];
+      TH2F *hnPhiPartElec[2];
+      TH2F *hzDistPartElec[2];
+      TH2F *hphiDistPartElec[2];
+      TH1F *hTPCTracks[2];
+      TH1F *hEMCMatchedTracks[2];
+      TH1F *hEMCIdTracks[2];
+      TH1F *hSMDMatchedTracks[2];
+      TH1F *hSMDIdTracks[2];
 
 		//TH2F *hDenInvMassvsPtMixLikePosMB;
 		//TH2F *hDenInvMassvsPtMixLikeNegMB;
@@ -305,14 +325,20 @@ class StMyAnaTreeMaker : public StMaker {
         Float_t     mELocalZCut[2];
         Float_t     mEnSigECut[2];
         Float_t     mHTEnSigECut[2];
+
+        Float_t     mPEEtaCut[2];
+        Float_t     mPEDcaCut[2];
         
         Float_t     mEmcEPtCut[2];
         Float_t     mEmcEEtaCut[2];
         Float_t     mEmcEPveCut[2];
         Float_t     mEmcEDcaCut[2];
+        Float_t     mEmcEnHitsFitCut[2];
+        Float_t     mEmcEnHitsDedxCut[2];
+        Float_t     mEmcEnSigECut[2];
         
-        Int_t      mEnEtaCut[2];
-        Int_t      mEnPhiCut[2];
+        Int_t       mEnEtaCut[2];
+        Int_t       mEnPhiCut[2];
         Float_t     mEZDistCut[2];
         Float_t     mEPhiDistCut[2];
 

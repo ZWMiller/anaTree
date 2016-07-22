@@ -40,6 +40,7 @@ ClassImp(StPicoQAMaker)
   mOutName = outName;
 
   mNBadRuns = sizeof(mBadRuns)/sizeof(int);
+  mRunFileName = "StRoot/StPicoQAMaker/mTotalRunList.dat";
 
 }
 
@@ -59,7 +60,7 @@ Int_t StPicoQAMaker::Init() {
   if(fillhistflag){
     //read in the runlist.dat
     ifstream indata;
-    indata.open("StRoot/StPicoQAMaker/mTotalRunList.dat");
+    indata.open(mRunFileName);
     mTotalRunId.clear();
     if(indata.is_open()){
       cout<<"read in total run number list and recode run number ...";
@@ -227,7 +228,7 @@ void StPicoQAMaker::DeclareHistograms() {
 
 
 
-  /*
+  
 
   //run by run QA
   hTPCVxvsRunIndex = new TH2F("hTPCVxvsRunIndex","hTPCVxvsRunIndex;runIndex;TPC Vx (cm)",mTotalRun,0,mTotalRun,100,-10,10);
@@ -311,7 +312,7 @@ void StPicoQAMaker::DeclareHistograms() {
   hDcaXYwHFTvsRunIndex = new TH2F("hDcaXYwHFTvsRunIndex","hDcaXYwHFTvsRunIndex;runIndex;dcaXY (cm)",mTotalRun,0,mTotalRun,300,-10,10);
   hDcaZvsRunIndex = new TH2F("hDcaZvsRunIndex","hDcaZvsRunIndex;runIndex;dcaZ (cm)",mTotalRun,0,mTotalRun,300,-10,10);
   hDcaZwHFTvsRunIndex = new TH2F("hDcaZwHFTvsRunIndex","hDcaZwHFTvsRunIndex;runIndex;dcaZ (cm)",mTotalRun,0,mTotalRun,300,-10,10);
-  */
+  
 
     /*
     //after pid QA pi,k,p,e,mu
@@ -478,7 +479,7 @@ Int_t StPicoQAMaker::Make() {
       //hHTth1vsRunIndex->Fill(runIndex, mPicoDst->event()->ht_th(1));
       //hHTth2vsRunIndex->Fill(runIndex, mPicoDst->event()->ht_th(2));
       //hHTth3vsRunIndex->Fill(runIndex, mPicoDst->event()->ht_th(3));
-      /*
+      
          hTPCVzvsRunIndex->Fill(runIndex, vztpc);
          hTPCVxvsRunIndex->Fill(runIndex, vxtpc);
          hTPCVyvsRunIndex->Fill(runIndex, vytpc);
@@ -491,7 +492,7 @@ Int_t StPicoQAMaker::Make() {
 
          hnGlobalvsRunIndex->Fill(runIndex, NGtrks);
          hnbemcmatchvsRunIndex->Fill(runIndex,Nbemcmatch);
-         */
+         
     }//
 
 
@@ -618,7 +619,7 @@ Int_t StPicoQAMaker::Make() {
 
       //------tpc information end-----
 
-      /*
+      
 
       //run by run QA
       if( Ispasseventcuts(event) ){
@@ -643,7 +644,7 @@ Int_t StPicoQAMaker::Make() {
       hNSigmaKvsRunIndex->Fill(runIndex,track->nSigmaKaon());
       hNSigmaPvsRunIndex->Fill(runIndex,track->nSigmaProton());
       }
-      */
+      
       }//
       
 
@@ -885,7 +886,7 @@ Int_t StPicoQAMaker::Make() {
     //------------------------------------------------------//
     //---------- make run by run QA of ---------------------//
     //------------------------------------------------------//
-    /*
+    
        if( Ispasseventcuts(event) ){
        hnPrimaryvsRunIndex->Fill(runIndex,Nptrks);
 
@@ -932,7 +933,8 @@ Int_t StPicoQAMaker::Make() {
        hNmuonOVnRvsRunIndex->Fill(runIndex, muonratio2);
        hNtofElectronOVnRvsRunIndex->Fill(runIndex,toferatio2);
        hNbemcElectronOVnRvsRunIndex->Fill(runIndex,bemceratio2);
-       }*/
+       cout << "runIndex: " << runIndex << endl;
+       }
   }//
   //  mPicoDst->Print();
   //  mPicoDst->printTracks();

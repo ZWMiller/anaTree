@@ -160,17 +160,26 @@ void makeAnaTree(const Int_t runnumber=16086001,
 	outQAFile=mInputFileName;
 	outQAFile.ReplaceAll("MuDst.root","qa.root");
    StPicoQAMaker *qaMaker = new StPicoQAMaker("ana",picoMaker,outQAFile);
+   qaMaker->setRunList("./runNumberList_run15pp_transverse");
    
    TString outPurityFile=mInputFileName;
    outPurityFile.ReplaceAll("MuDst.root","purity.root");
    StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
    ePurMaker->setRunMode(0); // 0 - pp (no centrality), 1- AuAu (centrality on)
    ePurMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   ePurMaker->addTrigger(470211,0);
+   ePurMaker->addTrigger(490201,0);
    ePurMaker->addTrigger(480203,0);
    ePurMaker->addTrigger(480202,1);
+   ePurMaker->addTrigger(470202,1);
+   ePurMaker->addTrigger(490202,1);
    ePurMaker->addTrigger(480204,1);
+   ePurMaker->addTrigger(470204,1);
+   ePurMaker->addTrigger(490204,1);
    ePurMaker->addTrigger(480206,1);
    ePurMaker->addTrigger(480205,2);
+   ePurMaker->addTrigger(470205,2);
+   ePurMaker->addTrigger(490205,2);
 	
    outputFile=mInputFileName;
 	outputFile.ReplaceAll("MuDst.root","anaTree.root");
@@ -193,12 +202,20 @@ void makeAnaTree(const Int_t runnumber=16086001,
       //treeMaker->setDoEvtPlane(false); //default is true
       if(prodType==0){ // prod low and mid
         treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
-         treeMaker->addTrigger(480201);
-         treeMaker->addTrigger(480202);
-         treeMaker->addTrigger(480203);
-         treeMaker->addTrigger(480204);
-         treeMaker->addTrigger(480205);
-         treeMaker->addTrigger(480206);
+        treeMaker->addTrigger(480201); 
+        treeMaker->addTrigger(470211);
+        treeMaker->addTrigger(490201);
+        treeMaker->addTrigger(480203);
+        treeMaker->addTrigger(480202);
+        treeMaker->addTrigger(470202);
+        treeMaker->addTrigger(490202);
+        treeMaker->addTrigger(480204);
+        treeMaker->addTrigger(470204);
+        treeMaker->addTrigger(490204);
+        treeMaker->addTrigger(480206);
+        treeMaker->addTrigger(480205);
+        treeMaker->addTrigger(470205);
+        treeMaker->addTrigger(490205);
          //    treeMaker->setInputRecenterFile("./recenter_correction.root");
          treeMaker->setMaxRunId(1700);
       }

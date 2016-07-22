@@ -43,11 +43,11 @@ ls -l --color=none
 
     <stderr URL="file:&path;/log/log_&ver;/&run;/$JOBID.err" />
     <stdout URL="file:&path;/log/log_&ver;/&run;/$JOBID.out" />
-    <input URL="catalog:star.bnl.gov?production=P16id,runnumber=&run;,trgsetupname=production_pp200trans_2015,filename~st_physics,filetype=daq_reco_Mudst,storage=nfs" nFiles="all"/>
+    <input URL="catalog:star.bnl.gov?production=P16id,runnumber=&run;,trgsetupname=production_pp200trans_2015,filename~st_physics,filetype=daq_reco_Mudst,storage!=hpss" nFiles="all"/>
     <output fromScratch="*.log" toURL="&path;/log/log_&ver;/&run;/"/>
     <output fromScratch="*anaTree.root" toURL="&path;/out/out_&ver;/&run;/" />
     <output fromScratch="*qa.root" toURL="&path;/out/out_&ver;/&run;/" />
-    <!--<output fromScratch="*purity.root" toURL="&path;/out/out_&ver;/&run;/" />-->
+    <output fromScratch="*purity.root" toURL="&path;/out/out_&ver;/&run;/" />
     <!--<output fromScratch="*qa.root" toURL="&path;/out/out_&ver;/&run;/" />-->
     <!--<output fromScratch="*hist.root" toURL="&path;/out/out_&ver;/&run;/" />-->
 </job>

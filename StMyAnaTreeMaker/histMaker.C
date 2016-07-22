@@ -43,18 +43,106 @@ void drawQAHists()
   drawHadQA();
   drawElecQA();
   drawEEQA();
+  drawPartEQA();
+  drawPartECutEffic();
+}
+
+void drawPartECutEffic()
+{
+  TH1F* histList[3];
+  char titlename[4][100] = {"EMC Matched","EMC eID","SMD Matched","SMD eID"};
+  for(int i=0; i < 5; i++)
+  {
+    if(i==0) for(int l=0;l<3;l++) histList[l] = TPCTracks[l];
+    if(i==1) for(int l=0;l<3;l++) histList[l] = EMCMatchedTracks[l];
+    if(i==2) for(int l=0;l<3;l++) histList[l] = EMCIdTracks[l];
+    if(i==3) for(int l=0;l<3;l++) histList[l] = SMDMatchedTracks[l];
+    if(i==4) for(int l=0;l<3;l++) histList[l] = SMDIdTracks[l];
+    pretty1DHistFill(histList[0],kRed,1001);
+    pretty1DHistFill(histList[2],kAzure+1,1001);
+    pretty1DHistFill(histList[1],kGreen+1,1001);
+    if(i>=1){
+      TLegend* leg = new TLegend(0.4,0.68,0.77,0.89);
+      leg->AddEntry(histList[0],"Unlike Sign","f");
+      leg->AddEntry(histList[1],"Like Sign","f");
+      leg->AddEntry(histList[2],"Unlike-Like","f");
+      eIDCutEffic[i-1]->cd(1);
+      gPad->SetLogy(1);
+      histList[0]->Draw("hist");
+      histList[2]->Draw("hist same");
+      histList[1]->Draw("hist same");
+      leg->Draw("same");
+      eIDCutEffic[i-1]->cd(2);
+      gPad->SetLogy(1);
+      TPCTracks[0]->Draw("hist");
+      TPCTracks[2]->Draw("hist same");
+      TPCTracks[1]->Draw("hist same");
+      eIDCutEffic[i-1]->cd(3);
+      TH1F* numerator = (TH1F*)histList[2]->Clone();
+      TH1F* denominator = (TH1F*)TPCTracks[2]->Clone();
+      numerator->Rebin(4);
+      denominator->Rebin(4);
+      numerator->SetTitle("Cut Efficiency;P_{T} (GeV/c);Efficiency");
+      pretty1DHist(numerator,kRed,20);
+      numerator->GetYaxis()->SetRangeUser(0.,1.3);
+      numerator->Divide(denominator);
+      numerator->Draw();
+      partECutEfficiency[i-1] = (TH1F*)numerator->Clone();
+      partECutEfficiency[i-1]->SetTitle(titlename[i-1]);
+    }
+  }
+  overlayEfficiencies();
+}
+
+void overlayEfficiencies()
+{
+  efficOverlay->cd();
+  TH1F* axes = (TH1F*)partECutEfficiency[0]->Clone();
+  axes->SetTitle("eID Cut Efficiency;p_{T} (GeV/c);Efficiency");
+  axes->GetYaxis()->SetRangeUser(0.,1.4);
+  axes->SetStats(kFALSE);
+  axes->Draw();
+  TLegend* leg = new TLegend(0.5,0.75,0.88,0.89);
+  for(int i=0; i<4; i++)
+  {
+    pretty1DHist(partECutEfficiency[i],colors[i],20+i);
+    partECutEfficiency[i]->Draw("same pe");
+    leg->AddEntry(partECutEfficiency[i],partECutEfficiency[i]->GetTitle(),"lpe");
+  }
+  leg->Draw("same");
+}
+
+void drawPartEQA()
+{
+  TH2F* histList[3];
+  for(int i=0; i < 6; i++)
+  {
+    if(i==0) for(int l=0;l<3;l++) histList[l] = nSigEPartE[l];
+    if(i==1) for(int l=0;l<3;l++) histList[l] = pvePartE[l];
+    if(i==2) for(int l=0;l<3;l++) histList[l] = nEtaPartE[l];
+    if(i==3) for(int l=0;l<3;l++) histList[l] = nPhiPartE[l];
+    if(i==4) for(int l=0;l<3;l++) histList[l] = phiDistPartE[l];
+    if(i==5) for(int l=0;l<3;l++) histList[l] = zDistPartE[l];
+    pElecCuts[i]->cd(1);
+    histList[0]->Draw("colz");
+    pElecCuts[i]->cd(2);
+    histList[1]->Draw("colz");
+    pElecCuts[i]->cd(3);
+    histList[2]->Draw("colz");
+  }
 }
 
 void drawEEQA()
 {
-
   TString title[2] = {"Unlike Sign","Like Sign"};
   for(int i=0; i<2; i++)
   {
     pretty1DHist(eeEta[i],kRed,20);
     pretty1DHist(eePhi[i],kRed,20);
     pretty1DHist(eeDca[i],kRed,20);
-    setTitleAndAxisLabels(eeDca[i],"Electron Pair DCA","DCA (cm)","Counts");
+    setTitleAndAxisLabels(eeEta[i],"","#eta","Counts");
+    setTitleAndAxisLabels(eePhi[i],"","#phi (rad)","Counts");
+    setTitleAndAxisLabels(eeDca[i],"","DCA (cm)","Counts");
     setTitleAndAxisLabels(eeEtaPhi[i],title[i],"#phi","#eta");
     eeQA[i]->cd(1);
     eeEtaPhi[i]->Draw("colz");
@@ -64,6 +152,12 @@ void drawEEQA()
     eeEta[i]->Draw("colz");
     eeQA[i]->cd(4);
     eeDca[i]->Draw("colz");
+  }
+
+  for(int i=0;i<6;i++)
+  {
+    eeOriginQA->cd(i+1);
+    hPEOrigins[i]->Draw("colz");
   }
 
   for(int i=0;i<3;i++)
@@ -91,6 +185,9 @@ void drawElecQA()
   pretty1DHist(elecEta,kRed,20);
   pretty1DHist(elecPhi,kRed,20);
   pretty1DHist(elecDca,kRed,20);
+  setTitleAndAxisLabels(elecEta,"","#eta","Counts");
+  setTitleAndAxisLabels(elecPhi,"","#phi (rad)","Counts");
+  setTitleAndAxisLabels(elecDca,"","DCA (cm)","Counts");
   setTitleAndAxisLabels(elecEtaPhi,"Semi-Inclusive Electrons","#phi","#eta");
   elecQA->cd(1);
   gPad->SetLogz(0);
@@ -125,6 +222,14 @@ void pretty1DHist(TH1* h, int col, int style)
   h->SetLineColor(col);
   h->SetMarkerStyle(style);
   h->SetMarkerSize(0.8);
+}
+
+void pretty1DHistFill(TH1* h, int col, int style)
+{
+  h->SetLineColor(kBlack);
+  h->SetMarkerStyle();
+  h->SetFillStyle(style);
+  h->SetFillColor(col);
 }
 
 void prepareLabels()
@@ -277,7 +382,20 @@ void prepareCanvas()
   }
   eeQAPhiv = new TCanvas("eeQAPhiv","Elec Pair Based QA",50,50,1050,1050);
   eeQAPhiv -> Divide(2,2);
+  eeOriginQA = new TCanvas("eeOriginQA","Elec Pair Based QA",50,50,1050,1050);
+  eeOriginQA -> Divide(3,3);
 
+  for(int i=0; i<6; i++)
+  {
+    pElecCuts[i] = new TCanvas(Form("pElecCuts_%i",i),"Partner Electron Based QA",50,50,1050,1050);
+    pElecCuts[i] -> Divide(2,2);
+  }
+  for(int i=0; i<4; i++)
+  {
+    eIDCutEffic[i] = new TCanvas(Form("eIDCutEffic_%i",i),"Partner eID Based QA",50,50,1050,1050);
+    eIDCutEffic[i] -> Divide(2,2);
+  }
+  efficOverlay = new TCanvas("efficOverlay","Partner eID Based QA",50,50,1050,1050);
   if(DEBUG) cout << "Canvas made." << endl;
 }
 
@@ -364,11 +482,77 @@ void getHistograms(TFile* f)
   eeDcaPt[1]   = (TH2F*)f->Get("hEELSPosPairDcavsPt");
   eeDcaPt[2]   = (TH2F*)f->Get("hEELSNegPairDcavsPt");
 
+  hPEOrigins[0] =  (TH2F*)f->Get("hPEUSOyOx");
+  hPEOrigins[1] =  (TH2F*)f->Get("hPEUSOxOz");
+  hPEOrigins[2] =  (TH2F*)f->Get("hPEUSOrOz");
+  hPEOrigins[3] =  (TH2F*)f->Get("hPELSOyOx");
+  hPEOrigins[4] =  (TH2F*)f->Get("hPELSOxOz");
+  hPEOrigins[5] =  (TH2F*)f->Get("hPELSOrOz");
+
   // Hadron Hists
   hadEtaPhi = (TH2F*)f->Get("hHadEtaPhi");
   hadDca =   (TH1F*)f->Get("hHadDca");
+  
+  //Partner Elec Hists
+  for(int i=0; i<2; i++) //0-Unlike, 1-Like
+  {
+    nSigEPartE[i] =  (TH2F*)f->Get(Form("hNSigEPartElec_%i",i));
+    pvePartE[i] =  (TH2F*)f->Get(Form("hPvePartElec_%i",i));
+    nEtaPartE[i] =  (TH2F*)f->Get(Form("hnEtaPartElec_%i",i));
+    nPhiPartE[i] =  (TH2F*)f->Get(Form("hnPhiPartElec_%i",i));
+    phiDistPartE[i] =  (TH2F*)f->Get(Form("hphiDistPartElec_%i",i));
+    zDistPartE[i] =  (TH2F*)f->Get(Form("hzDistPartElec_%i",i));
+
+    TPCTracks[i] =  (TH1F*)f->Get(Form("hTPCTracks_%i",i));
+    EMCMatchedTracks[i] =  (TH1F*)f->Get(Form("hEMCMatchedTracks_%i",i));
+    EMCIdTracks[i] =  (TH1F*)f->Get(Form("hEMCIdTracks_%i",i));
+    SMDMatchedTracks[i] =  (TH1F*)f->Get(Form("hSMDMatchedTracks_%i",i));
+    SMDIdTracks[i] =  (TH1F*)f->Get(Form("hSMDIdTracks_%i",i));
+
+    if(i == 1)
+    {
+      makeUnlikeMinusLikePartnerElectrons();
+    }
+  }
 
   if(DEBUG) cout << "Get Hist." << endl;
+}
+
+void makeUnlikeMinusLikePartnerElectrons()
+{
+  nSigEPartE[2] = (TH2F*)nSigEPartE[0]->Clone();
+  nSigEPartE[2]->Add(nSigEPartE[1],-1.);
+  nSigEPartE[2]->SetTitle("Unlike - Like");
+  pvePartE[2] = (TH2F*)pvePartE[0]->Clone();
+  pvePartE[2]->Add(pvePartE[1],-1.);
+  pvePartE[2]->SetTitle("Unlike - Like");
+  nEtaPartE[2] = (TH2F*)nEtaPartE[0]->Clone();
+  nEtaPartE[2]->Add(nEtaPartE[1],-1.);
+  nEtaPartE[2]->SetTitle("Unlike - Like");
+  nPhiPartE[2] = (TH2F*)nPhiPartE[0]->Clone();
+  nPhiPartE[2]->Add(nPhiPartE[1],-1.);
+  nPhiPartE[2]->SetTitle("Unlike - Like");
+  phiDistPartE[2] = (TH2F*)phiDistPartE[0]->Clone();
+  phiDistPartE[2]->Add(phiDistPartE[1],-1.);
+  phiDistPartE[2]->SetTitle("Unlike - Like");
+  zDistPartE[2] = (TH2F*)zDistPartE[0]->Clone();
+  zDistPartE[2]->Add(zDistPartE[1],-1.);
+  zDistPartE[2]->SetTitle("Unlike - Like");
+  TPCTracks[2] = (TH1F*)TPCTracks[0]->Clone();
+  TPCTracks[2]->Add(TPCTracks[1],-1.);
+  TPCTracks[2]->SetTitle("Unlike - Like");
+  EMCMatchedTracks[2] = (TH1F*)EMCMatchedTracks[0]->Clone();
+  EMCMatchedTracks[2]->Add(EMCMatchedTracks[1],-1.);
+  EMCMatchedTracks[2]->SetTitle("Unlike - Like");
+  EMCIdTracks[2] = (TH1F*)EMCIdTracks[0]->Clone();
+  EMCIdTracks[2]->Add(EMCIdTracks[1],-1.);
+  EMCIdTracks[2]->SetTitle("Unlike - Like");
+  SMDMatchedTracks[2] = (TH1F*)SMDMatchedTracks[0]->Clone();
+  SMDMatchedTracks[2]->Add(SMDMatchedTracks[1],-1.);
+  SMDMatchedTracks[2]->SetTitle("Unlike - Like");
+  SMDIdTracks[2] = (TH1F*)SMDIdTracks[0]->Clone();
+  SMDIdTracks[2]->Add(SMDIdTracks[1],-1.);
+  SMDIdTracks[2]->SetTitle("Unlike - Like");
 }
 
 void makePDF(const char* fileName)
@@ -443,7 +627,19 @@ void makePDF(const char* fileName)
     temp = eeQA[i];
     temp->Print(name);
   }
-  temp = eeQAPhiv;
+  for(int i=0;i<4;i++)
+  {
+    temp = eIDCutEffic[i];
+    temp->Print(name);
+  }
+    temp = efficOverlay;
+    temp->Print(name);
+  for(int i=0;i<6;i++)
+  {
+    temp = pElecCuts[i];
+    temp->Print(name);
+  }
+  temp = eeOriginQA;
   temp->Print(name);
 
   sprintf(name, "%s.pdf]", fileName);

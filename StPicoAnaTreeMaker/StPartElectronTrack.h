@@ -119,5 +119,13 @@ inline StThreeVectorF StPartElectronTrack::gMom() const
   return mGMom;
 }
 
+
+inline Float_t StPartElectronTrack::pve() const
+{
+    float p = pMom().mag();
+    float e = e0();
+    if(e!=0) return p/e;
+    else return -999.;
+}        
        
 #endif

@@ -849,7 +849,6 @@ void StPicoAnaTreeMaker::fillTracks() {
 
     // save hadrons
     if(mSaveHadron){
-      LOG_INFO << "in save had" << endm;
       if(isHadron(t)){ 
         int counter = mAnaTreeArrays[anaTreeHTrack]->GetEntries();
         new((*(mAnaTreeArrays[anaTreeHTrack]))[counter]) StHadronTrack(mPicoDst,t,i);

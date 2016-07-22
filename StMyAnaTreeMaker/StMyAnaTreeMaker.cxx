@@ -2,12 +2,15 @@
 #include "StRoot/StPicoAnaTreeMaker/StPicoAnaTreeMaker.h"
 #include "StRoot/StPicoAnaTreeMaker/StEventHeader.h"
 #include "StRoot/StPicoAnaTreeMaker/StElectronTrack.h"
+#include "StRoot/StPicoAnaTreeMaker/StPartElectronTrack.h"
+#include "StRoot/StPicoAnaTreeMaker/StPhoEEPair.h"
 #include "StRoot/StPicoAnaTreeMaker/StMuonTrack.h"
 #include "StRoot/StPicoAnaTreeMaker/StEEPair.h"
 #include "StRoot/StPicoAnaTreeMaker/StEMuPair.h"
 #include "StRoot/StPicoAnaTreeMaker/StMuMuPair.h"
 #include "StRoot/StPicoAnaTreeMaker/StEmcTrigger.h"
 #include "StRoot/StPicoAnaTreeMaker/StHadronTrack.h"
+#include "StEmcUtil/geometry/StEmcGeom.h"
 #include "StThreeVectorF.hh"
 #include "StLorentzVectorF.hh"
 #include "TH1F.h"
@@ -25,94 +28,99 @@
 
 ClassImp(StMyAnaTreeMaker)
 
-	//-----------------------------------------------------------------------------
-	StMyAnaTreeMaker::StMyAnaTreeMaker(const char* name, StPicoAnaTreeMaker *treeMaker, const char* outName, bool mixedEvent=false)
+  //-----------------------------------------------------------------------------
+  StMyAnaTreeMaker::StMyAnaTreeMaker(const char* name, StPicoAnaTreeMaker *treeMaker, const char* outName, bool mixedEvent=false)
 : StMaker(name)
 {
-	mPicoAnaTreeMaker = treeMaker;
-	mAnaTree = 0;
-	TH1F:: SetDefaultSumw2();//zaochen add
-	mOutName = outName;
-   makeMixedEvent = mixedEvent;
+  mPicoAnaTreeMaker = treeMaker;
+  mAnaTree = 0;
+  TH1F:: SetDefaultSumw2();//zaochen add
+  mOutName = outName;
+  makeMixedEvent = mixedEvent;
 
-	mTrigSelect = -1;
-	mHTth = 0;
-	mHTAdc0th = 0;
-	mEmcPtth = 2.5;
+  mTrigSelect = -1;
+  mHTth = 0;
+  mHTAdc0th = 0;
+  mEmcPtth = 2.5;
 
-	mVzCut[0] = -100; mVzCut[1] = 100;
-	mVzDiffCut[0] = -3; mVzDiffCut[1] = 3;
-	mnHitsFitCut[0] = 20; mnHitsFitCut[1] = 50;
-	mnHitsDedxCut[0] = 15; mnHitsDedxCut[1] = 50;
-	mRatioCut[0] = 0.52; mRatioCut[1] = 1.;
-	mHFTTrackCut = false;
+  mVzCut[0] = -100; mVzCut[1] = 100;
+  mVzDiffCut[0] = -3; mVzDiffCut[1] = 3;
+  mnHitsFitCut[0] = 20; mnHitsFitCut[1] = 50;
+  mnHitsDedxCut[0] = 15; mnHitsDedxCut[1] = 50;
+  mRatioCut[0] = 0.52; mRatioCut[1] = 1.;
+  mHFTTrackCut = false;
 
-	mEPtCut[0] = 0.2; mEPtCut[1] = 30;
-	mEEtaCut[0] = -1.; mEEtaCut[1] = 1.;
-	mEDcaCut[0] = 0.; mEDcaCut[1] = 3.;
-	mEInvBetaCut[0] = 0.975; mEInvBetaCut[1] = 1.025;
-	mELocalYCut[0] = -1.8; mELocalYCut[1] = 1.8;
-	mELocalZCut[0] = -3.05; mELocalZCut[1] = 3.05;
-	mEnSigECut[0] = -0.8; mEnSigECut[1] = 2;
-	mHTEnSigECut[0] = -2; mHTEnSigECut[1] = 2.5;
+  mEPtCut[0] = 0.2; mEPtCut[1] = 30;
+  mEEtaCut[0] = -0.7; mEEtaCut[1] = 0.7;
+  mEDcaCut[0] = 0.; mEDcaCut[1] = 1.5;
+  mEInvBetaCut[0] = 0.975; mEInvBetaCut[1] = 1.025;
+  mELocalYCut[0] = -1.8; mELocalYCut[1] = 1.8;
+  mELocalZCut[0] = -3.05; mELocalZCut[1] = 3.05;
+  mEnSigECut[0] = -1.0; mEnSigECut[1] = 3.0;
+  mHTEnSigECut[0] = -1.0; mHTEnSigECut[1] = 3.0;
 
-	mEmcEPtCut[0] = 1.5; mEmcEPtCut[1] = 100;
-	mEmcEEtaCut[0] = -1.; mEmcEEtaCut[1] = 1.;
-	mEmcEPveCut[0] = 0.3; mEmcEPveCut[1] = 2.;
-	mEmcEDcaCut[0] = 0.; mEmcEDcaCut[1] = 3.;
+  mPEEtaCut[0] = -0.7; mPEEtaCut[1] = 0.7;
+  mPEDcaCut[0] = 0.; mPEDcaCut[1] = 1.5;
 
-	mEnEtaCut[0] = 1; mEnEtaCut[1] = 20;
-	mEnPhiCut[0] = 1; mEnPhiCut[1] = 20;
-	mEZDistCut[0] = -2; mEZDistCut[1] = 2;
-	mEPhiDistCut[0] = -0.01; mEPhiDistCut[1] = 0.01;
+  mEmcEPtCut[0] = 1.5; mEmcEPtCut[1] = 100;
+  mEmcEEtaCut[0] = -1.; mEmcEEtaCut[1] = 1.;
+  mEmcEPveCut[0] = 0.3; mEmcEPveCut[1] = 1.5;
+  mEmcEDcaCut[0] = 0.; mEmcEDcaCut[1] = 3.;
+  mEmcEnHitsFitCut[0] = 20; mEmcEnHitsFitCut[1] = 50;
+  mEmcEnHitsDedxCut[0] = 15; mEmcEnHitsDedxCut[1] = 50;
+  mEmcEnSigECut[0] = -1.5; mEmcEnSigECut[1] = 3.; 
 
-	mMuPtCut[0] = 1.0; mMuPtCut[1] = 100.;
-	mMuEtaCut[0] = -0.65; mMuEtaCut[1] = 0.65;
-	mMuDcaCut[0] = 0.; mMuDcaCut[1] = 3.;
-	mMunSigPiCut[0] = -1; mMunSigPiCut[1] = 3.;
-	mMudTCut[0] = -0.7; mMudTCut[1] = 0.7;
-	mMudYCut[0] = -60; mMudYCut[1] = 60;
-	mMudZCut[0] = -30; mMudZCut[1] = 30;
+  mEnEtaCut[0] = 1; mEnEtaCut[1] = 20;
+  mEnPhiCut[0] = 1; mEnPhiCut[1] = 20;
+  mEZDistCut[0] = -3; mEZDistCut[1] = 3;
+  mEPhiDistCut[0] = -0.015; mEPhiDistCut[1] = 0.015;
 
-	mDauEPtCut[0] = 0.2; mDauEPtCut[1]  = 100.;
-	mDauEEtaCut[0] = -1.; mDauEEtaCut[1] = 1.;
-	mDauEDcaToVtxCut[0] = 0; mDauEDcaToVtxCut[1] = 3;
-	mDauEDcaDistCut[0] = 0; mDauEDcaDistCut[1] = 1;
+  mMuPtCut[0] = 1.0; mMuPtCut[1] = 100.;
+  mMuEtaCut[0] = -0.65; mMuEtaCut[1] = 0.65;
+  mMuDcaCut[0] = 0.; mMuDcaCut[1] = 3.;
+  mMunSigPiCut[0] = -1; mMunSigPiCut[1] = 3.;
+  mMudTCut[0] = -0.7; mMudTCut[1] = 0.7;
+  mMudYCut[0] = -60; mMudYCut[1] = 60;
+  mMudZCut[0] = -30; mMudZCut[1] = 30;
 
-	mDauMuPtCut[0] = 1.0; mDauMuPtCut[1] = 100.;
-	mDauMuEtaCut[0] = -0.65; mDauMuEtaCut[1] = 0.65;
-	mDauMuDcaToVtxCut[0] = 0.; mDauMuDcaToVtxCut[1] = 5.;
-	mCosThetaStarCut[0] = -1.; mCosThetaStarCut[1] = 1.;
-	mPointingAngleCut[0] = -3.14159; mPointingAngleCut[1] = 3.14159;
-	mPairDcaCut[0] = 0.; mPairDcaCut[1] = 1000.;
-	mPairDecayLCut[0] = 0.; mPairDecayLCut[1] = 1000.;
-	mEEYCut[0] = -1.; mEEYCut[1] = 1.;
-	mPairMassCut[0] = 0.; mPairMassCut[1] = 20;
+  mDauEPtCut[0] = 0.2; mDauEPtCut[1]  = 100.;
+  mDauEEtaCut[0] = -1.; mDauEEtaCut[1] = 1.;
+  mDauEDcaToVtxCut[0] = 0; mDauEDcaToVtxCut[1] = 3;
+  mDauEDcaDistCut[0] = 0; mDauEDcaDistCut[1] = 1;
 
-	mEEYCut[0] = -1.; mEEYCut[1] = 1.;
-	mEMuYCut[0] = -1.; mEMuYCut[1] = 1.;
-	mMuMuYCut[0] = -0.65; mMuMuYCut[1] = 0.65;
+  mDauMuPtCut[0] = 1.0; mDauMuPtCut[1] = 100.;
+  mDauMuEtaCut[0] = -0.65; mDauMuEtaCut[1] = 0.65;
+  mDauMuDcaToVtxCut[0] = 0.; mDauMuDcaToVtxCut[1] = 5.;
+  mCosThetaStarCut[0] = -1.; mCosThetaStarCut[1] = 1.;
+  mPointingAngleCut[0] = -3.14159; mPointingAngleCut[1] = 3.14159;
+  mPairDcaCut[0] = 0.; mPairDcaCut[1] = 1.0;
+  mPairDecayLCut[0] = 0.; mPairDecayLCut[1] = 1000.;
+  mEEYCut[0] = -1.; mEEYCut[1] = 1.;
+  mPairMassCut[0] = 0.; mPairMassCut[1] = 20;
 
-	mPEMassCut[0] = 0.; mPEMassCut[1] = 0.2;
+  mEMuYCut[0] = -1.; mEMuYCut[1] = 1.;
+  mMuMuYCut[0] = -0.65; mMuMuYCut[1] = 0.65;
 
-   mHadPtCut[0]  = 0.3;  mHadPtCut[1] = 20.0;
-   mHadEtaCut[0] = -0.7; mHadEtaCut[1]= 0.7;
-   mHadDcaCut[0] = 0.; mHadDcaCut[1] = 3.0;
+  mPEMassCut[0] = 0.; mPEMassCut[1] = 0.24;
 
-	mNBadRuns = sizeof(mBadRuns)/sizeof(int);
+  mHadPtCut[0]  = 0.5;  mHadPtCut[1] = 20.0;
+  mHadEtaCut[0] = -0.7; mHadEtaCut[1]= 0.7;
+  mHadDcaCut[0] = 0.; mHadDcaCut[1] = 3.0;
 
-	nMassBins = 500;
-	massMin = 0.;
-	massMax = 5.;
-	nPtBins = 200;
-	ptMin = 0.;
-	ptMax = 10.;
+  mNBadRuns = sizeof(mBadRuns)/sizeof(int);
 
-	iran = 231;
-	current_centrality = 0;
+  nMassBins = 500;
+  massMin = 0.;
+  massMax = 5.;
+  nPtBins = 200;
+  ptMin = 0.;
+  ptMax = 10.;
 
-	fPhiVm = new TF1("phiVm","[0]/(exp(-[1]/x)+[2])",0.,0.08);
-	fPhiVm->SetParameters(0.000228498,0.363774,0.000272462);
+  iran = 231;
+  current_centrality = 0;
+
+  fPhiVm = new TF1("phiVm","[0]/(exp(-[1]/x)+[2])",0.,0.08);
+  fPhiVm->SetParameters(0.000228498,0.363774,0.000272462);
 
 }
 
@@ -123,57 +131,57 @@ StMyAnaTreeMaker::~StMyAnaTreeMaker()
 //----------------------------------------------------------------------------- 
 Int_t StMyAnaTreeMaker::Init() {
 
-	if(mOutName!="") {
-		fout = new TFile(mOutName.Data(),"RECREATE");
-	}else{
-		fout = new TFile("test.ana.root","RECREATE");
-	}
+  if(mOutName!="") {
+    fout = new TFile(mOutName.Data(),"RECREATE");
+  }else{
+    fout = new TFile("test.ana.root","RECREATE");
+  }
 
-	fEDcaCut = new TF1("fEDcaCut","[0]*pow(1/x,[1])+[2]",0,100);
-	fEDcaCut->SetParameters(0.0121809,0.52427,0.00586945);
+  fEDcaCut = new TF1("fEDcaCut","[0]*pow(1/x,[1])+[2]",0,100);
+  fEDcaCut->SetParameters(0.0121809,0.52427,0.00586945);
 
-	fMuDcaCut = new TF1("fMuDcaCut","[0]*pow(1/x,[1])+[2]",1,100);
-	fMuDcaCut->SetParameters(0.00430293,2.45282,0.00650272);
+  fMuDcaCut = new TF1("fMuDcaCut","[0]*pow(1/x,[1])+[2]",1,100);
+  fMuDcaCut->SetParameters(0.00430293,2.45282,0.00650272);
 
-	fMudTCutLow = new TF1("fMudTCutLow","[0]*pow(1./x,[1])+[2]",1,100);
-	fMudTCutLow->SetParameters(-3.62155,5.17877,-0.398502);
+  fMudTCutLow = new TF1("fMudTCutLow","[0]*pow(1./x,[1])+[2]",1,100);
+  fMudTCutLow->SetParameters(-3.62155,5.17877,-0.398502);
 
-	fMudTCutHigh = new TF1("fMudTCutHigh","[0]*pow(1./x,[1])+[2]",1,100);
-	fMudTCutHigh->SetParameters(2.5084,2.67417,0.399722);
+  fMudTCutHigh = new TF1("fMudTCutHigh","[0]*pow(1./x,[1])+[2]",1,100);
+  fMudTCutHigh->SetParameters(2.5084,2.67417,0.399722);
 
-	memset(nEventsInBuffer,0,sizeof(nEventsInBuffer));
-	memset(buffer_fullFlag,0,sizeof(buffer_fullFlag));
-	memset(buffer_nePlus,0,sizeof(buffer_nePlus));
-	memset(buffer_neMinus,0,sizeof(buffer_neMinus));
-	memset(buffer_nmuPlus,0,sizeof(buffer_nmuPlus));
-	memset(buffer_nmuMinus,0,sizeof(buffer_nmuMinus));
+  memset(nEventsInBuffer,0,sizeof(nEventsInBuffer));
+  memset(buffer_fullFlag,0,sizeof(buffer_fullFlag));
+  memset(buffer_nePlus,0,sizeof(buffer_nePlus));
+  memset(buffer_neMinus,0,sizeof(buffer_neMinus));
+  memset(buffer_nmuPlus,0,sizeof(buffer_nmuPlus));
+  memset(buffer_nmuMinus,0,sizeof(buffer_nmuMinus));
 
-	Int_t dblSize = sizeof(Double_t);
-	memset(mMtdT0Corr,      0, 30*5*dblSize);
+  Int_t dblSize = sizeof(Double_t);
+  memset(mMtdT0Corr,      0, 30*5*dblSize);
 
-	ifstream inData;
-	inData.open("StRoot/StMyAnaTreeMaker/Run14_AuAu200_CalibDtof.offline.dat");
-	if(!inData.is_open())
-	{
-		LOG_ERROR << "Unable to get the T0 offset parameters from local file" <<endm;
-		LOG_ERROR << "Check if this file exists: StRoot/StMyAnaTreeMaker/Run14_AuAu200_CalibDtof.offline.dat" << endm;
-		return kStErr;
-	}
+  ifstream inData;
+  inData.open("StRoot/StMyAnaTreeMaker/Run14_AuAu200_CalibDtof.offline.dat");
+  if(!inData.is_open())
+  {
+    LOG_ERROR << "Unable to get the T0 offset parameters from local file" <<endm;
+    LOG_ERROR << "Check if this file exists: StRoot/StMyAnaTreeMaker/Run14_AuAu200_CalibDtof.offline.dat" << endm;
+    return kStErr;
+  }
 
-   for(Int_t i=0;i<30;i++)
-   {
-     for(Int_t j=0;j<5;j++)
-     {
-       int backlegId, moduleId, t0Corr;
-       inData >> backlegId >> moduleId >> t0Corr;
-       mMtdT0Corr[backlegId-1][moduleId-1]=t0Corr;
-     }
-   }
-   inData.close();
+  for(Int_t i=0;i<30;i++)
+  {
+    for(Int_t j=0;j<5;j++)
+    {
+      int backlegId, moduleId, t0Corr;
+      inData >> backlegId >> moduleId >> t0Corr;
+      mMtdT0Corr[backlegId-1][moduleId-1]=t0Corr;
+    }
+  }
+  inData.close();
 
-   declareHistograms();
+  declareHistograms();
 
-   return kStOK;
+  return kStOK;
 }
 
 //----------------------------------------------------------------------------- 
@@ -214,10 +222,10 @@ void StMyAnaTreeMaker::declareHistograms() {
 
   hPEUSOyOx = new TH2F("hPEUSOyOx","hPEUSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
   hPEUSOxOz = new TH2F("hPEUSOxOz","hPEUSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
-  hPEUSOrOz = new TH2F("hPEUSOrOz","hPEUSOrOz; Oz (cm); Or (cm)",600,-30,30,300,-30,30);
+  hPEUSOrOz = new TH2F("hPEUSOrOz","hPEUSOrOz; Oz (cm); Or (cm)",600,-30,30,300,  0,30);
   hPELSOyOx = new TH2F("hPELSOyOx","hPELSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
   hPELSOxOz = new TH2F("hPELSOxOz","hPELSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
-  hPELSOrOz = new TH2F("hPELSOrOz","hPELSOrOz; Oz (cm); Or (cm)",600,-30,30,300,-30,30);
+  hPELSOrOz = new TH2F("hPELSOrOz","hPELSOrOz; Oz (cm); Or (cm)",600,-30,30,300,  0,30);
 
   hPEUSOyOxwHft = new TH2F("hPEUSOyOxwHft","hPEUSOyOxwHft; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
   hPEUSOxOzwHft = new TH2F("hPEUSOxOzwHft","hPEUSOxOzwHft; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
@@ -252,9 +260,9 @@ void StMyAnaTreeMaker::declareHistograms() {
   hEELSPosEtavsPhi = new TH2F("hEELSPosEtavsPhi","Electron Pair Eta vs Phi LS Pos; #phi; #eta",300,-3.2,3.2,200,-1,1);
   hEELSNegEtavsPhi = new TH2F("hEELSNegEtavsPhi","Electron Pair Eta vs Phi LS Neg; #phi; #eta",300,-3.2,3.2,200,-1,1);
 
-  hEEUSPairDcavsPt = new TH2F("hEEUSPairDcavsPt","EE Pair DCA vs Pt US; p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,4);
-  hEELSPosPairDcavsPt = new TH2F("hEELSPosPairDcavsPt","EE Pair DCA vs Pt LS Pos; p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,4);
-  hEELSNegPairDcavsPt = new TH2F("hEELSNegPairDcavsPt","EE Pair DCA vs Pt LS Neg; p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,4);
+  hEEUSPairDcavsPt = new TH2F("hEEUSPairDcavsPt","EE Pair DCA vs Pt US; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
+  hEELSPosPairDcavsPt = new TH2F("hEELSPosPairDcavsPt","EE Pair DCA vs Pt LS Pos; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
+  hEELSNegPairDcavsPt = new TH2F("hEELSNegPairDcavsPt","EE Pair DCA vs Pt LS Neg; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
 
   hEENumInvMassvsPtMB = new TH2F("hEENumInvMassvsPtMB","same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
   hEEDenInvMassvsPtLikePosMB = new TH2F("hEEDenInvMassvsPtLikePosMB","like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
@@ -268,105 +276,105 @@ void StMyAnaTreeMaker::declareHistograms() {
   hMuMuDenInvMassvsPtLikePosMB = new TH2F("hMuMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
   hMuMuDenInvMassvsPtLikeNegMB = new TH2F("hMuMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-   hEENumInvMassvsPtMBwHft = new TH2F("hEENumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikePosMBwHft = new TH2F("hEEDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikeNegMBwHft = new TH2F("hEEDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEENumInvMassvsPtMBwHft = new TH2F("hEENumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikePosMBwHft = new TH2F("hEEDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikeNegMBwHft = new TH2F("hEEDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-   hEMuNumInvMassvsPtMBwHft = new TH2F("hEMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEMuDenInvMassvsPtLikePosMBwHft = new TH2F("hEMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hEMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuNumInvMassvsPtMBwHft = new TH2F("hEMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikePosMBwHft = new TH2F("hEMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hEMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
-   hMuMuNumInvMassvsPtMBwHft = new TH2F("hMuMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hMuMuDenInvMassvsPtLikePosMBwHft = new TH2F("hMuMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hMuMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hMuMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-
-   hEENumInvMassvsPtMBnophiv = new TH2F("hEENumInvMassvsPtMBnophiv","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikePosMBnophiv = new TH2F("hEEDenInvMassvsPtLikePosMBnophiv","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-   hEEDenInvMassvsPtLikeNegMBnophiv = new TH2F("hEEDenInvMassvsPtLikeNegMBnophiv","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuNumInvMassvsPtMBwHft = new TH2F("hMuMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikePosMBwHft = new TH2F("hMuMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hMuMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
 
-   hUSphivM = new TH2F("hUSphivM","unlike-sign phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
-   hLSPosphivM = new TH2F("hLSPosphivM","like-sign-pos phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
-   hLSNegphivM = new TH2F("hLSNegphivM","like-sign-neg phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
+  hEENumInvMassvsPtMBnophiv = new TH2F("hEENumInvMassvsPtMBnophiv","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikePosMBnophiv = new TH2F("hEEDenInvMassvsPtLikePosMBnophiv","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikeNegMBnophiv = new TH2F("hEEDenInvMassvsPtLikeNegMBnophiv","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
 
 
-   char name[200],title[200];
-   sprintf(name,"hEENumInvMassvsPt");
-   sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hEENumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-   sprintf(name,"hEEDenInvMassvsPtLikePos");
-   sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hEEDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-   sprintf(name,"hEEDenInvMassvsPtLikeNeg");
-   sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hEEDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-   sprintf(name,"hEMuNumInvMassvsPt");
-   sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hEMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-   sprintf(name,"hEMuDenInvMassvsPtLikePos");
-   sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hEMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-   sprintf(name,"hEMuDenInvMassvsPtLikeNeg");
-   sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hEMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hUSphivM = new TH2F("hUSphivM","unlike-sign phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
+  hLSPosphivM = new TH2F("hLSPosphivM","like-sign-pos phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
+  hLSNegphivM = new TH2F("hLSNegphivM","like-sign-neg phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
 
 
-   sprintf(name,"hMuMuNumInvMassvsPt");
-   sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hMuMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  char name[200],title[200];
+  sprintf(name,"hEENumInvMassvsPt");
+  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEENumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-   sprintf(name,"hMuMuDenInvMassvsPtLikePos");
-   sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hMuMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hEEDenInvMassvsPtLikePos");
+  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEEDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-   sprintf(name,"hMuMuDenInvMassvsPtLikeNeg");
-   sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-   hMuMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hEEDenInvMassvsPtLikeNeg");
+  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEEDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-   hEENumInvMassvsPtwHft = new TH3F("hEENumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   hEEDenInvMassvsPtLikePoswHft = new TH3F("hEEDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   hEEDenInvMassvsPtLikeNegwHft = new TH3F("hEEDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hEMuNumInvMassvsPt");
+  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-   hEMuNumInvMassvsPtwHft = new TH3F("hEMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   hEMuDenInvMassvsPtLikePoswHft = new TH3F("hEMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   hEMuDenInvMassvsPtLikeNegwHft = new TH3F("hEMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hEMuDenInvMassvsPtLikePos");
+  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-   hMuMuNumInvMassvsPtwHft = new TH3F("hMuMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   hMuMuDenInvMassvsPtLikePoswHft = new TH3F("hMuMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   hMuMuDenInvMassvsPtLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hEMuDenInvMassvsPtLikeNeg");
+  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-   if(makeMixedEvent){
-     hEEDenInvMassvsPtMix = new TH3F("hEEDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEEDenInvMassvsPtMixLikePos = new TH3F("hEEDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEEDenInvMassvsPtMixLikeNeg = new TH3F("hEEDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-     hEMuDenInvMassvsPtMix = new TH3F("hEMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEMuDenInvMassvsPtMixLikePos = new TH3F("hEMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEMuDenInvMassvsPtMixLikeNeg = new TH3F("hEMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hMuMuNumInvMassvsPt");
+  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hMuMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-     hMuMuDenInvMassvsPtMix = new TH3F("hMuMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hMuMuDenInvMassvsPtMixLikePos = new TH3F("hMuMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hMuMuDenInvMassvsPtMixLikeNeg = new TH3F("hMuMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hMuMuDenInvMassvsPtLikePos");
+  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hMuMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-     //wHFT
-     hEEDenInvMassvsPtMixwHft = new TH3F("hEEDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEEDenInvMassvsPtMixLikePoswHft = new TH3F("hEEDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEEDenInvMassvsPtMixLikeNegwHft = new TH3F("hEEDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  sprintf(name,"hMuMuDenInvMassvsPtLikeNeg");
+  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hMuMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-     hEMuDenInvMassvsPtMixwHft = new TH3F("hEMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEMuDenInvMassvsPtMixLikePoswHft = new TH3F("hEMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hEMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hEMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEENumInvMassvsPtwHft = new TH3F("hEENumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEEDenInvMassvsPtLikePoswHft = new TH3F("hEEDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEEDenInvMassvsPtLikeNegwHft = new TH3F("hEEDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
 
-     hMuMuDenInvMassvsPtMixwHft = new TH3F("hMuMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hMuMuDenInvMassvsPtMixLikePoswHft = new TH3F("hMuMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-     hMuMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-   }
+  hEMuNumInvMassvsPtwHft = new TH3F("hEMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEMuDenInvMassvsPtLikePoswHft = new TH3F("hEMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEMuDenInvMassvsPtLikeNegwHft = new TH3F("hEMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  hMuMuNumInvMassvsPtwHft = new TH3F("hMuMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hMuMuDenInvMassvsPtLikePoswHft = new TH3F("hMuMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hMuMuDenInvMassvsPtLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  if(makeMixedEvent){
+    hEEDenInvMassvsPtMix = new TH3F("hEEDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikePos = new TH3F("hEEDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikeNeg = new TH3F("hEEDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hEMuDenInvMassvsPtMix = new TH3F("hEMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikePos = new TH3F("hEMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikeNeg = new TH3F("hEMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hMuMuDenInvMassvsPtMix = new TH3F("hMuMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikePos = new TH3F("hMuMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikeNeg = new TH3F("hMuMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    //wHFT
+    hEEDenInvMassvsPtMixwHft = new TH3F("hEEDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikePoswHft = new TH3F("hEEDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikeNegwHft = new TH3F("hEEDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hEMuDenInvMassvsPtMixwHft = new TH3F("hEMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikePoswHft = new TH3F("hEMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hEMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hMuMuDenInvMassvsPtMixwHft = new TH3F("hMuMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikePoswHft = new TH3F("hMuMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  }
 
   cout << "Declare Had Hists" << endl;
   hHadPt  = new TH1F("hHadPt","Hadron Branch Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
@@ -378,7 +386,6 @@ void StMyAnaTreeMaker::declareHistograms() {
 
   hHadEtaPhi = new TH2F("hHadEtaPhi","Hadron Branch Phi vs Pseudorapidity; Eta; Phi",200,-1,1,300,-3.2,3.2); 
   hHadEDelPhiPt = new TH2F("hHadEDelPhiPt","Hadron-Electron DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
-  hHadEDelPhiPt_high = new TH2F("hHadEDelPhiPt_high","Hadron-Electron DeltaPhi vs Electron Pt (hp_{T} > 2 GeV/c^{2}); p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
   hHadEEDelPhiPt_LS = new TH2F("hHadEEDelPhiPt_LS","Hadron-EE LS DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
   hHadEEDelPhiPt_US = new TH2F("hHadEEDelPhiPt_US","Hadron-EE US DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
   hHadMuDelPhiPt = new TH2F("hHadMuDelPhiPt","Hadron-Muon DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
@@ -392,6 +399,23 @@ void StMyAnaTreeMaker::declareHistograms() {
     hEPt_eff[i] = new TH1F(Form("hEPt_eff_%i",i),Form("Electron Branch Pt Spectrum %s; p_{T} (GeV/c); Counts",nameeff[i]),nPtBins,ptMin,ptMax);
   }
 
+  char namePartE[2][20] = {"Unlike Sign", "Like Sign"};
+  float offs = 1e-6;
+  for(int i=0; i<2; i++)
+  {
+    hNSigEPartElec[i] = new TH2F(Form("hNSigEPartElec_%i",i),Form("nSigmaE PartE %s;P_{T} (GeV/c^{2});n#sigma_{E}",namePartE[i]),nPtBins,ptMin,ptMax,120,-6.-offs,6.+offs);
+    hPvePartElec[i] = new TH2F(Form("hPvePartElec_%i",i),Form("p/E PartE %s;P_{T} (GeV/c^{2});p/E",namePartE[i]),nPtBins,ptMin,ptMax,200,0.,10.);
+    hnEtaPartElec[i] = new TH2F(Form("hnEtaPartElec_%i",i),Form("nEta PartE %s;P_{T} (GeV/c^{2});nEta",namePartE[i]),nPtBins,ptMin,ptMax,20,0.,20.);
+    hnPhiPartElec[i] = new TH2F(Form("hnPhiPartElec_%i",i),Form("nPhi PartE %s;P_{T} (GeV/c^{2});nPhi",namePartE[i]),nPtBins,ptMin,ptMax,20,0.,20.);
+    hphiDistPartElec[i] = new TH2F(Form("hphiDistPartElec_%i",i),Form("phiDist PartE %s;P_{T} (GeV/c^{2});phiDist",namePartE[i]),nPtBins,ptMin,ptMax,1000,0.,0.2);
+    hzDistPartElec[i] = new TH2F(Form("hzDistPartElec_%i",i),Form("zDist PartE %s;P_{T} (GeV/c^{2});zDist",namePartE[i]),nPtBins,ptMin,ptMax,1000,0.,10.);
+
+    hTPCTracks[i] = new TH1F(Form("hTPCTracks_%i",i),Form("TPC Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hEMCMatchedTracks[i] = new TH1F(Form("hEMCMatchedTracks_%i",i),Form("EMC Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hEMCIdTracks[i] = new TH1F(Form("hEMCIdTracks_%i",i),Form("EMC eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hSMDMatchedTracks[i] = new TH1F(Form("hSMDMatchedTracks_%i",i),Form("SMD Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hSMDIdTracks[i] = new TH1F(Form("hSMDIdTracks_%i",i),Form("SMD eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+  }
 }
 
 
@@ -403,91 +427,91 @@ void StMyAnaTreeMaker::Clear(Option_t *opt) {
 //----------------------------------------------------------------------------- 
 Int_t StMyAnaTreeMaker::Make() {
 
-	if(!mPicoAnaTreeMaker) {
-		LOG_WARN << " No PicoAnaTreeMaker! Skip! " << endm;
-		return kStOK;
-	}
+  if(!mPicoAnaTreeMaker) {
+    LOG_WARN << " No PicoAnaTreeMaker! Skip! " << endm;
+    return kStOK;
+  }
 
-	mAnaTree = mPicoAnaTreeMaker->anaTree();
+  mAnaTree = mPicoAnaTreeMaker->anaTree();
 
-	if(!mAnaTree) {
-		LOG_WARN << " No AnaTree! Skip! " << endm;
-		return kStWarn;
-	}
+  if(!mAnaTree) {
+    LOG_WARN << " No AnaTree! Skip! " << endm;
+    return kStWarn;
+  }
 
-	hnEvents->Fill(0);
-	int runId = mAnaTree->event()->runId();
-	for(int i=0;i<mNBadRuns;i++){
-		if(runId==mBadRuns[i]) return kStOK;
-	}
-	hnEvents->Fill(1);
-   determineTriggers(); // This function finds which triggers fired in event.
-	int eventPass = 0;
-	if(mTrigSelect<0) eventPass = 1;
-	else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
-	else if(mTrigSelect==1&& isHT0){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 180
-	else if(mTrigSelect==2&& isHT1){ eventPass = 1; mHTth = 15; mHTAdc0th = 250; mEmcPtth = 2.5;}  //HT1 240
-	else if(mTrigSelect==3&& isHT2){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 3.0;}  //HT2 300
-	else if(mTrigSelect==4&& isHT3){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 400
-	else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
-	else if(mTrigSelect==6&&mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
-	else if(mTrigSelect==7&&mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
+  hnEvents->Fill(0);
+  int runId = mAnaTree->event()->runId();
+  for(int i=0;i<mNBadRuns;i++){
+    if(runId==mBadRuns[i]) return kStOK;
+  }
+  hnEvents->Fill(1);
+  determineTriggers(); // This function finds which triggers fired in event.
+  int eventPass = 0;
+  if(mTrigSelect<0) eventPass = 1;
+  else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
+  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 180
+  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 15; mHTAdc0th = 250; mEmcPtth = 2.5;}  //HT1 240
+  else if(mTrigSelect==3&& isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 3.0;}  //HT2 300
+  else if(mTrigSelect==4&& isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 400
+  else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
+  else if(mTrigSelect==6&&mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
+  else if(mTrigSelect==7&&mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
 
-	if(eventPass==0) return kStOK;
-	hnEvents->Fill(2);
+  if(eventPass==0) return kStOK;
+  hnEvents->Fill(2);
 
-	Double_t vzVpd=mAnaTree->event()->vzVpd();
-	StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
-	hVzVpdVz->Fill(mPrimaryVertex.z(),vzVpd);
-	hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
-	if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return kStOK;
-	hnEvents->Fill(3);
-	if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0]||vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) return kStOK;
-	hnEvents->Fill(4);
+  Double_t vzVpd=mAnaTree->event()->vzVpd();
+  StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
+  hVzVpdVz->Fill(mPrimaryVertex.z(),vzVpd);
+  hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
+  if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return kStOK;
+  hnEvents->Fill(3);
+  if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0]||vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) return kStOK;
+  hnEvents->Fill(4);
 
-	hRefMultCut->Fill(mAnaTree->event()->grefMult());
-	hVertexZCut->Fill(mPrimaryVertex.z());
+  hRefMultCut->Fill(mAnaTree->event()->grefMult());
+  hVertexZCut->Fill(mPrimaryVertex.z());
 
-	centrality = getCentrality();
-	current_centrality = getCentrality();
+  centrality = getCentrality();
+  current_centrality = getCentrality();
 
-	int magBufferPointer = -1;
-	double bfield = mAnaTree->event()->bField();
-	if(bfield>0) magBufferPointer = 0; //ff
-	if(bfield<0) magBufferPointer = 1;//rff 
-	if(magBufferPointer<0) return kStOK;
-	int cenBufferPointer = centrality-1;
-	//if(cenBufferPointer<0||cenBufferPointer>=nCenBin) return kStOK;
-	double current_eventplane = mAnaTree->event()->eventPlane();
-	int   eveBufferPointer = int((current_eventplane-0.)/TMath::Pi()*nEveBin);
-	//if(eveBufferPointer<0 ||eveBufferPointer>=nEveBin) return kStOK;
-	double Vz = mAnaTree->event()->primaryVertex().z();
-	int vzBufferPointer=int((Vz-mVzCut[0])/(mVzCut[1]-mVzCut[0])*nVzBin);
+  int magBufferPointer = -1;
+  double bfield = mAnaTree->event()->bField();
+  if(bfield>0) magBufferPointer = 0; //ff
+  if(bfield<0) magBufferPointer = 1;//rff 
+  if(magBufferPointer<0) return kStOK;
+  int cenBufferPointer = centrality-1;
+  //if(cenBufferPointer<0||cenBufferPointer>=nCenBin) return kStOK;
+  double current_eventplane = mAnaTree->event()->eventPlane();
+  int   eveBufferPointer = int((current_eventplane-0.)/TMath::Pi()*nEveBin);
+  //if(eveBufferPointer<0 ||eveBufferPointer>=nEveBin) return kStOK;
+  double Vz = mAnaTree->event()->primaryVertex().z();
+  int vzBufferPointer=int((Vz-mVzCut[0])/(mVzCut[1]-mVzCut[0])*nVzBin);
 
 
 
-	int current_nePlus = 0, current_neMinus = 0;
-	int current_nmuPlus = 0, current_nmuMinus = 0;
-	int nE = mAnaTree->numberOfETracks();
+  int current_nePlus = 0, current_neMinus = 0;
+  int current_nmuPlus = 0, current_nmuMinus = 0;
+  int nE = mAnaTree->numberOfETracks();
 
-	memset(current_ePlusFlag,0,sizeof(current_ePlusFlag));
-	memset(current_eMinusFlag,0,sizeof(current_eMinusFlag));
-	memset(current_ePlusIsHFT,0,sizeof(current_ePlusIsHFT));
-	memset(current_eMinusIsHFT,0,sizeof(current_eMinusIsHFT));
-	for(int i=0;i<nE;i++){
-		StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(i);
-      fillElectronHists(eTrk);  
-   }
+  memset(current_ePlusFlag,0,sizeof(current_ePlusFlag));
+  memset(current_eMinusFlag,0,sizeof(current_eMinusFlag));
+  memset(current_ePlusIsHFT,0,sizeof(current_ePlusIsHFT));
+  memset(current_eMinusIsHFT,0,sizeof(current_eMinusIsHFT));
+  for(int i=0;i<nE;i++){
+    StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(i);
+    fillElectronHists(eTrk);  
+  }
 
-   memset(current_muPlusFlag,0,sizeof(current_muPlusFlag));
-   memset(current_muMinusFlag,0,sizeof(current_muMinusFlag));
-   memset(current_muPlusIsHFT,0,sizeof(current_muPlusIsHFT));
-   memset(current_muMinusIsHFT,0,sizeof(current_muMinusIsHFT));
-   int nMu = mAnaTree->numberOfMuTracks();
-   for(int i=0;i<nMu;i++){
-     StMuonTrack *muTrk = (StMuonTrack*)mAnaTree->muTrack(i);
-     fillMuonHists(muTrk);    
-   }
+  memset(current_muPlusFlag,0,sizeof(current_muPlusFlag));
+  memset(current_muMinusFlag,0,sizeof(current_muMinusFlag));
+  memset(current_muPlusIsHFT,0,sizeof(current_muPlusIsHFT));
+  memset(current_muMinusIsHFT,0,sizeof(current_muMinusIsHFT));
+  int nMu = mAnaTree->numberOfMuTracks();
+  for(int i=0;i<nMu;i++){
+    StMuonTrack *muTrk = (StMuonTrack*)mAnaTree->muTrack(i);
+    fillMuonHists(muTrk);    
+  }
 
   int nHad = mAnaTree->numberOfHTracks(); 
   for(int j=0; j < nHad; j++)
@@ -505,662 +529,669 @@ Int_t StMyAnaTreeMaker::Make() {
   int nEMuPairs = mAnaTree->numberOfEMuPairs();
   for(int iemu=0; iemu< nEMuPairs;iemu++){
     StEMuPair* emu = (StEMuPair*) mAnaTree->eMuPair(iemu);
-      fillEMuHists(emu);
-	}
+    fillEMuHists(emu);
+  }
 
-	int nMuMuPairs = mAnaTree->numberOfMuMuPairs();
-	for(int imumu=0; imumu< nMuMuPairs;imumu++){
-		StMuMuPair* mumu = (StMuMuPair*) mAnaTree->MuMuPair(imumu);
-      fillMuMuHists(mumu);
-	}
+  int nMuMuPairs = mAnaTree->numberOfMuMuPairs();
+  for(int imumu=0; imumu< nMuMuPairs;imumu++){
+    StMuMuPair* mumu = (StMuMuPair*) mAnaTree->MuMuPair(imumu);
+    fillMuMuHists(mumu);
+  }
 
-   hNe->Fill(current_nePlus,current_neMinus);
-   hNemu->Fill(current_nePlus+current_neMinus, current_nmuPlus+current_nmuMinus);
-   hNmu->Fill(current_nmuPlus, current_nmuMinus);
+  int nPhoEEPairs = mAnaTree->numberOfPhoEEPairs();   
+  for(int iphoEE=0; iphoEE< nPhoEEPairs;iphoEE++){
+    StPhoEEPair *phoEE = (StPhoEEPair*) mAnaTree->phoEEPair(iphoEE);
+    fillPhoEEHists(phoEE);
+  }
 
-   if(makeMixedEvent)
-   {
-     makeEEMixedPairs(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
-     makeEMuMixedPairs(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
-     makeMuMuMixedPairs(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
-     copyCurrentToBuffer(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
-   }
-	return kStOK;
+  hNe->Fill(current_nePlus,current_neMinus);
+  hNemu->Fill(current_nePlus+current_neMinus, current_nmuPlus+current_nmuMinus);
+  hNmu->Fill(current_nmuPlus, current_nmuMinus);
+
+  if(makeMixedEvent)
+  {
+    makeEEMixedPairs(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
+    makeEMuMixedPairs(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
+    makeMuMuMixedPairs(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
+    copyCurrentToBuffer(magBufferPointer,cenBufferPointer, vzBufferPointer,eveBufferPointer);
+  }
+  return kStOK;
 }//end of main fucntion
 
 bool StMyAnaTreeMaker::passHTEIDCuts(StElectronTrack *eTrk) {
-	double pt = eTrk->pMom().perp();
-	double p = eTrk->pMom().mag();
-	double eta = eTrk->pMom().pseudoRapidity();
-	int nHitsFit = eTrk->nHitsFit();
-	int nHitsDedx = eTrk->nHitsDedx();
-	//int nHitsMax= eTrk->nHitsMax();
-	double beta = eTrk->beta();
-	double nSigE = eTrk->nSigmaElectron();
-	double dca = eTrk->dca();
-	double localY = eTrk->localY();
-	//double localZ = eTrk->localZ();
-	//double ratio = nHitsFit*1./nHitsMax;
-	double pve = eTrk->pve();
-	double adc0 = eTrk->adc0();
-	int nEta = eTrk->nEta();
-	int nPhi = eTrk->nPhi();
-	double zDist = eTrk->zDist();
-	double phiDist = eTrk->phiDist();
+  double pt = eTrk->gMom().perp();
+  double p = eTrk->gMom().mag();
+  double eta = eTrk->gMom().pseudoRapidity();
+  int nHitsFit = eTrk->nHitsFit();
+  int nHitsDedx = eTrk->nHitsDedx();
+  //int nHitsMax= eTrk->nHitsMax();
+  double beta = eTrk->beta();
+  double nSigE = eTrk->nSigmaElectron();
+  double dca = eTrk->dca();
+  double localY = eTrk->localY();
+  //double localZ = eTrk->localZ();
+  //double ratio = nHitsFit*1./nHitsMax;
+  double pve = eTrk->pve();
+  double adc0 = eTrk->adc0();
+  int nEta = eTrk->nEta();
+  int nPhi = eTrk->nPhi();
+  double zDist = eTrk->zDist();
+  double phiDist = eTrk->phiDist();
 
-	if(pt<mEmcEPtCut[0] || pt>mEmcEPtCut[1]) return false;
-	if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
-	//if(dca<mEmcEDcaCut[0] || dca>mEmcEDcaCut[1]) return false;
-	if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
-	if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
-	//if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
+  if(pt<mEmcEPtCut[0] || pt>mEmcEPtCut[1]) return false;
+  if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
+  //if(dca<mEmcEDcaCut[0] || dca>mEmcEDcaCut[1]) return false;
+  if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
+  if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
+  //if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
 
-	if(nSigE<mHTEnSigECut[0]||nSigE>mHTEnSigECut[1]) return false;
-	if(pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1]) return false;
-	//if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
-	//if(nPhi<mEnPhiCut[0]||nPhi>mEnPhiCut[1]) return false;
-	//if(zDist<mEZDistCut[0]||zDist>mEZDistCut[1]) return false;
-	//if(phiDist<mEPhiDistCut[0]||phiDist>mEPhiDistCut[1]) return false;
+  if(nSigE<mHTEnSigECut[0]||nSigE>mHTEnSigECut[1]) return false;
+  if(pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1]) return false;
+  if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
+  if(nPhi<mEnPhiCut[0]||nPhi>mEnPhiCut[1]) return false;
+  if(zDist<mEZDistCut[0]||zDist>mEZDistCut[1]) return false;
+  if(phiDist<mEPhiDistCut[0]||phiDist>mEPhiDistCut[1]) return false;
 
-	return true;
+  return true;
 }
 
 bool StMyAnaTreeMaker::isHTTrigE(StElectronTrack *eTrk) {
-	int emcTrgId = eTrk->emcTriggerId();
-	double dsmadc0 = 0;
-	double adc0 = eTrk->adc0();
-	double pt = eTrk->pMom().perp();
-	if(emcTrgId>=0){
-		StEmcTrigger *emcTrg = (StEmcTrigger*)mAnaTree->emcTrigger(emcTrgId);
-		if(!emcTrg) return false;
-		dsmadc0 = emcTrg->adc0();
-	}else{
-		return false;
-	}
-	if((mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5)&&adc0<=mHTAdc0th&&pt<=mEmcPtth)  return false;
-	return true;
+  int emcTrgId = eTrk->emcTriggerId();
+  double dsmadc0 = 0;
+  double adc0 = eTrk->adc0();
+  double pt = eTrk->gMom().perp();
+  if(emcTrgId>=0){
+    StEmcTrigger *emcTrg = (StEmcTrigger*)mAnaTree->emcTrigger(emcTrgId);
+    if(!emcTrg) return false;
+    dsmadc0 = emcTrg->adc0();
+  }else{
+    return false;
+  }
+  if((mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5)&&adc0<=mHTAdc0th&&pt<=mEmcPtth)  return false;
+  return true;
 }
 
 
 bool StMyAnaTreeMaker::passEIDCuts(StElectronTrack *eTrk) {
-	double pt = eTrk->pMom().perp();
-	double p = eTrk->pMom().mag();
-	double eta = eTrk->pMom().pseudoRapidity();
-	int nHitsFit = eTrk->nHitsFit();
-	int nHitsDedx = eTrk->nHitsDedx();
-	//int nHitsMax= eTrk->nHitsMax();
-	double beta = eTrk->beta();
-	double nSigE = eTrk->nSigmaElectron();
-	double dca = eTrk->dca();
-	double localY = eTrk->localY();
-	//double localZ = eTrk->localZ();
+  double pt = eTrk->gMom().perp();
+  double p = eTrk->gMom().mag();
+  double eta = eTrk->gMom().pseudoRapidity();
+  int nHitsFit = eTrk->nHitsFit();
+  int nHitsDedx = eTrk->nHitsDedx();
+  //int nHitsMax= eTrk->nHitsMax();
+  double beta = eTrk->beta();
+  double nSigE = eTrk->nSigmaElectron();
+  double dca = eTrk->dca();
+  double localY = eTrk->localY();
+  //double localZ = eTrk->localZ();
 
-	if(beta<=0) return false;
+  if(beta<=0) return false;
 
-	double invBeta = beta!=0 ? 1./beta : 0;
-	//double ratio = nHitsFit*1./nHitsMax;
+  double invBeta = beta!=0 ? 1./beta : 0;
+  //double ratio = nHitsFit*1./nHitsMax;
 
-	if(pt<mEPtCut[0] || pt>mEPtCut[1]) return false;
-	if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
-	if(dca<mEDcaCut[0] || dca>mEDcaCut[1]) return false;
-	if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
-	if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
-	//if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
-	//if(invBeta<mEInvBetaCut[0] || invBeta>mEInvBetaCut[1]) return false;
-	if(localY<mELocalYCut[0] || localY>mELocalYCut[1]) return false;
-	//if(localZ<mELocalZCut[0] || localZ>mELocalZCut[1]) return false;
-	if(p<1.0){
-		if(nSigE>mEnSigECut[1]||nSigE<(1.5*(p-0.2)-2.0)) return false;
-	}else{
-		if(nSigE<mEnSigECut[0]||nSigE>mEnSigECut[1]) return false;
-	}
+  if(pt<mEPtCut[0] || pt>mEPtCut[1]) return false;
+  if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
+  if(dca<mEDcaCut[0] || dca>mEDcaCut[1]) return false;
+  if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
+  if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
+  //if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
+  //if(invBeta<mEInvBetaCut[0] || invBeta>mEInvBetaCut[1]) return false;
+  //if(localY<mELocalYCut[0] || localY>mELocalYCut[1]) return false;
+  //if(localZ<mELocalZCut[0] || localZ>mELocalZCut[1]) return false;
+  if(p<1.0){
+    if(nSigE>mEnSigECut[1]||nSigE<(1.5*(p-0.2)-2.0)) return false;
+  }else{
+    if(nSigE<mEnSigECut[0]||nSigE>mEnSigECut[1]) return false;
+  }
 
-	return true;
+  return true;
 }
 
 bool StMyAnaTreeMaker::passETrackQualityCuts(StElectronTrack *eTrk) {
-	double pt = eTrk->pMom().perp();
-	double p = eTrk->pMom().mag();
-	double eta = eTrk->pMom().pseudoRapidity();
-	int nHitsFit = eTrk->nHitsFit();
-	int nHitsDedx = eTrk->nHitsDedx();
-	//int nHitsMax= eTrk->nHitsMax();
-	double dca = eTrk->dca();
+  double pt = eTrk->gMom().perp();
+  double p = eTrk->gMom().mag();
+  double eta = eTrk->gMom().pseudoRapidity();
+  int nHitsFit = eTrk->nHitsFit();
+  int nHitsDedx = eTrk->nHitsDedx();
+  //	int nHitsMax= eTrk->nHitsMax();
+  double dca = eTrk->dca();
 
 
-	//double ratio = nHitsFit*1./nHitsMax;
+  //	double ratio = nHitsFit*1./nHitsMax;
 
-	if(pt<mEPtCut[0] || pt>mEPtCut[1]) return false;
-	if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
-	if(dca<mEDcaCut[0] || dca>mEDcaCut[1]) return false;
-	if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
-	if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
-	//if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
+  if(pt<mEPtCut[0] || pt>mEPtCut[1]) return false;
+  if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
+  if(dca<mEDcaCut[0] || dca>mEDcaCut[1]) return false;
+  if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
+  if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
+  //	if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
 
-	return true;
+  return true;
 }
 
 bool StMyAnaTreeMaker::passMuIDCuts(StMuonTrack *muTrk) {
-	double pt = muTrk->pMom().perp();
-	double eta = muTrk->pMom().pseudoRapidity();
-	int charge = muTrk->charge();
-	int nHitsFit = muTrk->nHitsFit();
-	int nHitsDedx = muTrk->nHitsDedx();
-	double nSigPi = muTrk->nSigmaPion();
-	double dca = muTrk->dca();
-	double dT = muTrk->deltaTimeOfFlight();
-	int channel = muTrk->channel();
-	//double dTCor = mtddTCor(dT,channel);
-	double dZ = muTrk->deltaZ();
-	//double dY = muTrk->deltaY();
-	if(pt<mMuPtCut[0] || pt>mMuPtCut[1]) return false;
-	if(eta<mMuEtaCut[0] || eta>mMuEtaCut[1]) return false;
-	//if(dT<mMudTCut[0] || dT>mMudTCut[1]) return false;
-	//if(dTCor<fMudTCutLow->Eval(pt) || dTCor>fMudTCutHigh->Eval(pt)) return false;
-	if(dT<fMudTCutLow->Eval(pt) || dT>fMudTCutHigh->Eval(pt)) return false;
-	//if(dY<mMudYCut[0] || dY>mMudYCut[1]) return false;
-	if(dZ<mMudZCut[0] || dZ>mMudZCut[1]) return false;
-	if(dca<mMuDcaCut[0] || dca>mMuDcaCut[1]) return false;
-	if(nSigPi<mMunSigPiCut[0] || nSigPi>mMunSigPiCut[1]) return false;
-	int triggerFlag = muTrk->triggerFlag();
-	if(mTrigSelect==5||mTrigSelect==6||mTrigSelect==7){
-		if(triggerFlag>0) return true;
-		else return false;
-	}	
-	return true;
+  double pt = muTrk->gMom().perp();
+  double eta = muTrk->gMom().pseudoRapidity();
+  int charge = muTrk->charge();
+  int nHitsFit = muTrk->nHitsFit();
+  int nHitsDedx = muTrk->nHitsDedx();
+  double nSigPi = muTrk->nSigmaPion();
+  double dca = muTrk->dca();
+  double dT = muTrk->deltaTimeOfFlight();
+  int channel = muTrk->channel();
+  //double dTCor = mtddTCor(dT,channel);
+  double dZ = muTrk->deltaZ();
+  //double dY = muTrk->deltaY();
+  if(pt<mMuPtCut[0] || pt>mMuPtCut[1]) return false;
+  if(eta<mMuEtaCut[0] || eta>mMuEtaCut[1]) return false;
+  //if(dT<mMudTCut[0] || dT>mMudTCut[1]) return false;
+  //if(dTCor<fMudTCutLow->Eval(pt) || dTCor>fMudTCutHigh->Eval(pt)) return false;
+  if(dT<fMudTCutLow->Eval(pt) || dT>fMudTCutHigh->Eval(pt)) return false;
+  //if(dY<mMudYCut[0] || dY>mMudYCut[1]) return false;
+  if(dZ<mMudZCut[0] || dZ>mMudZCut[1]) return false;
+  if(dca<mMuDcaCut[0] || dca>mMuDcaCut[1]) return false;
+  if(nSigPi<mMunSigPiCut[0] || nSigPi>mMunSigPiCut[1]) return false;
+  int triggerFlag = muTrk->triggerFlag();
+  if(mTrigSelect==5||mTrigSelect==6||mTrigSelect==7){
+    if(triggerFlag>0) return true;
+    else return false;
+  }	
+  return true;
 }
 
-bool StMyAnaTreeMaker::passEEPairCuts(double y) {
-	if(y<mEEYCut[0] || y>mEEYCut[1]) return false;
-	return true;	
+bool StMyAnaTreeMaker::passEEPairCuts(double y, double pairdca) {
+  if(y<mEEYCut[0] || y>mEEYCut[1] || pairdca<mPairDcaCut[0] || pairdca>mPairDcaCut[1]) 
+    return false;
+  return true;	
 }
 
 bool StMyAnaTreeMaker::passEMuPairCuts(double y) {
-	if(y<mEMuYCut[0] || y>mEMuYCut[1]) return false;
-	return true;	
+  if(y<mEMuYCut[0] || y>mEMuYCut[1]) return false;
+  return true;	
 }
 
 bool StMyAnaTreeMaker::passMuMuPairCuts(double y) {
-	if(y<mMuMuYCut[0] || y>mMuMuYCut[1]) return false;
-	return true;	
+  if(y<mMuMuYCut[0] || y>mMuMuYCut[1]) return false;
+  return true;	
 }
 
 int StMyAnaTreeMaker::getCentrality(){
-	int gRefMult = mAnaTree->event()->grefMult();	
-	int Centrality = 0;
-	//temporary
-	int cent[] = {10,21,40,71,116,179,263,373,441};
-	if(     gRefMult < cent[0]) Centrality = 0;
-	else if(gRefMult < cent[1]) Centrality = 1;
-	else if(gRefMult < cent[2]) Centrality = 2;
-	else if(gRefMult < cent[3]) Centrality = 3;
-	else if(gRefMult < cent[4]) Centrality = 4;
-	else if(gRefMult < cent[5]) Centrality = 5;
-	else if(gRefMult < cent[6]) Centrality = 6;
-	else if(gRefMult < cent[7]) Centrality = 7;
-	else if(gRefMult < cent[8]) Centrality = 8;
-	else Centrality = 9;
-	return Centrality;
+  int gRefMult = mAnaTree->event()->grefMult();	
+  int Centrality = 0;
+  //temporary
+  int cent[] = {10,21,40,71,116,179,263,373,441};
+  if(     gRefMult < cent[0]) Centrality = 0;
+  else if(gRefMult < cent[1]) Centrality = 1;
+  else if(gRefMult < cent[2]) Centrality = 2;
+  else if(gRefMult < cent[3]) Centrality = 3;
+  else if(gRefMult < cent[4]) Centrality = 4;
+  else if(gRefMult < cent[5]) Centrality = 5;
+  else if(gRefMult < cent[6]) Centrality = 6;
+  else if(gRefMult < cent[7]) Centrality = 7;
+  else if(gRefMult < cent[8]) Centrality = 8;
+  else Centrality = 9;
+  return Centrality;
 }
 void StMyAnaTreeMaker::printCuts(){
 
-	LOG_INFO<<"analysis cuts:"<<endm;
-	LOG_INFO<<mVzCut[0]<<"<mVzCut<"<<mVzCut[1]<<endm;
-	LOG_INFO<<mVzDiffCut[0]<<"<mVzDiffCut<"<<mVzDiffCut[1]<<endm;
-	LOG_INFO<<"mTrigSelect="<<mTrigSelect<<endm;
-	LOG_INFO<<"mHTth="<<mHTth<<endm;
+  LOG_INFO<<"analysis cuts:"<<endm;
+  LOG_INFO<<mVzCut[0]<<"<mVzCut<"<<mVzCut[1]<<endm;
+  LOG_INFO<<mVzDiffCut[0]<<"<mVzDiffCut<"<<mVzDiffCut[1]<<endm;
+  LOG_INFO<<"mTrigSelect="<<mTrigSelect<<endm;
+  LOG_INFO<<"mHTth="<<mHTth<<endm;
 
-	LOG_INFO<<mnHitsFitCut[0]<<"<mnHitsFitCut<"<<mnHitsFitCut[1]<<endm;
-	LOG_INFO<<mnHitsDedxCut[0]<<"<mnHitsDedxCut<"<<mnHitsDedxCut[1]<<endm;
-	LOG_INFO<<mRatioCut[0]<<"<mRatioCut<"<<mRatioCut[1]<<endm;
-	LOG_INFO<<"mHFTTrackCut="<<mHFTTrackCut<<endm;
+  LOG_INFO<<mnHitsFitCut[0]<<"<mnHitsFitCut<"<<mnHitsFitCut[1]<<endm;
+  LOG_INFO<<mnHitsDedxCut[0]<<"<mnHitsDedxCut<"<<mnHitsDedxCut[1]<<endm;
+  LOG_INFO<<mRatioCut[0]<<"<mRatioCut<"<<mRatioCut[1]<<endm;
+  LOG_INFO<<"mHFTTrackCut="<<mHFTTrackCut<<endm;
 
-	LOG_INFO<<mEPtCut[0]<<"<mEPtCut<"<<mEPtCut[1]<<endm;
-	LOG_INFO<<mEEtaCut[0]<<"<mEEtaCut<"<<mEEtaCut[1]<<endm;
-	LOG_INFO<<mEDcaCut[0]<<"<mEDcaCut<"<<mEDcaCut[1]<<endm;
-	LOG_INFO<<mEInvBetaCut[0]<<"<mEInvBetaCut<"<<mEInvBetaCut[1]<<endm;
-	LOG_INFO<<mELocalYCut[0]<<"<mELocalYCut<"<<mELocalYCut[1]<<endm;
-	LOG_INFO<<mELocalZCut[0]<<"<mELocalZCut<"<<mELocalZCut[1]<<endm;
-	LOG_INFO<<mEnSigECut[0]<<"<mEnSigECut<"<<mEnSigECut[1]<<endm;
+  LOG_INFO<<mEPtCut[0]<<"<mEPtCut<"<<mEPtCut[1]<<endm;
+  LOG_INFO<<mEEtaCut[0]<<"<mEEtaCut<"<<mEEtaCut[1]<<endm;
+  LOG_INFO<<mEDcaCut[0]<<"<mEDcaCut<"<<mEDcaCut[1]<<endm;
+  LOG_INFO<<mEInvBetaCut[0]<<"<mEInvBetaCut<"<<mEInvBetaCut[1]<<endm;
+  LOG_INFO<<mELocalYCut[0]<<"<mELocalYCut<"<<mELocalYCut[1]<<endm;
+  LOG_INFO<<mELocalZCut[0]<<"<mELocalZCut<"<<mELocalZCut[1]<<endm;
+  LOG_INFO<<mEnSigECut[0]<<"<mEnSigECut<"<<mEnSigECut[1]<<endm;
 
-	LOG_INFO<<mEmcEPtCut[0]<<"<mEmcEPtCut<"<<mEmcEPtCut[1]<<endm;
-	LOG_INFO<<mEmcEEtaCut[0]<<"<mEmcEEtaCut<"<<mEmcEEtaCut[1]<<endm;
-	LOG_INFO<<mEmcEPveCut[0]<<"<mEmcEPveCut<"<<mEmcEPveCut[1]<<endm;
+  LOG_INFO<<mEmcEPtCut[0]<<"<mEmcEPtCut<"<<mEmcEPtCut[1]<<endm;
+  LOG_INFO<<mEmcEEtaCut[0]<<"<mEmcEEtaCut<"<<mEmcEEtaCut[1]<<endm;
+  LOG_INFO<<mEmcEPveCut[0]<<"<mEmcEPveCut<"<<mEmcEPveCut[1]<<endm;
 
-	LOG_INFO<<mEnEtaCut[0]<<"<mEnEtaCut<"<<mEnEtaCut[1]<<endm;
-	LOG_INFO<<mEnPhiCut[0]<<"<mEnPhiCut<"<<mEnPhiCut[1]<<endm;
-	LOG_INFO<<mEZDistCut[0]<<"<mEZDistCut<"<<mEZDistCut[1]<<endm;
-	LOG_INFO<<mEPhiDistCut[0]<<"<mEPhiDistCut<"<<mEPhiDistCut[1]<<endm;
+  LOG_INFO<<mEnEtaCut[0]<<"<mEnEtaCut<"<<mEnEtaCut[1]<<endm;
+  LOG_INFO<<mEnPhiCut[0]<<"<mEnPhiCut<"<<mEnPhiCut[1]<<endm;
+  LOG_INFO<<mEZDistCut[0]<<"<mEZDistCut<"<<mEZDistCut[1]<<endm;
+  LOG_INFO<<mEPhiDistCut[0]<<"<mEPhiDistCut<"<<mEPhiDistCut[1]<<endm;
 
-	LOG_INFO<<mMuPtCut[0]<<"<mMuPtCut<"<<mMuPtCut[1]<<endm;
-	LOG_INFO<<mMuEtaCut[0]<<"<mMuEtaCut<"<<mMuEtaCut[1]<<endm;
-	LOG_INFO<<mMuDcaCut[0]<<"<mMuDcaCut<"<<mMuDcaCut[1]<<endm;
-	LOG_INFO<<mMunSigPiCut[0]<<"<mMunSigPiCut<"<<mMunSigPiCut[1]<<endm;
-	LOG_INFO<<mMudTCut[0]<<"<mMudTCut<"<<mMudTCut[1]<<endm;
-	LOG_INFO<<mMudZCut[0]<<"<mMudZCut<"<<mMudZCut[1]<<endm;
-	LOG_INFO<<mMudYCut[0]<<"<mMudYCut<"<<mMudYCut[1]<<endm;
+  LOG_INFO<<mMuPtCut[0]<<"<mMuPtCut<"<<mMuPtCut[1]<<endm;
+  LOG_INFO<<mMuEtaCut[0]<<"<mMuEtaCut<"<<mMuEtaCut[1]<<endm;
+  LOG_INFO<<mMuDcaCut[0]<<"<mMuDcaCut<"<<mMuDcaCut[1]<<endm;
+  LOG_INFO<<mMunSigPiCut[0]<<"<mMunSigPiCut<"<<mMunSigPiCut[1]<<endm;
+  LOG_INFO<<mMudTCut[0]<<"<mMudTCut<"<<mMudTCut[1]<<endm;
+  LOG_INFO<<mMudZCut[0]<<"<mMudZCut<"<<mMudZCut[1]<<endm;
+  LOG_INFO<<mMudYCut[0]<<"<mMudYCut<"<<mMudYCut[1]<<endm;
 
-	LOG_INFO<<mDauEPtCut[0]<<"<mDauEPtCut<"<<mDauEPtCut[1]<<endm;
-	LOG_INFO<<mDauEEtaCut[0]<<"<mDauEEtaCut<"<<mDauEEtaCut[1]<<endm;
-	LOG_INFO<<mDauEDcaToVtxCut[0]<<"<mDauEDcaToVtxCut<"<<mDauEDcaToVtxCut[1]<<endm;
-	LOG_INFO<<mDauEDcaDistCut[0]<<"<mDauEDcaDistCut<"<<mDauEDcaDistCut[1]<<endm;
+  LOG_INFO<<mDauEPtCut[0]<<"<mDauEPtCut<"<<mDauEPtCut[1]<<endm;
+  LOG_INFO<<mDauEEtaCut[0]<<"<mDauEEtaCut<"<<mDauEEtaCut[1]<<endm;
+  LOG_INFO<<mDauEDcaToVtxCut[0]<<"<mDauEDcaToVtxCut<"<<mDauEDcaToVtxCut[1]<<endm;
+  LOG_INFO<<mDauEDcaDistCut[0]<<"<mDauEDcaDistCut<"<<mDauEDcaDistCut[1]<<endm;
 
-	LOG_INFO<<mDauMuPtCut[0]<<"<mDauMuPtCut<"<<mDauMuPtCut[1]<<endm;
-	LOG_INFO<<mDauMuEtaCut[0]<<"<mDauMuEtaCut<"<<mDauMuEtaCut[1]<<endm;
-	LOG_INFO<<mDauMuDcaToVtxCut[0]<<"<mDauMuDcaToVtxCut<"<<mDauMuDcaToVtxCut[1]<<endm;
+  LOG_INFO<<mDauMuPtCut[0]<<"<mDauMuPtCut<"<<mDauMuPtCut[1]<<endm;
+  LOG_INFO<<mDauMuEtaCut[0]<<"<mDauMuEtaCut<"<<mDauMuEtaCut[1]<<endm;
+  LOG_INFO<<mDauMuDcaToVtxCut[0]<<"<mDauMuDcaToVtxCut<"<<mDauMuDcaToVtxCut[1]<<endm;
 
-	LOG_INFO<<mCosThetaStarCut[0]<<"<mCosThetaStarCut<"<<mCosThetaStarCut[1]<<endm;
-	LOG_INFO<<mPointingAngleCut[0]<<"<mPointingAngleCut<"<<mPointingAngleCut[1]<<endm;
-	LOG_INFO<<mPairDcaCut[0]<<"<mPairDcaCut<"<<mPairDcaCut[1]<<endm;
-	LOG_INFO<<mPairDecayLCut[0]<<"<mPairDecayLCut<"<<mPairDecayLCut[1]<<endm;
-	LOG_INFO<<mEEYCut[0]<<"<mEEYCut<"<<mEEYCut[1]<<endm;
-	LOG_INFO<<mPairMassCut[0]<<"<mPairMassCut<"<<mPairMassCut[1]<<endm;
+  LOG_INFO<<mCosThetaStarCut[0]<<"<mCosThetaStarCut<"<<mCosThetaStarCut[1]<<endm;
+  LOG_INFO<<mPointingAngleCut[0]<<"<mPointingAngleCut<"<<mPointingAngleCut[1]<<endm;
+  LOG_INFO<<mPairDcaCut[0]<<"<mPairDcaCut<"<<mPairDcaCut[1]<<endm;
+  LOG_INFO<<mPairDecayLCut[0]<<"<mPairDecayLCut<"<<mPairDecayLCut[1]<<endm;
+  LOG_INFO<<mEEYCut[0]<<"<mEEYCut<"<<mEEYCut[1]<<endm;
+  LOG_INFO<<mPairMassCut[0]<<"<mPairMassCut<"<<mPairMassCut[1]<<endm;
 
-	LOG_INFO<<mEEYCut[0]<<"<mEEYCut<"<<mEEYCut[1]<<endm;
-	LOG_INFO<<mEMuYCut[0]<<"<mEMuYCut<"<<mEMuYCut[1]<<endm;
-	LOG_INFO<<mMuMuYCut[0]<<"<mMuMuYCut<"<<mMuMuYCut[1]<<endm;
+  LOG_INFO<<mEEYCut[0]<<"<mEEYCut<"<<mEEYCut[1]<<endm;
+  LOG_INFO<<mEMuYCut[0]<<"<mEMuYCut<"<<mEMuYCut[1]<<endm;
+  LOG_INFO<<mMuMuYCut[0]<<"<mMuMuYCut<"<<mMuMuYCut[1]<<endm;
 
 }
 
 Double_t StMyAnaTreeMaker::mtddTCor(double dT, int channel){
 
-	int backleg = channel/60+1;
-	int module = (channel%60)/12+1;
+  int backleg = channel/60+1;
+  int module = (channel%60)/12+1;
 
-	return dT + +mMtdT0Corr[backleg-1][module-1];
+  return dT + +mMtdT0Corr[backleg-1][module-1];
 
 }
 
 void StMyAnaTreeMaker::makeEEMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer){
 
-	int htFlag = 0;
-	if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4){
-		htFlag = 1;
-	}
+  int htFlag = 0;
+  if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4){
+    htFlag = 1;
+  }
 
-	TLorentzVector pair(0,0,0,0);
-	for(int iBufferEvent=0;iBufferEvent<nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];iBufferEvent++) {
-		//+-------------------------+
-		//| current e+  + buffer e- |
-		//+-------------------------+
-		for(int i=0;i<current_nePlus;i++) {
-			for(int j=0;j<buffer_neMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+  TLorentzVector pair(0,0,0,0);
+  for(int iBufferEvent=0;iBufferEvent<nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];iBufferEvent++) {
+    //+-------------------------+
+    //| current e+  + buffer e- |
+    //+-------------------------+
+    for(int i=0;i<current_nePlus;i++) {
+      for(int j=0;j<buffer_neMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
 
-				int flag1 = current_ePlusFlag[i];
-				int flag2 = buffer_eMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_ePlusIsHFT[i];
-				int isHft2 = buffer_eMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2/4;
-				if(htFlag){
-					if(trgFlag1&&trgFlag2) continue; //both fired trigger
-					if(!trgFlag1&&!trgFlag2) continue; // no one triggered
-					if(flag1==1&&flag2==1) continue; //TPC+TPC
+        int flag1 = current_ePlusFlag[i];
+        int flag2 = buffer_eMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_ePlusIsHFT[i];
+        int isHft2 = buffer_eMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2/4;
+        if(htFlag){
+          if(trgFlag1&&trgFlag2) continue; //both fired trigger
+          if(!trgFlag1&&!trgFlag2) continue; // no one triggered
+          if(flag1==1&&flag2==1) continue; //TPC+TPC
 
-				}
-				pair = current_ePlus[i] + buffer_eMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<mEEYCut[1]) {
-					hEEDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEEDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current e+ loop
-		}//end of buffer e- loop
+        }
+        pair = current_ePlus[i] + buffer_eMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<mEEYCut[1]) {
+          hEEDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEEDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current e+ loop
+    }//end of buffer e- loop
 
-		//+-------------------------+
-		//| current e-  + buffer e+ |
-		//+-------------------------+
-		for(int i=0;i<current_neMinus;i++) {
-			for(int j=0;j<buffer_nePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_eMinusFlag[i];
-				int flag2 = buffer_ePlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_eMinusIsHFT[i];
-				int isHft2 = buffer_ePlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2/4;
-				if(htFlag){
-					if(trgFlag1&&trgFlag2) continue; //both fired trigger
-					if(!trgFlag1&&!trgFlag2) continue; // no one triggered
-					if(flag1==1&&flag2==1) continue; //TPC+TPC
-				}
+    //+-------------------------+
+    //| current e-  + buffer e+ |
+    //+-------------------------+
+    for(int i=0;i<current_neMinus;i++) {
+      for(int j=0;j<buffer_nePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_eMinusFlag[i];
+        int flag2 = buffer_ePlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_eMinusIsHFT[i];
+        int isHft2 = buffer_ePlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2/4;
+        if(htFlag){
+          if(trgFlag1&&trgFlag2) continue; //both fired trigger
+          if(!trgFlag1&&!trgFlag2) continue; // no one triggered
+          if(flag1==1&&flag2==1) continue; //TPC+TPC
+        }
 
-				pair = current_eMinus[i] + buffer_ePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<=mEEYCut[1]) {
-					hEEDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEEDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current e- loop
-		}// end of buffer e+ loop
+        pair = current_eMinus[i] + buffer_ePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<=mEEYCut[1]) {
+          hEEDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEEDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current e- loop
+    }// end of buffer e+ loop
 
-		//+-------------------------+
-		//| current e+  + buffer e+ |
-		//+-------------------------+
-		// Mixed-likesign
-		for(int i=0;i<current_nePlus;i++) {
-			for(int j=0;j<buffer_nePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				char flag1 = current_ePlusFlag[i];
-				char flag2 = buffer_ePlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_ePlusIsHFT[i];
-				int isHft2 = buffer_ePlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2/4;
-				if(htFlag){
-					if(trgFlag1&&trgFlag2) continue; //both fired trigger
-					if(!trgFlag1&&!trgFlag2) continue; // no one triggered
-					if(flag1==1&&flag2==1) continue; //TPC+TPC
-				}
+    //+-------------------------+
+    //| current e+  + buffer e+ |
+    //+-------------------------+
+    // Mixed-likesign
+    for(int i=0;i<current_nePlus;i++) {
+      for(int j=0;j<buffer_nePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        char flag1 = current_ePlusFlag[i];
+        char flag2 = buffer_ePlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_ePlusIsHFT[i];
+        int isHft2 = buffer_ePlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2/4;
+        if(htFlag){
+          if(trgFlag1&&trgFlag2) continue; //both fired trigger
+          if(!trgFlag1&&!trgFlag2) continue; // no one triggered
+          if(flag1==1&&flag2==1) continue; //TPC+TPC
+        }
 
-				pair = current_ePlus[i] + buffer_ePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<=mEEYCut[1]) {
-					hEEDenInvMassvsPtMixLikePos->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEEDenInvMassvsPtMixLikePoswHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current e+ loop
-		}// end of buffer e+ loop
+        pair = current_ePlus[i] + buffer_ePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<=mEEYCut[1]) {
+          hEEDenInvMassvsPtMixLikePos->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEEDenInvMassvsPtMixLikePoswHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current e+ loop
+    }// end of buffer e+ loop
 
-		//+-------------------------+
-		//| current e-  + buffer e- |
-		//+-------------------------+
-		for(int i=0;i<current_neMinus;i++) {
-			for(int j=0;j<buffer_neMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				char flag1 = current_eMinusFlag[i];
-				char flag2 = buffer_eMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_eMinusIsHFT[i];
-				int isHft2 = buffer_eMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2/4;
-				if(htFlag){
-					if(trgFlag1&&trgFlag2) continue; //both fired trigger
-					if(!trgFlag1&&!trgFlag2) continue; // no one triggered
-					if(flag1==1&&flag2==1) continue; //TPC+TPC
-				}
+    //+-------------------------+
+    //| current e-  + buffer e- |
+    //+-------------------------+
+    for(int i=0;i<current_neMinus;i++) {
+      for(int j=0;j<buffer_neMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        char flag1 = current_eMinusFlag[i];
+        char flag2 = buffer_eMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_eMinusIsHFT[i];
+        int isHft2 = buffer_eMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2/4;
+        if(htFlag){
+          if(trgFlag1&&trgFlag2) continue; //both fired trigger
+          if(!trgFlag1&&!trgFlag2) continue; // no one triggered
+          if(flag1==1&&flag2==1) continue; //TPC+TPC
+        }
 
-				pair = current_eMinus[i] + buffer_eMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<=mEEYCut[1]) {
-					hEEDenInvMassvsPtMixLikeNeg->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEEDenInvMassvsPtMixLikeNegwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current e- loop
-		}// end of buffer e- loop
+        pair = current_eMinus[i] + buffer_eMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEEYCut[0]&&pair.Rapidity()<=mEEYCut[1]) {
+          hEEDenInvMassvsPtMixLikeNeg->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEEDenInvMassvsPtMixLikeNegwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current e- loop
+    }// end of buffer e- loop
 
-		//+-------------------------+
-	}//end of buffer events loop
+    //+-------------------------+
+  }//end of buffer events loop
 }
 
 void StMyAnaTreeMaker::makeEMuMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer){
-	int emuFlag = 0;
-	if(mTrigSelect==5){
-		emuFlag = 1;
-	}
-	int htFlag = 0;
-	if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4){
-		htFlag = 1;
-	}
+  int emuFlag = 0;
+  if(mTrigSelect==5){
+    emuFlag = 1;
+  }
+  int htFlag = 0;
+  if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4){
+    htFlag = 1;
+  }
 
-	TLorentzVector pair(0,0,0,0);
-	for(int iBufferEvent=0;iBufferEvent<nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];iBufferEvent++) {
-		//+-------------------------+
-		//| current e+  + buffer mu-|
-		//+-------------------------+
-		for(int i=0;i<current_nePlus;i++) {
-			for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_ePlusFlag[i];
-				int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_ePlusIsHFT[i];
-				int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2;
-				if(emuFlag){
-					if(!trgFlag1||!trgFlag2) continue; 
-				}
-				if(htFlag){
-					if(!trgFlag1) continue;
-				}
+  TLorentzVector pair(0,0,0,0);
+  for(int iBufferEvent=0;iBufferEvent<nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];iBufferEvent++) {
+    //+-------------------------+
+    //| current e+  + buffer mu-|
+    //+-------------------------+
+    for(int i=0;i<current_nePlus;i++) {
+      for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_ePlusFlag[i];
+        int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_ePlusIsHFT[i];
+        int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2;
+        if(emuFlag){
+          if(!trgFlag1||!trgFlag2) continue; 
+        }
+        if(htFlag){
+          if(!trgFlag1) continue;
+        }
 
-				pair = current_ePlus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<mEMuYCut[1]) {
-					hEMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of buffer mu+ loop
-		}//end of current e- loop
+        pair = current_ePlus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<mEMuYCut[1]) {
+          hEMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of buffer mu+ loop
+    }//end of current e- loop
 
-		//+-------------------------+
-		//| current e-  + buffer mu+ |
-		//+-------------------------+
-		for(int i=0;i<current_neMinus;i++) {
-			for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_eMinusFlag[i];
-				int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_eMinusIsHFT[i];
-				int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2;
-				if(emuFlag){
-					if(!trgFlag1||!trgFlag2) continue; 
-				}
-				if(htFlag){
-					if(!trgFlag1) continue;
-				}
+    //+-------------------------+
+    //| current e-  + buffer mu+ |
+    //+-------------------------+
+    for(int i=0;i<current_neMinus;i++) {
+      for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_eMinusFlag[i];
+        int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_eMinusIsHFT[i];
+        int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2;
+        if(emuFlag){
+          if(!trgFlag1||!trgFlag2) continue; 
+        }
+        if(htFlag){
+          if(!trgFlag1) continue;
+        }
 
-				pair = current_eMinus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<=mEMuYCut[1]) {
-					hEMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}// end of buffer mu+ loop
-		}//end of current e- loop
+        pair = current_eMinus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<=mEMuYCut[1]) {
+          hEMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }// end of buffer mu+ loop
+    }//end of current e- loop
 
-		//+-------------------------+
-		//| current e+  + buffer mu+ |
-		//+-------------------------+
-		// Mixed-likesign
-		for(int i=0;i<current_nePlus;i++) {
-			for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_ePlusFlag[i];
-				int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_ePlusIsHFT[i];
-				int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2;
-				if(emuFlag){
-					if(!trgFlag1||!trgFlag2) continue; 
-				}
-				if(htFlag){
-					if(!trgFlag1) continue;
-				}
+    //+-------------------------+
+    //| current e+  + buffer mu+ |
+    //+-------------------------+
+    // Mixed-likesign
+    for(int i=0;i<current_nePlus;i++) {
+      for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_ePlusFlag[i];
+        int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_ePlusIsHFT[i];
+        int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2;
+        if(emuFlag){
+          if(!trgFlag1||!trgFlag2) continue; 
+        }
+        if(htFlag){
+          if(!trgFlag1) continue;
+        }
 
-				pair = current_ePlus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<=mEMuYCut[1]) {
-					hEMuDenInvMassvsPtMixLikePos->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEMuDenInvMassvsPtMixLikePoswHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}// end of buffer mu+ loop
-		}//end of current e+ loop
+        pair = current_ePlus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<=mEMuYCut[1]) {
+          hEMuDenInvMassvsPtMixLikePos->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEMuDenInvMassvsPtMixLikePoswHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }// end of buffer mu+ loop
+    }//end of current e+ loop
 
-		//+-------------------------+
-		//| current e-  + buffer mu- |
-		//+-------------------------+
-		for(int i=0;i<current_neMinus;i++) {
-			for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_eMinusFlag[i];
-				int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_eMinusIsHFT[i];
-				int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1/4;
-				int trgFlag2 = flag2;
-				if(emuFlag){
-					if(!trgFlag1||!trgFlag2) continue; 
-				}
-				if(htFlag){
-					if(!trgFlag1) continue;
-				}
-				pair = current_eMinus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<=mEMuYCut[1]) {
-					hEMuDenInvMassvsPtMixLikeNeg->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hEMuDenInvMassvsPtMixLikeNegwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}// end of buffer mu- loop
-		}//end of current e- loop
+    //+-------------------------+
+    //| current e-  + buffer mu- |
+    //+-------------------------+
+    for(int i=0;i<current_neMinus;i++) {
+      for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_eMinusFlag[i];
+        int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_eMinusIsHFT[i];
+        int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1/4;
+        int trgFlag2 = flag2;
+        if(emuFlag){
+          if(!trgFlag1||!trgFlag2) continue; 
+        }
+        if(htFlag){
+          if(!trgFlag1) continue;
+        }
+        pair = current_eMinus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mEMuYCut[0]&&pair.Rapidity()<=mEMuYCut[1]) {
+          hEMuDenInvMassvsPtMixLikeNeg->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hEMuDenInvMassvsPtMixLikeNegwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }// end of buffer mu- loop
+    }//end of current e- loop
 
-	}//end of buffer events loop
+  }//end of buffer events loop
 
 }
 
 void StMyAnaTreeMaker::makeMuMuMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer){
-	int mumuFlag = 0;
-	if(mTrigSelect==5){
-		mumuFlag = 1;
-	}
+  int mumuFlag = 0;
+  if(mTrigSelect==5){
+    mumuFlag = 1;
+  }
 
-	TLorentzVector pair(0,0,0,0);
-	for(int iBufferEvent=0;iBufferEvent<nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];iBufferEvent++) {
-		//+-------------------------+
-		//| current mu+  + buffer mu-|
-		//+-------------------------+
-		for(int i=0;i<current_nmuPlus;i++) {
-			for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_muPlusFlag[i];
-				int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_muPlusIsHFT[i];
-				int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1;
-				int trgFlag2 = flag2;
-				if(mumuFlag==1){
-					if(!trgFlag1||!trgFlag2) continue;
-				}
+  TLorentzVector pair(0,0,0,0);
+  for(int iBufferEvent=0;iBufferEvent<nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];iBufferEvent++) {
+    //+-------------------------+
+    //| current mu+  + buffer mu-|
+    //+-------------------------+
+    for(int i=0;i<current_nmuPlus;i++) {
+      for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_muPlusFlag[i];
+        int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_muPlusIsHFT[i];
+        int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1;
+        int trgFlag2 = flag2;
+        if(mumuFlag==1){
+          if(!trgFlag1||!trgFlag2) continue;
+        }
 
-				pair = current_muPlus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<mMuMuYCut[1]) {
-					hMuMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current mu+ loop
-		}//end of buffer mu- loop
+        pair = current_muPlus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<mMuMuYCut[1]) {
+          hMuMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current mu+ loop
+    }//end of buffer mu- loop
 
-		//+-------------------------+
-		//| current mu-  + buffer mu+ |
-		//+-------------------------+
-		for(int i=0;i<current_nmuMinus;i++) {
-			for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_muMinusFlag[i];
-				int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_muMinusIsHFT[i];
-				int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1;
-				int trgFlag2 = flag2;
-				if(mumuFlag==1){
-					if(!trgFlag1||!trgFlag2) continue;
-				}
+    //+-------------------------+
+    //| current mu-  + buffer mu+ |
+    //+-------------------------+
+    for(int i=0;i<current_nmuMinus;i++) {
+      for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_muMinusFlag[i];
+        int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_muMinusIsHFT[i];
+        int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1;
+        int trgFlag2 = flag2;
+        if(mumuFlag==1){
+          if(!trgFlag1||!trgFlag2) continue;
+        }
 
-				pair = current_muMinus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<=mMuMuYCut[1]) {
-					hMuMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current mu- loop
-		}// end of buffer mu+ loop
+        pair = current_muMinus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<=mMuMuYCut[1]) {
+          hMuMuDenInvMassvsPtMix->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current mu- loop
+    }// end of buffer mu+ loop
 
-		//+-------------------------+
-		//| current mu+  + buffer mu+ |
-		//+-------------------------+
-		// Mixed-likesign
-		for(int i=0;i<current_nmuPlus;i++) {
-			for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_muPlusFlag[i];
-				int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_muPlusIsHFT[i];
-				int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1;
-				int trgFlag2 = flag2;
-				if(mumuFlag==1){
-					if(!trgFlag1||!trgFlag2) continue;
-				}
-
-
-				pair = current_muPlus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<=mMuMuYCut[1]) {
-					hMuMuDenInvMassvsPtMixLikePos->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixLikePoswHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current mu+ loop
-		}// end of buffer mu+ loop
-
-		//+-------------------------+
-		//| current mu-  + buffer mu- |
-		//+-------------------------+
-		for(int i=0;i<current_nmuMinus;i++) {
-			for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
-				int flag1 = current_muMinusFlag[i];
-				int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int isHft1 = current_muMinusIsHFT[i];
-				int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				int trgFlag1 = flag1;
-				int trgFlag2 = flag2;
-				if(mumuFlag==1){
-					if(!trgFlag1||!trgFlag2) continue;
-				}
+    //+-------------------------+
+    //| current mu+  + buffer mu+ |
+    //+-------------------------+
+    // Mixed-likesign
+    for(int i=0;i<current_nmuPlus;i++) {
+      for(int j=0;j<buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_muPlusFlag[i];
+        int flag2 = buffer_muPlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_muPlusIsHFT[i];
+        int isHft2 = buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1;
+        int trgFlag2 = flag2;
+        if(mumuFlag==1){
+          if(!trgFlag1||!trgFlag2) continue;
+        }
 
 
-				pair = current_muMinus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
-				if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<=mMuMuYCut[1]) {
-					hMuMuDenInvMassvsPtMixLikeNeg->Fill(pair.Pt(), pair.M(), current_centrality); 
-					if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixLikeNegwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
-				}
-			}//end of current mu- loop
-		}// end of buffer mu- loop
+        pair = current_muPlus[i] + buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<=mMuMuYCut[1]) {
+          hMuMuDenInvMassvsPtMixLikePos->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixLikePoswHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current mu+ loop
+    }// end of buffer mu+ loop
 
-	}//end of buffer events loop
+    //+-------------------------+
+    //| current mu-  + buffer mu- |
+    //+-------------------------+
+    for(int i=0;i<current_nmuMinus;i++) {
+      for(int j=0;j<buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent];j++) {
+        int flag1 = current_muMinusFlag[i];
+        int flag2 = buffer_muMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int isHft1 = current_muMinusIsHFT[i];
+        int isHft2 = buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        int trgFlag1 = flag1;
+        int trgFlag2 = flag2;
+        if(mumuFlag==1){
+          if(!trgFlag1||!trgFlag2) continue;
+        }
+
+
+        pair = current_muMinus[i] + buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][iBufferEvent][j];
+        if(pair.Rapidity()>mMuMuYCut[0]&&pair.Rapidity()<=mMuMuYCut[1]) {
+          hMuMuDenInvMassvsPtMixLikeNeg->Fill(pair.Pt(), pair.M(), current_centrality); 
+          if(isHft1&&isHft2) hMuMuDenInvMassvsPtMixLikeNegwHft->Fill(pair.Pt(), pair.M(), current_centrality); 
+        }
+      }//end of current mu- loop
+    }// end of buffer mu- loop
+
+  }//end of buffer events loop
 }
 
 void StMyAnaTreeMaker::copyCurrentToBuffer(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer){
 
-	if(nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer]>=nMaxEventsInBuffer) buffer_fullFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer] = kTRUE;
+  if(nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer]>=nMaxEventsInBuffer) buffer_fullFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer] = kTRUE;
 
-	TRandom3 *gRandom = new TRandom3(iran++);
-	int eventPointer = -1;
-	if(buffer_fullFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer]){//full, random replace one
-		eventPointer =  (int) gRandom->Uniform(0,nMaxEventsInBuffer-1e-6);
-	} else {
-		eventPointer = nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];
-	}
-	delete gRandom;
+  TRandom3 *gRandom = new TRandom3(iran++);
+  int eventPointer = -1;
+  if(buffer_fullFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer]){//full, random replace one
+    eventPointer =  (int) gRandom->Uniform(0,nMaxEventsInBuffer-1e-6);
+  } else {
+    eventPointer = nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer];
+  }
+  delete gRandom;
 
-	buffer_nePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_nePlus;
-	for(int i=0;i<current_nePlus;i++) {
-		buffer_ePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_ePlus[i];
-		buffer_ePlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_ePlusFlag[i];
-		buffer_ePlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_ePlusIsHFT[i];
-	}
+  buffer_nePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_nePlus;
+  for(int i=0;i<current_nePlus;i++) {
+    buffer_ePlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_ePlus[i];
+    buffer_ePlusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_ePlusFlag[i];
+    buffer_ePlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_ePlusIsHFT[i];
+  }
 
-	buffer_neMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_neMinus;
-	for(int i=0;i<current_neMinus;i++) {
-		buffer_eMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_eMinus[i];
-		buffer_eMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_eMinusFlag[i];
-		buffer_eMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_eMinusIsHFT[i];
-	}
+  buffer_neMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_neMinus;
+  for(int i=0;i<current_neMinus;i++) {
+    buffer_eMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_eMinus[i];
+    buffer_eMinusFlag[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_eMinusFlag[i];
+    buffer_eMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_eMinusIsHFT[i];
+  }
 
-	buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_nmuPlus;
-	for(int i=0;i<current_nmuPlus;i++) {
-		buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muPlus[i];
-		buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muPlusIsHFT[i];
-	}
+  buffer_nmuPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_nmuPlus;
+  for(int i=0;i<current_nmuPlus;i++) {
+    buffer_muPlus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muPlus[i];
+    buffer_muPlusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muPlusIsHFT[i];
+  }
 
-	buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_nmuMinus;
-	for(int i=0;i<current_nmuMinus;i++) {
-		buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muMinus[i];
-		buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muMinusIsHFT[i];
-	}
+  buffer_nmuMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer] = current_nmuMinus;
+  for(int i=0;i<current_nmuMinus;i++) {
+    buffer_muMinus[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muMinus[i];
+    buffer_muMinusIsHFT[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer][eventPointer][i] = current_muMinusIsHFT[i];
+  }
 
-	if(nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer]<nMaxEventsInBuffer) {
-		nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer] += 1;
-	}
+  if(nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer]<nMaxEventsInBuffer) {
+    nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer] += 1;
+  }
 }
 void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 {
   int charge = eTrk->charge();
   int qualFlag = 0, eHTflag = 0, eflag = 0, isTrgE = 0, 
       etrgflag = 0, isInPair = 0;
-  double pt = eTrk->pMom().perp();
+  double pt = eTrk->gMom().perp();
   if(passHTEIDCuts(eTrk)) eHTflag = 1;
   if(passEIDCuts(eTrk)) eflag = 1;
   if(isHTTrigE(eTrk)) isTrgE = 1;
@@ -1174,8 +1205,8 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   if(qualFlag && isTrgE)   hEPt_eff[3]->Fill(pt);
 
   if(!eHTflag&&!eflag) return;
-  double eta = eTrk->pMom().pseudoRapidity();
-  double phi = eTrk->pMom().phi();
+  double eta = eTrk->gMom().pseudoRapidity();
+  double phi = eTrk->gMom().phi();
   if(charge>0){ 
     current_ePlusFlag[current_nePlus] = eflag + 2*eHTflag+4*etrgflag;
     if(eTrk->isHFTTrack()) current_ePlusIsHFT[current_nePlus] = 1;
@@ -1190,7 +1221,7 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
     current_neMinus++; 
     hnTracks->Fill(2); 
   }
-  double p = eTrk->pMom().mag();
+  double p = eTrk->gMom().mag();
   double dca = eTrk->dca();
   double dcaXY = eTrk->dcaXY();
   double dcaZ = eTrk->dcaZ();
@@ -1226,8 +1257,7 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 
     hHadPtEPt ->Fill(pt,hpt);
     dphi = delPhiCorrect(dphi);
-    if(pt > 1.0 && hpt > 1.5 && hdca < 1.0) hHadEDelPhiPt->Fill(pt,dphi); // electron pt
-    if(pt > 1.0 && hpt > 4.0 && hdca < 1.0) hHadEDelPhiPt_high->Fill(pt,dphi); // electron pt
+    if(pt > 1.0 && hdca < 1.0) hHadEDelPhiPt->Fill(pt,dphi); // electron pt
   }
 }
 
@@ -1241,44 +1271,45 @@ bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk)
     StElectronTrack *pTrk1 = mAnaTree->eTrack(dauIndex1);
     StElectronTrack *pTrk2 = mAnaTree->eTrack(dauIndex2);
     StLorentzVectorF pair;
-    StThreeVectorF mom1 = pTrk1->pMom();
-    StThreeVectorF mom2 = pTrk2->pMom();
+    StThreeVectorF mom1 = pTrk1->gMom();
+    StThreeVectorF mom2 = pTrk2->gMom();
     StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
     StLorentzVectorF dau2(mom2,mom2.massHypothesis(eMass));
     pair = dau1+dau2;
     double pt = pair.perp();
     double y = pair.rapidity();
     double pmass = pair.m();
+    double dauDcaDist = ee->pairDca();
 
-    if((eTrk == pTrk1 || eTrk == pTrk2) && passEEPairCuts(y))
+    if((eTrk == pTrk1 || eTrk == pTrk2) && passEEPairCuts(y,dauDcaDist))
       return true;
   }
-  
+
   return false;
 }
 
 void StMyAnaTreeMaker::fillHadronHists(StHadronTrack* hTrk)
 {
-    if(!passHadronCuts(hTrk)) return;
-    int charge = hTrk->charge();
-    double hpt = hTrk->gMom().perp();
-    double heta = hTrk->gMom().pseudoRapidity();
-    double hphi = hTrk->gMom().phi();
-    double hdca = hTrk->dca();
+  if(!passHadronCuts(hTrk)) return;
+  int charge = hTrk->charge();
+  double hpt = hTrk->gMom().perp();
+  double heta = hTrk->gMom().pseudoRapidity();
+  double hphi = hTrk->gMom().phi();
+  double hdca = hTrk->dca();
 
-    hHadPt    ->Fill(hpt);
-    hHadPhi   ->Fill(hphi);
-    hHadDca   ->Fill(hdca);
-    hHadEtaPhi->Fill(heta,hphi);
-    hHadDcaPt ->Fill(charge*hpt,hdca);
+  hHadPt    ->Fill(hpt);
+  hHadPhi   ->Fill(hphi);
+  hHadDca   ->Fill(hdca);
+  hHadEtaPhi->Fill(heta,hphi);
+  hHadDcaPt ->Fill(charge*hpt,hdca);
 }
 
 void StMyAnaTreeMaker::fillMuonHists(StMuonTrack* muTrk){
   int charge = muTrk->charge();
   if(!passMuIDCuts(muTrk));
-  double pt = muTrk->pMom().perp();
-  double eta = muTrk->pMom().pseudoRapidity();
-  double phi = muTrk->pMom().phi();
+  double pt = muTrk->gMom().perp();
+  double eta = muTrk->gMom().pseudoRapidity();
+  double phi = muTrk->gMom().phi();
   if(charge>0){ 
     current_muPlus[current_nmuPlus].SetPtEtaPhiM(pt,eta,phi,eMass);
     if(muTrk->triggerFlag()>0) current_muPlusFlag[current_nmuPlus] = 1;
@@ -1293,7 +1324,7 @@ void StMyAnaTreeMaker::fillMuonHists(StMuonTrack* muTrk){
     current_nmuMinus++; 
     hnTracks->Fill(4);
   }
-  double p = muTrk->pMom().mag();
+  double p = muTrk->gMom().mag();
   double dca = muTrk->dca();
   double dcaXY = muTrk->dcaXY();
   double dcaZ = muTrk->dcaZ();
@@ -1311,6 +1342,151 @@ void StMyAnaTreeMaker::fillMuonHists(StMuonTrack* muTrk){
     hMuDcaXYvsPtwHft->Fill(pt*charge,dcaXY);
     hMuDcaZvsPtwHft->Fill(pt*charge,dcaZ);
   }
+}
+
+void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
+{
+  int tagEIndex = phoEE->primEIndex();
+  int partEIndex = phoEE->partEIndex();
+
+  StElectronTrack *tagETrk = mAnaTree->eTrack(tagEIndex);
+  StPartElectronTrack *partETrk = mAnaTree->partETrack(partEIndex);
+  int    idTag      = tagETrk->id();
+  int    idPart     = partETrk->id();
+  if(idTag==idPart) return; 
+
+  int flag = 0;
+  if(mTrigSelect==0){
+    if(tagEIDCuts(tagETrk))//&&partEIDCuts(partETrk)) 
+      flag=1;
+  }
+
+  if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5){
+    if(tagEIDCuts(tagETrk)&&tagEEMCCuts(tagETrk))//&&partEIDCuts(partETrk))
+      flag=1;//tagETrkFlag += 1;
+  }
+  if(mTrigSelect==-1){
+    if(tagEIDCuts(tagETrk)&&partEIDCuts(partETrk)) flag=1;
+  }
+
+  if(flag==0) return;
+
+  double mass = phoEE->pairMass();
+  double pairDca = phoEE->pairDca();
+  if(pairDca>1) return;
+
+  int    charge1    = tagETrk->charge();
+  int    charge2    = partETrk->charge();
+  double PtTag      = tagETrk->gPt();
+  double etaTag     = tagETrk->gEta();
+  double nSigETag   = tagETrk->nSigmaElectron();
+  double eTag       = tagETrk->e();
+  double pveTag     = tagETrk->pve();
+  int    nEtaTag    = tagETrk->nEta();
+  int    nPhiTag    = tagETrk->nPhi();
+  double zDistTag   = tagETrk->zDist();
+  double phiDistTag = tagETrk->phiDist();
+  int    emcTowerIdTag   = tagETrk->towerId();
+
+  double nSigEPart   = partETrk->nSigmaElectron();
+  double EtaPart     = partETrk->gEta();
+  double PtPart      = partETrk->gPt();
+  int    nHitsFitPart    = partETrk->nHitsFit();
+  int    nHitsDedxPart   = partETrk->nHitsDedx();
+  double dcaPart     = partETrk->dca();
+  double ePart       = partETrk->e();
+  double pvePart     = partETrk->pve();
+  int    nEtaPart    = partETrk->nEta();
+  int    nPhiPart    = partETrk->nPhi();
+  double zDistPart   = partETrk->zDist();
+  double phiDistPart = partETrk->phiDist();
+  double Adc0Part    = partETrk->adc0();       
+  int    emcTowerIdPart = partETrk->towerId();
+  double dsmadcPart   = 0;
+  int nEmcTrigger = mAnaTree->numberOfEmcTriggers();
+  for(int nEmc=0;nEmc<nEmcTrigger;nEmc++){
+    StEmcTrigger *emcTrgPart = (StEmcTrigger*)mAnaTree->emcTrigger(nEmc);
+    int emcTrgIDPart=emcTrgPart->id();
+    if(emcTrgIDPart==emcTowerIdPart){
+      dsmadcPart = emcTrgPart->adc();
+      continue;
+    }
+  }
+  double  TofYlocalTag           =  tagETrk->localY();
+  double  TofBetaTag             =  tagETrk->beta();
+  double  TofYlocalPart           =  partETrk->localY();
+  double  TofBetaPart             =  partETrk->beta();
+  StEmcGeom *mEmcGeom = StEmcGeom::instance("bemc");
+  Float_t TowerPhi, TowerEta;
+  Float_t TowerPhiPart, TowerEtaPart;
+  Float_t dEta=999;
+  Float_t dPhi=999;
+
+  if(!passPartEQuality(EtaPart, nHitsFitPart, nHitsDedxPart, dcaPart) || 
+      !isHTTrigE(tagETrk) ) return;
+  if(charge1 != charge2)
+  {
+    hNSigEPartElec[0]->Fill(PtPart,nSigEPart);
+    hTPCTracks[0]->Fill(PtPart);
+    if(ePart>0.)
+    {
+      hEMCMatchedTracks[0]->Fill(PtPart); 
+      hPvePartElec[0]->Fill(PtPart,pvePart);
+      if(pvePart>0.3 && pvePart < 1.5)
+      {
+        hEMCIdTracks[0]->Fill(PtPart);
+        hnEtaPartElec[0]->Fill(PtPart,nEtaPart);
+        hnPhiPartElec[0]->Fill(PtPart,nPhiPart);
+        hzDistPartElec[0]->Fill(PtPart,zDistPart);
+        hphiDistPartElec[0]->Fill(PtPart,phiDistPart);
+        if(nEtaPart>0 && nPhiPart>0)
+        {
+          hSMDMatchedTracks[0]->Fill(PtPart);
+        }
+        if(nEtaPart>1 && nPhiPart>1 && 
+            fabs(zDistPart) < 3 && fabs(phiDistPart) < 0.015 )
+        {
+          hSMDIdTracks[0]->Fill(PtPart);
+        }
+      }
+    }
+  }
+  else
+  {
+    hNSigEPartElec[1]->Fill(PtPart,nSigEPart);
+    hTPCTracks[1]->Fill(PtPart);
+    if(ePart>0.)
+    {
+      hEMCMatchedTracks[1]->Fill(PtPart); 
+      hPvePartElec[1]->Fill(PtPart,pvePart);
+      if(pvePart>0.3 && pvePart < 1.5)
+      {
+        hEMCIdTracks[1]->Fill(PtPart);
+        hnEtaPartElec[1]->Fill(PtPart,nEtaPart);
+        hnPhiPartElec[1]->Fill(PtPart,nPhiPart);
+        hzDistPartElec[1]->Fill(PtPart,zDistPart);
+        hphiDistPartElec[1]->Fill(PtPart,phiDistPart);
+        if(nEtaPart>0 && nPhiPart>0)
+        {
+          hSMDMatchedTracks[1]->Fill(PtPart);
+        }
+        if(nEtaPart>1 && nPhiPart>1 && 
+            fabs(zDistPart) < 3 && fabs(phiDistPart) < 0.015 )
+        {
+          hSMDIdTracks[1]->Fill(PtPart);
+        }
+      }
+    }
+  }
+}
+
+bool StMyAnaTreeMaker::passPartEQuality(double eta, int nHitsFit, int nHitsDedx, double dca)
+{
+  if(eta<mPEEtaCut[0] || eta>mPEEtaCut[1]) return false;
+  if(dca<mPEDcaCut[0] || dca>mPEDcaCut[1]) return false;
+  if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
+  if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
+  return true;
 }
 
 void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
@@ -1335,8 +1511,8 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   }
   if(flag==0) return;
 
-  StThreeVectorF mom1 = eTrk1->pMom();
-  StThreeVectorF mom2 = eTrk2->pMom();
+  StThreeVectorF mom1 = eTrk1->gMom();
+  StThreeVectorF mom2 = eTrk2->gMom();
   StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
   StLorentzVectorF dau2(mom2,mom2.massHypothesis(eMass));
 
@@ -1349,9 +1525,9 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   double phi = pair.phi();
   double pmass = pair.m();
   double mass = pair.m();
-  if(!passEEPairCuts(y)) return;
   double phiV = ee->pairPhiV();
   double dauDcaDist = ee->pairDca();
+  if(!passEEPairCuts(y,dauDcaDist)) return;
   int dauIsHft1 = eTrk1->isHFTTrack();
   int dauIsHft2 = eTrk2->isHFTTrack();
   int charge1 = eTrk1->charge();
@@ -1369,7 +1545,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     hEENumInvMassvsPtMB->Fill(pt,mass);
     hEENumInvMassvsPt->Fill(pt,mass,centrality);
     hEEUSEtavsPhi->Fill(phi,eta);
-    hEEUSPairDcavsPt->Fill(dauDcaDist,pt);
+    hEEUSPairDcavsPt->Fill(pt,dauDcaDist);
     if(dauIsHft1&&dauIsHft2){ 
       hEENumInvMassvsPtMBwHft->Fill(pt,mass);
       hEENumInvMassvsPtwHft->Fill(pt,mass,centrality);
@@ -1379,7 +1555,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     hEEDenInvMassvsPtLikePosMB->Fill(pt,mass);
     hEEDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
     hEELSPosEtavsPhi->Fill(phi,eta);
-    hEELSPosPairDcavsPt->Fill(dauDcaDist,pt);
+    hEELSPosPairDcavsPt->Fill(pt,dauDcaDist);
     if(dauIsHft1&&dauIsHft2){ 
       hEEDenInvMassvsPtLikePosMBwHft->Fill(pt,mass);
       hEEDenInvMassvsPtLikePoswHft->Fill(pt,mass,centrality);
@@ -1389,7 +1565,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     hEEDenInvMassvsPtLikeNegMB->Fill(pt,mass);
     hEEDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
     hEELSNegEtavsPhi->Fill(phi,eta);
-    hEELSNegPairDcavsPt->Fill(dauDcaDist,pt);
+    hEELSNegPairDcavsPt->Fill(pt,dauDcaDist);
     if(dauIsHft1&&dauIsHft2){ 
       hEEDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
       hEEDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
@@ -1407,13 +1583,13 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   StThreeVectorF origin = ee->pairOrigin();
   if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]){//&&phiV<vcut){
     //if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]&&dauDcaDist>mDauEDcaDistCut[0]&&dauDcaDist<mDauEDcaDistCut[1])
-    double pt1 = eTrk1->pMom().perp();
+    double pt1 = eTrk1->gMom().perp();
     double dca1 = eTrk1->dca();
     double dcaXY1 = eTrk1->dcaXY();
     double dcaZ1 = eTrk1->dcaZ();
     int    isHft1 = eTrk1->isHFTTrack();
 
-    double pt2 = eTrk2->pMom().perp();
+    double pt2 = eTrk2->gMom().perp();
     double dca2 = eTrk2->dca();
     double dcaXY2 = eTrk2->dcaXY();
     double dcaZ2 = eTrk2->dcaZ();
@@ -1468,8 +1644,8 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     }
 
     // Loop over hadrons for Eh correlation
-    double phi1 = eTrk1->pMom().phi();
-    double phi2 = eTrk2->pMom().phi();
+    double phi1 = eTrk1->gMom().phi();
+    double phi2 = eTrk2->gMom().phi();
 
     int nHad = mAnaTree->numberOfHTracks(); 
     for(int j=0; j < nHad; j++)
@@ -1496,210 +1672,281 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
       }
     }
   }
-}
-
-void StMyAnaTreeMaker::fillEMuHists(StEMuPair* emu)
-{
-  int dauIndex1 = emu->dauIndex1();
-  int dauIndex2 = emu->dauIndex2();
-  StElectronTrack *eTrk1 = mAnaTree->eTrack(dauIndex1);
-  StMuonTrack *muTrk2 = mAnaTree->muTrack(dauIndex2);
-  if(mTrigSelect==0){
-    if(!passEIDCuts(eTrk1)) return;
   }
-  if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5){
-    if(!passHTEIDCuts(eTrk1)) return;
-    if(!isHTTrigE(eTrk1)) return;
-  }
-  if(!passMuIDCuts(muTrk2)) return;
 
-  StThreeVectorF mom1 = eTrk1->pMom();
-  StThreeVectorF mom2 = muTrk2->pMom();
-  StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
-  StLorentzVectorF dau2(mom2,mom2.massHypothesis(muMass));
-
-  StLorentzVectorF pair;
-  pair = dau1+dau2;
-
-  double pt = pair.perp();
-  double y = pair.rapidity();
-  if(!passEMuPairCuts(y)) return;
-  double mass = pair.m();
-  int dauIsHft1 = eTrk1->isHFTTrack();
-  int dauIsHft2 = muTrk2->isHFTTrack();
-  int charge1 = eTrk1->charge();
-  int charge2 = muTrk2->charge();
-
-  double dca1 = eTrk1->dca();
-  double dca2 = muTrk2->dca();
-
-  double pt1 = eTrk1->pMom().perp();
-  double pt2 = muTrk2->pMom().perp();
-
-  //if(centrality<=0) return;
-  if(charge1!=charge2){ 
-    hEMuNumInvMassvsPtMB->Fill(pt,mass);
-    hEMuNumInvMassvsPt->Fill(pt,mass,centrality);
-    if(dauIsHft1&&dauIsHft2&&dca1>fEDcaCut->Eval(pt1)&&dca2>fMuDcaCut->Eval(pt2)){ 
-      hEMuNumInvMassvsPtMBwHft->Fill(pt,mass);
-      hEMuNumInvMassvsPtwHft->Fill(pt,mass,centrality);
-    }
-  }
-  if(charge1==1&&charge2==1){ 
-    hEMuDenInvMassvsPtLikePosMB->Fill(pt,mass);
-    hEMuDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
-    //if(dauIsHft1&&dauIsHft2) 
-    if(dauIsHft1&&dauIsHft2&&dca1>fEDcaCut->Eval(pt1)&&dca2>fMuDcaCut->Eval(pt2)){ 
-      hEMuDenInvMassvsPtLikePosMBwHft->Fill(pt,mass);
-      hEMuDenInvMassvsPtLikePoswHft->Fill(pt,mass,centrality);
-    }
-  }
-  if(charge1==-1&&charge2==-1){ 
-    hEMuDenInvMassvsPtLikeNegMB->Fill(pt,mass);
-    hEMuDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
-    //if(dauIsHft1&&dauIsHft2) 
-    if(dauIsHft1&&dauIsHft2&&dca1>fEDcaCut->Eval(pt1)&&dca2>fMuDcaCut->Eval(pt2)){ 
-      hEMuDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
-      hEMuDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
-    }
-  }
-}
-
-void StMyAnaTreeMaker::fillMuMuHists(StMuMuPair* mumu)
-{
-  int dauIndex1 = mumu->dauIndex1();
-  int dauIndex2 = mumu->dauIndex2();
-  StMuonTrack *muTrk1 = mAnaTree->muTrack(dauIndex1);
-  StMuonTrack *muTrk2 = mAnaTree->muTrack(dauIndex2);
-  if(!passMuIDCuts(muTrk1)) return;
-  if(!passMuIDCuts(muTrk2)) return;
-
-  StThreeVectorF mom1 = muTrk1->pMom();
-  StThreeVectorF mom2 = muTrk2->pMom();
-  StLorentzVectorF dau1(mom1,mom1.massHypothesis(muMass));
-  StLorentzVectorF dau2(mom2,mom2.massHypothesis(muMass));
-
-  StLorentzVectorF pair;
-  pair = dau1+dau2;
-
-  double pt = pair.perp();
-  double y = pair.rapidity();
-  if(!passMuMuPairCuts(y)) return;
-  double mass = pair.m();
-  int dauIsHft1 = muTrk1->isHFTTrack();
-  int dauIsHft2 = muTrk2->isHFTTrack();
-  int charge1 = muTrk1->charge();
-  int charge2 = muTrk2->charge();
-  //if(centrality<=0) return;
-  if(charge1!=charge2){ 
-    hMuMuNumInvMassvsPtMB->Fill(pt,mass);
-    hMuMuNumInvMassvsPt->Fill(pt,mass,centrality);
-    if(dauIsHft1&&dauIsHft2){ 
-      hMuMuNumInvMassvsPtMBwHft->Fill(pt,mass);
-      hMuMuNumInvMassvsPtwHft->Fill(pt,mass,centrality);
-    }
-  }
-  if(charge1==1&&charge2==1){ 
-    hMuMuDenInvMassvsPtLikePosMB->Fill(pt,mass);
-    hMuMuDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
-    if(dauIsHft1&&dauIsHft2){ 
-      hMuMuDenInvMassvsPtLikePosMBwHft->Fill(pt,mass);
-      hMuMuDenInvMassvsPtLikePoswHft->Fill(pt,mass,centrality);
-    }
-  }
-  if(charge1==-1&&charge2==-1){ 
-    hMuMuDenInvMassvsPtLikeNegMB->Fill(pt,mass);
-    hMuMuDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
-    if(dauIsHft1&&dauIsHft2){ 
-      hMuMuDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
-      hMuMuDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
-    }
-  }
-}
-
-void StMyAnaTreeMaker::determineTriggers()
-{
-  // THIS FUNCTION MUST BE MAINTAINED PER ANALYSIS TYPE
-
-  clearTriggers();
-  int trigword = mAnaTree->event()->triggerWord();
-  // Check if HT0 triggers
-  if(trigword >> 0 & 0x1 ||
-     trigword >> 2 & 0x1 ) isHT0 = true;
-  // Check if HT1 triggers
-  if(trigword >> 1 & 0x1 ||
-     trigword >> 3 & 0x1 ||
-     trigword >> 5 & 0x1 ) isHT1 = true;
-  // Check if HT2 triggers
-  if(trigword >> 4 & 0x1 ) isHT2 = true;
-
-}
-
-void StMyAnaTreeMaker::clearTriggers()
-{
-  isHT0 = isHT1 = isHT2 = isHT3 = isMB = false;
-}
-
-bool StMyAnaTreeMaker::passHadronCuts(StHadronTrack* hTrk)
-{
-
-  int charge = hTrk->charge();
-  double pt = hTrk->gMom().perp();
-  double eta = hTrk->gMom().pseudoRapidity();
-  double phi = hTrk->gMom().phi();
-  double dca = hTrk->dca();
-  if(charge!=0 && 
-      mHadPtCut[0] < pt  && pt  < mHadPtCut[1] &&
-      mHadEtaCut[0]< eta && eta < mHadEtaCut[1] &&
-      mHadDcaCut[0]< dca && dca < mHadDcaCut[1]) 
+  void StMyAnaTreeMaker::fillEMuHists(StEMuPair* emu)
   {
+    int dauIndex1 = emu->dauIndex1();
+    int dauIndex2 = emu->dauIndex2();
+    StElectronTrack *eTrk1 = mAnaTree->eTrack(dauIndex1);
+    StMuonTrack *muTrk2 = mAnaTree->muTrack(dauIndex2);
+    if(mTrigSelect==0){
+      if(!passEIDCuts(eTrk1)) return;
+    }
+    if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5){
+      if(!passHTEIDCuts(eTrk1)) return;
+      if(!isHTTrigE(eTrk1)) return;
+    }
+    if(!passMuIDCuts(muTrk2)) return;
+
+    StThreeVectorF mom1 = eTrk1->gMom();
+    StThreeVectorF mom2 = muTrk2->gMom();
+    StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
+    StLorentzVectorF dau2(mom2,mom2.massHypothesis(muMass));
+
+    StLorentzVectorF pair;
+    pair = dau1+dau2;
+
+    double pt = pair.perp();
+    double y = pair.rapidity();
+    if(!passEMuPairCuts(y)) return;
+    double mass = pair.m();
+    int dauIsHft1 = eTrk1->isHFTTrack();
+    int dauIsHft2 = muTrk2->isHFTTrack();
+    int charge1 = eTrk1->charge();
+    int charge2 = muTrk2->charge();
+
+    double dca1 = eTrk1->dca();
+    double dca2 = muTrk2->dca();
+
+    double pt1 = eTrk1->gMom().perp();
+    double pt2 = muTrk2->gMom().perp();
+
+    //if(centrality<=0) return;
+    if(charge1!=charge2){ 
+      hEMuNumInvMassvsPtMB->Fill(pt,mass);
+      hEMuNumInvMassvsPt->Fill(pt,mass,centrality);
+      if(dauIsHft1&&dauIsHft2&&dca1>fEDcaCut->Eval(pt1)&&dca2>fMuDcaCut->Eval(pt2)){ 
+        hEMuNumInvMassvsPtMBwHft->Fill(pt,mass);
+        hEMuNumInvMassvsPtwHft->Fill(pt,mass,centrality);
+      }
+    }
+    if(charge1==1&&charge2==1){ 
+      hEMuDenInvMassvsPtLikePosMB->Fill(pt,mass);
+      hEMuDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
+      //if(dauIsHft1&&dauIsHft2) 
+      if(dauIsHft1&&dauIsHft2&&dca1>fEDcaCut->Eval(pt1)&&dca2>fMuDcaCut->Eval(pt2)){ 
+        hEMuDenInvMassvsPtLikePosMBwHft->Fill(pt,mass);
+        hEMuDenInvMassvsPtLikePoswHft->Fill(pt,mass,centrality);
+      }
+    }
+    if(charge1==-1&&charge2==-1){ 
+      hEMuDenInvMassvsPtLikeNegMB->Fill(pt,mass);
+      hEMuDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
+      //if(dauIsHft1&&dauIsHft2) 
+      if(dauIsHft1&&dauIsHft2&&dca1>fEDcaCut->Eval(pt1)&&dca2>fMuDcaCut->Eval(pt2)){ 
+        hEMuDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
+        hEMuDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
+      }
+    }
+  }
+
+  void StMyAnaTreeMaker::fillMuMuHists(StMuMuPair* mumu)
+  {
+    int dauIndex1 = mumu->dauIndex1();
+    int dauIndex2 = mumu->dauIndex2();
+    StMuonTrack *muTrk1 = mAnaTree->muTrack(dauIndex1);
+    StMuonTrack *muTrk2 = mAnaTree->muTrack(dauIndex2);
+    if(!passMuIDCuts(muTrk1)) return;
+    if(!passMuIDCuts(muTrk2)) return;
+
+    StThreeVectorF mom1 = muTrk1->gMom();
+    StThreeVectorF mom2 = muTrk2->gMom();
+    StLorentzVectorF dau1(mom1,mom1.massHypothesis(muMass));
+    StLorentzVectorF dau2(mom2,mom2.massHypothesis(muMass));
+
+    StLorentzVectorF pair;
+    pair = dau1+dau2;
+
+    double pt = pair.perp();
+    double y = pair.rapidity();
+    if(!passMuMuPairCuts(y)) return;
+    double mass = pair.m();
+    int dauIsHft1 = muTrk1->isHFTTrack();
+    int dauIsHft2 = muTrk2->isHFTTrack();
+    int charge1 = muTrk1->charge();
+    int charge2 = muTrk2->charge();
+    //if(centrality<=0) return;
+    if(charge1!=charge2){ 
+      hMuMuNumInvMassvsPtMB->Fill(pt,mass);
+      hMuMuNumInvMassvsPt->Fill(pt,mass,centrality);
+      if(dauIsHft1&&dauIsHft2){ 
+        hMuMuNumInvMassvsPtMBwHft->Fill(pt,mass);
+        hMuMuNumInvMassvsPtwHft->Fill(pt,mass,centrality);
+      }
+    }
+    if(charge1==1&&charge2==1){ 
+      hMuMuDenInvMassvsPtLikePosMB->Fill(pt,mass);
+      hMuMuDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
+      if(dauIsHft1&&dauIsHft2){ 
+        hMuMuDenInvMassvsPtLikePosMBwHft->Fill(pt,mass);
+        hMuMuDenInvMassvsPtLikePoswHft->Fill(pt,mass,centrality);
+      }
+    }
+    if(charge1==-1&&charge2==-1){ 
+      hMuMuDenInvMassvsPtLikeNegMB->Fill(pt,mass);
+      hMuMuDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
+      if(dauIsHft1&&dauIsHft2){ 
+        hMuMuDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
+        hMuMuDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
+      }
+    }
+  }
+
+  //////////////////////////////////////////////////////////
+  /// This block maintained for backwards compatibility
+  /// with first type of anaTree in R15. Can remove after
+  //  full production is completed
+  //////////////////////////////////////////////////////////
+  void StMyAnaTreeMaker::determineTriggers()
+  {
+    // THIS FUNCTION MUST BE MAINTAINED PER ANALYSIS TYPE
+
+    clearTriggers();
+    int trigword = mAnaTree->event()->triggerWord();
+    // Check if HT0 triggers
+    if(trigword >> 0 & 0x1 ||
+        trigword >> 2 & 0x1 ) isHT0 = true;
+    // Check if HT1 triggers
+    if(trigword >> 1 & 0x1 ||
+        trigword >> 3 & 0x1 ||
+        trigword >> 5 & 0x1 ) isHT1 = true;
+    // Check if HT2 triggers
+    if(trigword >> 4 & 0x1 ) isHT2 = true;
+
+  }
+
+  void StMyAnaTreeMaker::clearTriggers()
+  {
+    isHT0 = isHT1 = isHT2 = isHT3 = isMB = false;
+  }
+  //////////////////////////////////////////////////////////
+
+  bool StMyAnaTreeMaker::passHadronCuts(StHadronTrack* hTrk)
+  {
+
+    int charge = hTrk->charge();
+    double pt = hTrk->gMom().perp();
+    double eta = hTrk->gMom().pseudoRapidity();
+    double phi = hTrk->gMom().phi();
+    double dca = hTrk->dca();
+    if(charge!=0 && 
+        mHadPtCut[0] < pt  && pt  < mHadPtCut[1] &&
+        mHadEtaCut[0]< eta && eta < mHadEtaCut[1] &&
+        mHadDcaCut[0]< dca && dca < mHadDcaCut[1]) 
+    {
+      return true;
+    }
+  }
+
+  double StMyAnaTreeMaker::delPhiCorrect(double p)
+  {
+    double PI = 3.1415926;  
+    if(p < -PI/2.0) p+=2*PI;
+    if(p >  3.*PI/2.)  p-=2.*PI;
+    return p;
+  }
+
+  Bool_t StMyAnaTreeMaker::checkTriggers(int trigType)
+  {
+    for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
+    {
+      if(mAnaTree->event()->isTrigger(*trg))
+        return true;
+    }
+    return false;
+  }
+
+
+  Bool_t StMyAnaTreeMaker::isBHT0()
+  { 
+    return checkTriggers(0);
+  }
+
+
+  Bool_t StMyAnaTreeMaker::isBHT1()
+  { 
+    return checkTriggers(1);
+  }
+
+  //-----------------------------------------                                              
+  Bool_t StMyAnaTreeMaker::isBHT2()
+  {
+    return checkTriggers(2);
+  }
+
+  //---------------------------------------------------  
+  Bool_t StMyAnaTreeMaker::isBHT3()
+  {
+    return checkTriggers(3);
+  }
+
+  Bool_t StMyAnaTreeMaker::isMinBias()
+  { 
+    return checkTriggers(4);
+  }
+
+  bool StMyAnaTreeMaker::tagEIDCuts(StElectronTrack *eTrk) {
+    double pt        = eTrk->gPt();
+    double p         = eTrk->gMom().mag();
+    double eta       = eTrk->gEta();
+    int    nHitsFit  = eTrk->nHitsFit();
+    int    nHitsDedx = eTrk->nHitsDedx();
+    double nSigE     = eTrk->nSigmaElectron();
+    double dca       = eTrk->dca();
+
+    if(pt<mEmcEPtCut[0] || pt>mEmcEPtCut[1]) return false;
+    hnTracks->Fill(5);
+    if(eta<mEmcEEtaCut[0] || eta>mEmcEEtaCut[1]) return false;
+    hnTracks->Fill(6);
+    if(dca<mEmcEDcaCut[0] || dca>mEmcEDcaCut[1]) return false;
+    hnTracks->Fill(7);
+    if(nHitsFit<mEmcEnHitsFitCut[0] || nHitsFit>mEmcEnHitsFitCut[1]) return false;
+    hnTracks->Fill(8);
+    if(nHitsDedx<mEmcEnHitsDedxCut[0] || nHitsDedx>mEmcEnHitsDedxCut[1]) return false;
+    hnTracks->Fill(9);
+    if(nSigE<mEmcEnSigECut[0] || nSigE>mEmcEnSigECut[1]) return false;
+    hnTracks->Fill(10);
     return true;
   }
-}
+  bool StMyAnaTreeMaker::tagEEMCCuts(StElectronTrack *eTrk) {
+    double pve     = eTrk->pve();
+    //int    nEta    = eTrk->nEta();
+    //int    nPhi    = eTrk->nPhi();
+    //double zDist   = eTrk->zDist();
+    //double phiDist = eTrk->phiDist();
 
-double StMyAnaTreeMaker::delPhiCorrect(double p)
-{
-  double PI = 3.1415926;  
-  if(p < -PI/2.0) p+=2*PI;
-  if(p >  3.*PI/2.)  p-=2.*PI;
-  return p;
-}
-
-Bool_t StMyAnaTreeMaker::checkTriggers(int trigType)
-{
-  for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
-  {
-    if(mAnaTree->event()->isTrigger(*trg))
-      return true;
+    if(pve<mEmcEPveCut[0] || pve>mEmcEPveCut[1]) return false;
+    hnTracks->Fill(16);
+    /*if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
+      hnTracks->Fill(17);
+      if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
+      hnTracks->Fill(18);
+      if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
+      hnTracks->Fill(19);
+      if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
+      hnTracks->Fill(20);      */ 
+    return true;
   }
-  return false;
-}
 
+  bool StMyAnaTreeMaker::partEIDCuts(StPartElectronTrack *parteTrk) {
+    double pt        = parteTrk->gPt();
+    //double p         = parteTrk->gMom().mag();
+    double eta       = parteTrk->gEta();
+    int    nHitsFit  = parteTrk->nHitsFit();
+    int    nHitsDedx = parteTrk->nHitsDedx();
+    double nSigE     = parteTrk->nSigmaElectron();
 
-Bool_t StMyAnaTreeMaker::isBHT0()
-{ 
-  return checkTriggers(0);
-}
+    if(pt<mEPtCut[0] || pt>mEPtCut[1]) return false;
+    hnTracks->Fill(11);
+    if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
+    hnTracks->Fill(12);
+    if(nHitsFit<=mnHitsFitCut[0] || nHitsFit>mnHitsFitCut[1]) return false;
+    hnTracks->Fill(13);
+    if(nHitsDedx<=mnHitsDedxCut[0] || nHitsDedx>mnHitsDedxCut[1]) return false;
+    hnTracks->Fill(14);
+    if(nSigE<mEnSigECut[0] || nSigE>mEnSigECut[1]) return false;
+    hnTracks->Fill(15);
+    return true;
+  }
 
-
-Bool_t StMyAnaTreeMaker::isBHT1()
-{ 
-  return checkTriggers(1);
-}
-
-//-----------------------------------------                                              
-Bool_t StMyAnaTreeMaker::isBHT2()
-{
-  return checkTriggers(2);
-}
-
-//---------------------------------------------------  
-Bool_t StMyAnaTreeMaker::isBHT3()
-{
-  return checkTriggers(3);
-}
-
-Bool_t StMyAnaTreeMaker::isMinBias()
-{ 
-  return checkTriggers(4);
-}
