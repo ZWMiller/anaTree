@@ -27,11 +27,19 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
 	cout<<"Trigger chosen: "<<trigSelect<<endl;
 	anaMaker->setTrigSelect(trigSelect);
    anaMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   anaMaker->addTrigger(470211,0);
+   anaMaker->addTrigger(490201,0);
    anaMaker->addTrigger(480203,0);
    anaMaker->addTrigger(480202,1);
+   anaMaker->addTrigger(470202,1);
+   anaMaker->addTrigger(490202,1);
    anaMaker->addTrigger(480204,1);
+   anaMaker->addTrigger(470204,1);
+   anaMaker->addTrigger(490204,1);
    anaMaker->addTrigger(480206,1);
    anaMaker->addTrigger(480205,2);
+   anaMaker->addTrigger(470205,2);
+   anaMaker->addTrigger(490205,2);
 	if(trigSelect==0){
 		anaMaker->setVzCut(-6,6);
 		anaMaker->setVzDiffCut(-3,3);

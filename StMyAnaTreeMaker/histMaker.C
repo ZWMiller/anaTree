@@ -27,7 +27,8 @@ void histMaker(const char* fileName="test")
       if(DEBUG) cout << "pt loop: " << ptbin <<endl;
     } 
   }
-
+  
+  drawEventHists();
   drawInvMassHists();
   drawQAHists();
   drawCutEfficiencyHists();
@@ -45,6 +46,17 @@ void drawQAHists()
   drawEEQA();
   drawPartEQA();
   drawPartECutEffic();
+}
+
+void drawEventHists()
+{
+  eventHists->cd(1);
+  pretty1DHist(vertexZ,kRed,20);
+  vertexZ->Draw();
+  eventHists->cd(2);
+  pretty1DHist(refMult,kRed,20);
+  refMult->Draw();
+
 }
 
 void drawPartECutEffic()
@@ -221,7 +233,7 @@ void pretty1DHist(TH1* h, int col, int style)
   h->SetMarkerColor(col);
   h->SetLineColor(col);
   h->SetMarkerStyle(style);
-  h->SetMarkerSize(0.8);
+  h->SetMarkerSize(1.2);
 }
 
 void pretty1DHistFill(TH1* h, int col, int style)
@@ -396,6 +408,9 @@ void prepareCanvas()
     eIDCutEffic[i] -> Divide(2,2);
   }
   efficOverlay = new TCanvas("efficOverlay","Partner eID Based QA",50,50,1050,1050);
+  
+  eventHists = new TCanvas("eventHists","Event Level Hists",50,50,1050,1050);
+  eventHists->Divide(1,2);
   if(DEBUG) cout << "Canvas made." << endl;
 }
 
@@ -452,6 +467,11 @@ void drawDeltaPhi(TH1D* h, TCanvas* c, float norm, int activeBin, TPaveText* tpt
 
 void getHistograms(TFile* f)
 {
+  //Events
+  refMult = (TH1F*)f->Get("hRefMultCut");
+  vertexZ = (TH1F*)f->Get("hVertexZCut");
+
+  // electrons
   eHadDelPhiPt[0] = (TH2F*)f->Get("hHadEDelPhiPt");
   eHadDelPhiPt[1] = (TH2F*)f->Get("hHadEEDelPhiPt_US");
   eHadDelPhiPt[2] = (TH2F*)f->Get("hHadEEDelPhiPt_LS");
@@ -597,6 +617,8 @@ void makePDF(const char* fileName)
   temp->Print(name);
   sprintf(name, "%s.pdf", fileName);
   temp = fp; // print front page
+  temp->Print(name);
+  temp = eventHists;
   temp->Print(name);
   for(int etype=0;etype<3;etype++)
   {

@@ -15,6 +15,7 @@ fi
 
 for run in `cat runNumberList_run15pp_transverse`
 do
+  echo "RUN"
    if [ ! -d out/out_$1/${run} ]; then
       continue;
    fi
@@ -31,5 +32,7 @@ do
 #rm -f out/out_$1/${run}/st*${run}*anaTree.root
       fi
    fi
+
+echo "DONE"
 
 done

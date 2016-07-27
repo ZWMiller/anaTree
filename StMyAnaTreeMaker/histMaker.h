@@ -10,7 +10,7 @@
     const float highpt[numPtBins] = 
      {2.0, 3.0, 4.0, 5.0,
       6.0, 8.0, 10., 20. };
-    const int colors[5] = {kBlack,kRed,kBlue,kMagenta,kYellow};
+    const int colors[5] = {kBlack,kRed,kAzure+1,kMagenta,kYellow};
 
 
     TCanvas* dPhiPt[3][numCanvas];
@@ -25,6 +25,7 @@
     TCanvas* pElecCuts[6];
     TCanvas* eIDCutEffic[4];
     TCanvas* efficOverlay;
+    TCanvas* eventHists;
 
     TPaveText* lbl[numPtBins];
 
@@ -69,6 +70,9 @@
     TH1F* SMDMatchedTracks[3];
     TH1F* SMDIdTracks[3];
     TH1F* partECutEfficiency[4];
+    
+    TH1F* refMult;
+    TH1F* vertexZ;
 
     float trigCount[3][numPtBins];
     float eHadNorm;
@@ -81,6 +85,7 @@
     void makeUnlikeMinusLikePartnerElectron();
 
     void drawQAHists();
+    void drawEventHists();
     void drawHadQA();
     void drawElecQA();
     void drawEEQA();
