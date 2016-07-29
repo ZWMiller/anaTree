@@ -910,6 +910,6 @@ void StPicoElecPurityMaker::SetDefaultCuts()
   setDsmAdcCut(2,18); // dsmADC cut sets ()
   setDsmAdcCut(3,25); // dsmADC cut sets ()
   setSMDCuts(0,0,3.,0.8); // nEta>=, nPhi>=, zDist<, phiDist< 
-  setSMDCuts2(1,1,3.,0.08); // nEta>=, nPhi>=, zDist<, phiDist< 
+  setSMDCuts2(1,1,3.,0.015); // nEta>=, nPhi>=, zDist<, phiDist< 
 }
 

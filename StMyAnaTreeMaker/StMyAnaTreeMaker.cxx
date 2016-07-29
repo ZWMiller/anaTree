@@ -62,7 +62,7 @@ ClassImp(StMyAnaTreeMaker)
   mPEEtaCut[0] = -0.7; mPEEtaCut[1] = 0.7;
   mPEDcaCut[0] = 0.; mPEDcaCut[1] = 1.5;
 
-  mEmcEPtCut[0] = 1.5; mEmcEPtCut[1] = 100;
+  mEmcEPtCut[0] = 1.3; mEmcEPtCut[1] = 100;
   mEmcEEtaCut[0] = -1.; mEmcEEtaCut[1] = 1.;
   mEmcEPveCut[0] = 0.3; mEmcEPveCut[1] = 1.5;
   mEmcEDcaCut[0] = 0.; mEmcEDcaCut[1] = 1.5;
@@ -771,7 +771,8 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   }
 
 
-  // Hadron Comparisons
+  // Hadron Comparisons only done for trigger electrons
+  if(!eHTflag || !isTrgE) return;
   hEPt->Fill(pt); // need for normalization
   int nHad = mAnaTree->numberOfHTracks(); 
   for(int j=0; j < nHad; j++)
@@ -934,14 +935,14 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   int    emcTowerIdPart = partETrk->towerId();
   double dsmadcPart   = 0;
   int nEmcTrigger = mAnaTree->numberOfEmcTriggers();
-  for(int nEmc=0;nEmc<nEmcTrigger;nEmc++){
+  /*for(int nEmc=0;nEmc<nEmcTrigger;nEmc++){
     StEmcTrigger *emcTrgPart = (StEmcTrigger*)mAnaTree->emcTrigger(nEmc);
     int emcTrgIDPart=emcTrgPart->id();
     if(emcTrgIDPart==emcTowerIdPart){
       dsmadcPart = emcTrgPart->adc();
       continue;
     }
-  }
+  }*/
   double  TofYlocalTag           =  tagETrk->localY();
   double  TofBetaTag             =  tagETrk->beta();
   double  TofYlocalPart           =  partETrk->localY();

@@ -13,6 +13,7 @@ void histMaker(const char* fileName="test")
     std::cout<< "Opened " << fileName << std::endl;
 
   getHistograms(f);
+  declareHistograms();
   doProjections();
   prepareCanvas();
   prepareLabels();
@@ -32,6 +33,7 @@ void histMaker(const char* fileName="test")
   drawInvMassHists();
   drawQAHists();
   drawCutEfficiencyHists();
+  getdNdpT();
   makePDF(fileName);
 }
 
@@ -54,7 +56,9 @@ void drawEventHists()
   pretty1DHist(vertexZ,kRed,20);
   vertexZ->Draw();
   eventHists->cd(2);
+  gPad->SetLogy();
   pretty1DHist(refMult,kRed,20);
+  refMult->GetXaxis()->SetRangeUser(0,150);
   refMult->Draw();
 
 }
@@ -90,10 +94,16 @@ void drawPartECutEffic()
       TPCTracks[2]->Draw("hist same");
       TPCTracks[1]->Draw("hist same");
       eIDCutEffic[i-1]->cd(3);
+
+      Double_t xbins[numPtBins];
+      int segs = numPtBins - 1;
+      for(int ii=0;ii<numPtBins;ii++) xbins[ii] = lowpt[ii];
       TH1F* numerator = (TH1F*)histList[2]->Clone();
       TH1F* denominator = (TH1F*)TPCTracks[2]->Clone();
-      numerator->Rebin(4);
-      denominator->Rebin(4);
+      numerator->Rebin(segs,"numerator",xbins);
+      denominator->Rebin(segs,"denominator",xbins);
+      numerator->Rebin(10);
+      denominator->Rebin(10);
       numerator->SetTitle("Cut Efficiency;P_{T} (GeV/c);Efficiency");
       pretty1DHist(numerator,kRed,20);
       numerator->GetYaxis()->SetRangeUser(0.,1.3);
@@ -104,6 +114,7 @@ void drawPartECutEffic()
     }
   }
   overlayEfficiencies();
+  drawnSigE();
 }
 
 void overlayEfficiencies()
@@ -228,6 +239,24 @@ void drawHadQA()
   hadDca->Draw("pe");
 }
 
+void prettyTGraph(TGraphErrors* h, int col, int style, float yrangeLow, float yrangeHigh)
+{
+  h->GetYaxis()->SetRangeUser(yrangeLow,yrangeHigh);
+  h->SetMarkerColor(col);
+  h->SetLineColor(col);
+  h->SetMarkerStyle(style);
+  h->SetMarkerSize(1.2);
+}
+
+void prettyTGraph(TGraph* h, int col, int style, float yrangeLow, float yrangeHigh)
+{
+  h->GetYaxis()->SetRangeUser(yrangeLow,yrangeHigh);
+  h->SetMarkerColor(col);
+  h->SetLineColor(col);
+  h->SetMarkerStyle(style);
+  h->SetMarkerSize(1.2);
+}
+
 void pretty1DHist(TH1* h, int col, int style)
 {
   h->SetMarkerColor(col);
@@ -250,7 +279,7 @@ void prepareLabels()
 
   for(int ptbin=0; ptbin<numPtBins; ptbin++)
   {
-    lbl[ptbin] = new TPaveText(.53,.72,.75,.8,Form("NB NDC%i",ptbin));
+    lbl[ptbin] = new TPaveText(.12,.83,.45,.88,Form("NB NDC%i",ptbin));
     sprintf(textLabel,"%.2f < P_{T,e} < %.2f",lowpt[ptbin],highpt[ptbin]);
     lbl[ptbin]->AddText(textLabel);
     lbl[ptbin]->SetFillColor(kWhite);
@@ -265,10 +294,7 @@ void drawInvMassHists()
   {
     invMass->cd();
     gPad->SetLogy();
-    eeInvMassAll[pairType]->SetLineColor(colors[pairType]);
-    eeInvMassAll[pairType]->SetMarkerColor(colors[pairType]);
-    eeInvMassAll[pairType]->SetMarkerStyle(20+pairType);
-    eeInvMassAll[pairType]->SetMarkerSize(0.8);
+    pretty1DHist(eeInvMassAll[pairType],colors[pairType],20+pairType);
     eeInvMassAll[pairType]->GetXaxis()->SetRangeUser(0.,0.5);
     eeInvMassAll[pairType]->Draw((pairType==0) ? "pe" : "same pe");
     leg->AddEntry(eeInvMassAll[pairType],legLab[pairType],"lpe"); 
@@ -280,14 +306,157 @@ void drawInvMassHists()
       int activeBin = ptbin - activeCanvas*9; 
       invMassPt[activeCanvas]->cd(activeBin+1);
       gPad->SetLogy();
-      eeInvMass[pairType][ptbin]->SetLineColor(colors[pairType]);
-      eeInvMass[pairType][ptbin]->SetMarkerColor(colors[pairType]);
-      eeInvMass[pairType][ptbin]->SetMarkerStyle(20+pairType);
-      eeInvMass[pairType][ptbin]->SetMarkerSize(0.8);
+      pretty1DHist(eeInvMass[pairType][ptbin],colors[pairType],20+pairType);
       eeInvMass[pairType][ptbin]->GetXaxis()->SetRangeUser(0.,0.5);
       eeInvMass[pairType][ptbin]->Draw((pairType==0) ? "pe" : "same pe");
+      lbl[ptbin]->Draw("same");
       if(pairType==2 && ptbin == 0) leg->Draw("same");
     }
+  }
+}
+
+void drawnSigE()
+{
+  Double_t pT[numPtBins], pTErr[numPtBins], meanErr[numPtBins], sigmaErr[numPtBins], mean[numPtBins], sigma[numPtBins];
+  TLegend* leg = new TLegend(0.55,0.75,0.98,0.92);
+  TString legLab[3] = {"Unlike Sign","Like Sign","US - LS"};
+  //TF1 *gaus = new TF1("Gaus","[0]*exp(-0.5*pow((x-[1])/[2],2))/sqrt(2.*TMath::Pi())/[2]",-3.5,3.5);
+  TF1 *gaus = new TF1("gausn","gausn",-3.5,3.5);
+  for(int pairType=0; pairType<3; pairType++) //0 = UnlikeSign, 1 = LikeSign ++&-- Combined, 2 = US - LS
+  {
+    leg->AddEntry(nSigE[pairType][0],legLab[pairType],"lpe"); 
+    for(int ptbin=0; ptbin<numPtBins; ptbin++)
+    {
+      int activeCanvas = (int) ptbin/9;
+      int activeBin = ptbin - activeCanvas*9; 
+      nSigEPt[activeCanvas]->cd(activeBin+1);
+      gPad->SetLogy(0);
+      pretty1DHist(nSigE[pairType][ptbin],colors[pairType],20+pairType);
+      nSigE[pairType][ptbin]->GetXaxis()->SetRangeUser(-4.,4.);
+      nSigE[pairType][ptbin]->Draw((pairType==0) ? "pe" : "same pe");
+      lbl[ptbin]->Draw("same");
+      if(pairType==2 && ptbin == 0) leg->Draw("same");
+      if(pairType==2) 
+      {
+        nSigE[pairType][ptbin]->Fit("gausn","IN0R","",-3.0,3.0);
+        double *par= gaus->GetParameters();
+        gaus->SetParameter(0,par[0]);
+        gaus->SetParameter(1,par[1]);
+        gaus->SetParameter(2,par[2]);
+        nSigE[pairType][ptbin]->Fit("gausn","R","",-3.0,3.0);
+        //Taken from Shenghui run14 analysis
+        TVirtualFitter * fitter = TVirtualFitter::GetFitter();
+        if(fitter == 0)
+        {
+          cout << "No fitter found for TVirtualFitter" << endl;
+          return;
+        }
+        double * cov = fitter->GetCovarianceMatrix();
+        cout << "Covariance Matrix Found: " << endl;
+        cout << cov[0] << " " << cov[1] << " " << cov[2] << endl;
+        cout << cov[3] << " " << cov[4] << " " << cov[5] << endl;
+        cout << cov[6] << " " << cov[7] << " " << cov[8] << endl << endl;
+        meanSigE[ptbin]=gaus->GetParameter(1);
+        meanerrSigE[ptbin]=cov[4];
+        sigmaSigE[ptbin]=gaus->GetParameter(2);
+        sigmaerrSigE[ptbin]=cov[8];
+        corSigE[ptbin]=cov[7];
+        // For TGraph
+        pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
+        pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
+        mean[ptbin]=gaus->GetParameter(1);
+        meanErr[ptbin]=cov[4];
+        sigma[ptbin]=gaus->GetParameter(2);
+        sigmaErr[ptbin]=cov[8];
+      }
+    }
+  }
+  drawnSigMeanSig(pT,pTErr,mean,meanErr,sigma,sigmaErr);
+  getnSigEeff();
+}
+
+void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, const double* meanErr, const double* sigma, const double* sigmaErr)
+{
+  TGraphErrors* mn = new TGraphErrors(numPtBins,pT,mean,pTErr,meanErr);
+  TGraphErrors* sg = new TGraphErrors(numPtBins,pT,sigma,pTErr,sigmaErr);
+  prettyTGraph(mn,colors[0],20,-1.,3.);
+  prettyTGraph(sg,colors[1],21,-1.,3.);
+  TLegend* leg = new TLegend(.12,.75,.45,.87);
+  leg->AddEntry(mn,"Mean","lpe");
+  leg->AddEntry(sg,"Sigma","lpe");
+  sg->SetTitle("n#sigma_{e} Fit Values;P_{T} (GeV/c);");
+  nSigMeanSig->cd();
+  sg->Draw("APE");
+  sg->Fit("pol1","R","",1.3,6.);
+  mn->Draw("SAME PE");
+  mn->Fit("pol1","R","",1.3,6.);
+  leg->Draw("SAME");
+}
+
+void getnSigEeff()
+{
+  Double_t pT[numPtBins], pTErr[numPtBins], cutEff[numPtBins], cutEffErr[numPtBins];
+  for(int ptbin=0; ptbin<numPtBins; ptbin++)
+  {
+    double meant=meanSigE[ptbin];
+    double meanerrt=sqrt(meanerrSigE[ptbin]);
+    double sigmat=sigmaSigE[ptbin];
+    double sigmaerrt=sqrt(sigmaerrSigE[ptbin]);
+    double cort=corSigE[ptbin]/meanerrt/sigmaerrt;
+    cout << ptbin << ": " << meant << " " << meanerrt << " " << sigmat << " " << sigmaerrt << " " << cort << endl;
+    twogaus[ptbin] = new TF2(Form("twogaus_%i",ptbin),"1./2./3.14/[0]/[1]/sqrt(1-[2]*[2])*exp(-1./2./(1-[2]*[2])*(pow((x[0]-[3])/[0],2)-2*[2]*(x[0]-[3])*(x[1]-[4])/[0]/[1]+pow((x[1]-[4])/[1],2)))",meant-3*meanerrt,meant+3*meanerrt,sigmat-3*sigmaerrt,sigmat+3*sigmaerrt);
+    twogaus[ptbin]->SetParameter(0,meanerrt);
+    twogaus[ptbin]->SetParameter(1,sigmaerrt);
+    twogaus[ptbin]->SetParameter(2,cort);
+    twogaus[ptbin]->SetParameter(3,meant);
+    twogaus[ptbin]->SetParameter(4,sigmat);
+
+    //TF1 *Gaus=new TF1("Gaus","exp(-0.5*pow((x-[0])/[1],2))/sqrt(2.*TMath::Pi())/[1]",-4,4);
+    TF1 *Gaus=new TF1("Gaus","gausn(0)",-4,4);
+    for(int j=0;j<10000;j++){
+      if(j%1000==0) cout << "begin " << j << "th entry...." << endl;
+      double mean1,sigma1;
+      twogaus[ptbin]->GetRandom2(mean1,sigma1);
+      Gaus->SetParameter(0,1.0);
+      Gaus->SetParameter(1,mean1);
+      Gaus->SetParameter(2,sigma1);
+      nSigEeff[ptbin]->Fill((1.0*Gaus->Integral(-1.,3.))/(1.0*Gaus->Integral(-3.5,3.5)));
+    }
+      int activeCanvas = (int) ptbin/9;
+      int activeBin = ptbin - activeCanvas*9; 
+      TF1 *gaus2=new TF1("gaus2","gausn",0,1);
+      gaus2->SetLineColor(kBlack);
+      nSigEff[activeCanvas]->cd(activeBin+1);
+      pretty1DHist(nSigEeff[ptbin],kRed,20);
+      nSigEeff[ptbin]->Draw("pe");
+      nSigEeff[ptbin]->Fit("gaus2");
+      lbl[ptbin]->Draw("same");
+      pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
+      pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
+      cutEff[ptbin] = nSigEeff[ptbin]->GetMean(1);
+      cutEffErr[ptbin] = nSigEeff[ptbin]->GetRMS(1);
+
+      twoGaus[activeCanvas]->cd(activeBin+1);
+      twogaus[ptbin]->SetTitle("2D Gaussian of #mu and #sigma for nSigE Cut");
+      twogaus[ptbin]->GetXaxis()->SetTitle("#mu");
+      twogaus[ptbin]->GetYaxis()->SetTitle("#sigma");
+      twogaus[ptbin]->Draw("SURF2");
+      lbl[ptbin]->Draw("same");
+  }
+  TGraphErrors* grnSigCut = new TGraphErrors(numPtBins,pT,cutEff,pTErr,cutEffErr);
+  prettyTGraph(grnSigCut,kRed,20,0.,1.2);
+  nSigCutPlot->cd();
+  grnSigCut->SetTitle("n#sigma_{E} Cut Efficiency;P_{T} (GeV/c);Efficiency");
+  grnSigCut->Draw("APE");
+  grnSigCut->Fit("pol1","R","",1.3,6.);
+
+}
+
+void declareHistograms(){
+  
+  for(int ptbin=0; ptbin<numPtBins; ptbin++)
+  {
+    nSigEeff[ptbin] = new TH1F(Form("nSigEeff_%i",ptbin),"nSigE Cut Eff",1000,0,1);
   }
 }
 
@@ -328,13 +497,27 @@ void doProjections()
     }
      
   }
-  for(int ptbin = 0; ptbin < numPtBins; ptbin++){
+
+  for(int etype=0; etype<2; etype++)
+  {
+    for(int ptbin=0; ptbin<numPtBins; ptbin++)
+    {
+      nSigE[etype][ptbin] = (TH1D*)nSigEPartE[etype]->ProjectionY(Form("nSigE_%i_%i",etype,ptbin),nSigEPartE[etype]->GetXaxis()->FindBin(lowpt[ptbin]),nSigEPartE[etype]->GetXaxis()->FindBin(highpt[ptbin])-1); 
+      if(etype==1)
+      {
+        nSigE[2][ptbin] = (TH1D*)nSigE[0][ptbin]->Clone();
+        nSigE[2][ptbin]->Add(nSigE[1][ptbin],-1.);
+      }
+    }
+  }
+
+ /* for(int ptbin = 0; ptbin < numPtBins; ptbin++){
     eHadNorm[ptbin] = 0;
     for(int etype=0; etype<3; etype++)
     {
       eHadNorm[ptbin] += trigCount[etype][ptbin];
     }
-  }
+  }*/
 
   hadEta = (TH1D*)hadEtaPhi->ProjectionX();
   setTitleAndAxisLabels(hadEta,"Hadron Eta","#eta","Counts");
@@ -379,6 +562,13 @@ void prepareCanvas()
   {
     invMassPt[q] = new TCanvas(Form("invMassPt_%i",q),"Invariant Mass Spectrum",50,50,1050,1050);
     invMassPt[q]->Divide(3,3);
+    nSigEPt[q] = new TCanvas(Form("nSigEPt_%i",q),"nSigmaE Spectrum",50,50,1050,1050);
+    nSigEPt[q]->Divide(3,3);
+    nSigEff[q] = new TCanvas(Form("nSigEff_%i",q),"nSigmaE Cut Efficiency",50,50,1050,1050);
+    nSigEff[q]->Divide(3,3);
+    twoGaus[q] = new TCanvas(Form("twoGaus_%i",q),"Covariance Double Gaussian",50,50,1050,1050);
+    twoGaus[q]->Divide(3,3);
+    
   }
   invMass     = new TCanvas("invMass","Invariant Mass All pT",50,50,1050,1050);
   ptCompare     = new TCanvas("ptCompare","pT Comparison",50,50,1050,1050);
@@ -408,6 +598,9 @@ void prepareCanvas()
     eIDCutEffic[i] -> Divide(2,2);
   }
   efficOverlay = new TCanvas("efficOverlay","Partner eID Based QA",50,50,1050,1050);
+  nSigCutPlot = new TCanvas("nSigCutPlot","nSigmaE Cut Efficiency",50,50,1050,1050);
+  nSigMeanSig = new TCanvas("nSigMeanSig","nSigmaE Fit Results",50,50,1050,1050);
+  dndpt = new TCanvas("dndpt","dndpt",50,50,1050,1050);
   
   eventHists = new TCanvas("eventHists","Event Level Hists",50,50,1050,1050);
   eventHists->Divide(1,2);
@@ -538,6 +731,42 @@ void getHistograms(TFile* f)
   if(DEBUG) cout << "Get Hist." << endl;
 }
 
+void getdNdpT()
+{
+  Double_t pT[numPtBins], pTErr[numPtBins], num[2][numPtBins], numErr[2][numPtBins];
+  for(int ptbin=0; ptbin<numPtBins; ptbin++)
+  {
+    elecDcaForInt[ptbin] = (TH1D*)elecDcaPt->ProjectionY(Form("elecDcaForInt_%i",ptbin),elecDcaPt->GetXaxis()->FindBin(lowpt[ptbin]),elecDcaPt->GetXaxis()->FindBin(highpt[ptbin])-1); 
+    for(int etype=0;etype<3;etype++)
+    {
+      eeDcaForInt[etype][ptbin] = (TH1D*)eeDcaPt[etype]->ProjectionY(Form("eeDcaForInt_%i",ptbin),eeDcaPt[etype]->GetXaxis()->FindBin(lowpt[ptbin]),eeDcaPt[etype]->GetXaxis()->FindBin(highpt[ptbin])-1); 
+      if(etype==2)
+      {
+        eeDcaForInt[1][ptbin]->Add(eeDcaForInt[2][ptbin]);
+        eeDcaForInt[0][ptbin]->Add(eeDcaForInt[1][ptbin],-1.);
+      }
+    }
+    pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
+    pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
+    num[0][ptbin] = elecDcaForInt[ptbin]->Integral()/(pTErr[ptbin]*2.);
+    numErr[0][ptbin] = (num[0][ptbin]>0.) ? 1/sqrt(num[0][ptbin]) : 0.;
+    num[1][ptbin] = eeDcaForInt[0][ptbin]->Integral()/(pTErr[ptbin]*2.);
+    numErr[1][ptbin] = (num[1][ptbin]>1.) ? 1/sqrt(num[1][ptbin]) : 0.;
+  }
+  TGraphErrors* dNdptIncl = new TGraphErrors(numPtBins,pT,num[0],pTErr,numErr[0]);
+  TGraphErrors* dNdptee = new TGraphErrors(numPtBins,pT,num[1],pTErr,numErr[1]);
+  dndpt->cd();
+  gPad->SetLogy();
+  prettyTGraph(dNdptIncl,kBlack,20,1,1e6);
+  prettyTGraph(dNdptee,kRed,20,1e-9,1e6);
+  TLegend* leg = new TLegend(.6,.6,.84,.75);
+  leg->AddEntry(dNdptIncl,"Semi-Inclusive Elec","lpe");
+  leg->AddEntry(dNdptee,"Unlike-Like Elec","lpe");
+  dNdptIncl->SetTitle("Raw Electron Yield; P_{T} (GeV/c); dN/dp_{T}");
+  dNdptIncl->Draw("APE");
+  dNdptee->Draw("SAME PE");
+}
+
 void makeUnlikeMinusLikePartnerElectrons()
 {
   nSigEPartE[2] = (TH2F*)nSigEPartE[0]->Clone();
@@ -620,6 +849,8 @@ void makePDF(const char* fileName)
   temp->Print(name);
   temp = eventHists;
   temp->Print(name);
+  temp = dndpt;
+  temp->Print(name);
   for(int etype=0;etype<3;etype++)
   {
     for(int q=0; q<numCanvas; q++)
@@ -661,6 +892,25 @@ void makePDF(const char* fileName)
     temp = pElecCuts[i];
     temp->Print(name);
   }
+  for(int q=0; q<numCanvas; q++)
+  {
+    temp = nSigEPt[q]; // print data canvases
+    temp->Print(name);
+  }
+  temp = nSigMeanSig;
+  temp->Print(name);
+  for(int q=0; q<numCanvas; q++)
+  {
+    temp = twoGaus[q]; 
+    temp->Print(name);
+  }
+  for(int q=0; q<numCanvas; q++)
+  {
+    temp = nSigEff[q];
+    temp->Print(name);
+  }
+  temp = nSigCutPlot;
+  temp->Print(name);
   temp = eeOriginQA;
   temp->Print(name);
 

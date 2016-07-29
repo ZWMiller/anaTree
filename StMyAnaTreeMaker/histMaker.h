@@ -1,31 +1,38 @@
 #ifndef _histMaker
 #define _histMaker
 
-    const int numPtBins = 8;
+    const int numPtBins = 17;
     const int numCanvas = numPtBins/9 + 1;
 
     const float lowpt[numPtBins]  = 
-     {1.3, 2.0, 3.0, 4.0, 
+     {1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 
       5.0, 6.0, 8.0, 10.0};
     const float highpt[numPtBins] = 
-     {2.0, 3.0, 4.0, 5.0,
-      6.0, 8.0, 10., 20. };
+     {1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 5.0,
+      6.0, 8.0, 10., 20.0 };
     const int colors[5] = {kBlack,kRed,kAzure+1,kMagenta,kYellow};
 
 
     TCanvas* dPhiPt[3][numCanvas];
     TCanvas* invMassPt[numCanvas];
+    TCanvas* nSigEPt[numCanvas];
     TCanvas* invMass;
     TCanvas* ptCompare;
     TCanvas* cutEfficiency;
     TCanvas* hadQA;
     TCanvas* eeQA[2];
+    TCanvas* eeQAPhiv;
     TCanvas* eeOriginQA;
     TCanvas* elecQA;
     TCanvas* pElecCuts[6];
     TCanvas* eIDCutEffic[4];
     TCanvas* efficOverlay;
     TCanvas* eventHists;
+    TCanvas* nSigEff[numCanvas];
+    TCanvas* twoGaus[numCanvas];
+    TCanvas* nSigCutPlot;
+    TCanvas* nSigMeanSig;
+    TCanvas* dndpt;
 
     TPaveText* lbl[numPtBins];
 
@@ -58,7 +65,12 @@
     TH1D* elecEta;
     TH1D* elecPhi;
 
+    TH1D* elecDcaForInt[numPtBins];
+    TH1D* eeDcaForInt[3][numPtBins];
+
     TH2F* nSigEPartE[3];
+    TH1D* nSigE[3][numPtBins];
+    TH1D* nSigEForInt[3][numPtBins];
     TH2F* pvePartE[3];
     TH2F* nEtaPartE[3];
     TH2F* nPhiPartE[3];
@@ -70,36 +82,54 @@
     TH1F* SMDMatchedTracks[3];
     TH1F* SMDIdTracks[3];
     TH1F* partECutEfficiency[4];
+
+    TH1F* nSigEeff[numPtBins];
+    TF2 *twogaus[numPtBins]; 
     
     TH1F* refMult;
     TH1F* vertexZ;
 
     float trigCount[3][numPtBins];
     float eHadNorm;
+    double *nSigCovariance[numPtBins];
+    double meanSigE[numPtBins];
+    double meanerrSigE[numPtBins];
+    double sigmaSigE[numPtBins];
+    double sigmaerrSigE[numPtBins];
+    double corSigE[numPtBins];
 
     void doProjections();
     void prepareCanvas();
     void prepareLabels();
+    void declareHistograms();
     void getHistograms(TFile*);
     void pretty1DHist(TH1*, int, int);
-    void makeUnlikeMinusLikePartnerElectron();
+    void pretty1DHistFill(TH1*, int, int);
+    void prettyTGraph(TGraphErrors*, int, int, float, float);
+    void prettyTGraph(TGraph*, int, int, float, float);
+    void makeUnlikeMinusLikePartnerElectrons();
 
     void drawQAHists();
+    void getnSigEeff();
     void drawEventHists();
     void drawHadQA();
     void drawElecQA();
     void drawEEQA();
     void drawInvMassHists();
+    void drawnSigE();
     void drawPartECutEffic();
     void overlayEfficiencies();
     void drawPartEQA();
+    void getdNdpT();
     void drawDeltaPhi(TH1D*, TCanvas*, float, int, TPaveText*);
     void drawCutEfficiencyHists();
     void computeEfficiencyAndDraw(int, TH1F*, TH1F*);
     void makePDF(const char*);
+    void drawnSigMeanSig( const double*, const double*, const double*, const double*, const double*, const double*);
 
     void setTitleAndAxisLabels(TH1*,TString,TString,TString);
     void setTitleAndAxisLabels(TH2*,TString,TString,TString);
+
 
 #endif
 
