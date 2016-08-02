@@ -240,7 +240,7 @@ Int_t StPicoElecPurityMaker::Make() {
   if( isMB  ( event ) )   {FillHistograms(0,event);} // Decide what type of trigger you have, use to select what histos to fill
   if( isBHT1( event ) )   {FillHistograms(1,event);}
   if( isBHT2( event ) )   {FillHistograms(2,event);}
-  if( isBHT3( event ) )   {FillHistograms(3,event); dVzStudy(event);}
+  if( isBHT0( event ) )   {FillHistograms(3,event); dVzStudy(event);}
   if(trigCounter == 0) 
     trigCounter = -99;
   trigType->Fill(trigCounter); // Use to detect sample overlaps
@@ -888,14 +888,14 @@ void StPicoElecPurityMaker::SetDefaultCuts()
   setNSigKCuts(-20,20);
   setNSigPiCuts(-20,20);
   setvZCuts(0,6.0 ,3.0);  // (vZ, delVz)
-  setvZCuts(1,30.0,3.0); // (vZ, delVz)
-  setvZCuts(2,30.0,3.0); // (vZ, delVz)
-  setvZCuts(3,30.0,30.0); // (vZ, delVz)
+  setvZCuts(1,100.0,3.0); // (vZ, delVz)
+  setvZCuts(2,100.0,3.0); // (vZ, delVz)
+  setvZCuts(3,100.0,3.0); // (vZ, delVz)
   setvZCutsHFT(0,6.0,4.0);  // (vZ, delVz)
   setvZCutsHFT(1,6.0,4.0); // (vZ, delVz)
   setvZCutsHFT(2,6.0,4.0); // (vZ, delVz)
   setvZCutsHFT(3,6.0,30.0); // (vZ, delVz)
-  setPrimaryPtCut(3.0, 1.5); // pT < 3 (TOF), pT >1.5 (BEMC)
+  setPrimaryPtCut(3.0, 1.2); // pT < 3 (TOF), pT >1.5 (BEMC)
   setPrimaryEtaCut(1.0); // |eta| < 1.0
   setPrimaryDCACut(1.5); // eDCA < 1.5 cm
   setNhitsCuts(15.,20.,0.52); // nHitsdEdx >= 15, nHitsFit >= 20, nHitsRatio >= 0.52

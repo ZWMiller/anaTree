@@ -71,6 +71,7 @@ class StMyAnaTreeMaker : public StMaker {
 		void 	copyCurrentToBuffer(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer);
 
       void determineTriggers();
+      void fillTrigTypeHist();
       void clearTriggers();
       bool passHadronCuts(StHadronTrack*);
       double delPhiCorrect(double);
@@ -291,6 +292,8 @@ class StMyAnaTreeMaker : public StMaker {
       TH1F *hSMDMatchedTracks[2];
       TH1F *hSMDIdTracks[2];
 
+      TH1F *hTrigType;
+
 		//TH2F *hDenInvMassvsPtMixLikePosMB;
 		//TH2F *hDenInvMassvsPtMixLikeNegMB;
 		//TH2F *hDenInvMassvsPtMixLikePosMBnophiv;
@@ -374,6 +377,8 @@ class StMyAnaTreeMaker : public StMaker {
         Float_t     mHadPtCut[2];
         Float_t     mHadEtaCut[2];
         Float_t     mHadDcaCut[2];
+        Float_t     mHadHitsFitCut[2];
+        Float_t     mHadHitsdEdxCut[2];
         
 		Float_t     mPEMassCut[2];
 		Short_t	    nMassBins;

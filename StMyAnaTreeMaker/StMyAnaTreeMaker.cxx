@@ -50,7 +50,7 @@ ClassImp(StMyAnaTreeMaker)
   mRatioCut[0] = 0.52; mRatioCut[1] = 1.;
   mHFTTrackCut = false;
 
-  mEPtCut[0] = 0.2; mEPtCut[1] = 30;
+  mEPtCut[0] = 1.0; mEPtCut[1] = 30;
   mEEtaCut[0] = -0.7; mEEtaCut[1] = 0.7;
   mEDcaCut[0] = 0.; mEDcaCut[1] = 1.5;
   mEInvBetaCut[0] = 0.975; mEInvBetaCut[1] = 1.025;
@@ -105,7 +105,9 @@ ClassImp(StMyAnaTreeMaker)
 
   mHadPtCut[0]  = 0.5;  mHadPtCut[1] = 20.0;
   mHadEtaCut[0] = -0.7; mHadEtaCut[1]= 0.7;
-  mHadDcaCut[0] = 0.; mHadDcaCut[1] = 3.0;
+  mHadDcaCut[0] = 0.; mHadDcaCut[1] = 1.0;
+  mHadHitsFitCut[0] = 15.; mHadHitsFitCut[1] = 50.0;
+  mHadHitsdEdxCut[0] = 10.; mHadHitsdEdxCut[1] = 50.0;
 
   mNBadRuns = sizeof(mBadRuns)/sizeof(int);
 
@@ -199,6 +201,7 @@ void StMyAnaTreeMaker::declareHistograms() {
   fout->cd();
   hnEvents = new TH1F("hnEvents","hnEvents",10,0,10);
   hnTracks = new TH1F("hnTracks","hnTracks",10,0,10);
+  hTrigType = new TH1F("hTrigType","Trigger Type",20,0,20);
   hVzVpdVz = new TH2F("hVzVpdVz","hVzVpdVz;Vz (cm); Vz_{VPD} (cm);",400,-100,100,400,-100,100);
   hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",400,-100,100,400,-10,10);
   hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
@@ -458,6 +461,7 @@ Int_t StMyAnaTreeMaker::Make() {
   else if(mTrigSelect==7&&mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
 
   if(eventPass==0) return kStOK;
+  fillTrigTypeHist();
   hnEvents->Fill(2);
 
   Double_t vzVpd=mAnaTree->event()->vzVpd();
@@ -904,6 +908,7 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
 
   double mass = phoEE->pairMass();
   double pairDca = phoEE->pairDca();
+  StThreeVectorF origin = phoEE->pairOrigin();
   if(pairDca>1) return;
 
   int    charge1    = tagETrk->charge();
@@ -955,6 +960,7 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
 
   if(!passPartEQuality(EtaPart, nHitsFitPart, nHitsDedxPart, dcaPart) || 
       !isHTTrigE(tagETrk) ) return;
+
   if(charge1 != charge2)
   {
     hNSigEPartElec[0]->Fill(PtPart,nSigEPart);
@@ -1121,13 +1127,15 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   //photonic electron
   if(charge1!=charge2){
     hUSphivM->Fill(mass,phiV);
-  }else{
+  }
+  else{
     if(charge1==1)  hLSPosphivM->Fill(mass,phiV);
     if(charge1==-1) hLSNegphivM->Fill(mass,phiV);
   }
   double vcut = fPhiVm->Eval(mass);
   StThreeVectorF origin = ee->pairOrigin();
   //if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]){//&&phiV<vcut){
+  
   if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]&&dauDcaDist>mDauEDcaDistCut[0]&&dauDcaDist<mDauEDcaDistCut[1]){
     double pt1 = eTrk1->gMom().perp();
     double dca1 = eTrk1->dca();
@@ -1376,10 +1384,15 @@ bool StMyAnaTreeMaker::passHadronCuts(StHadronTrack* hTrk)
   double eta = hTrk->gMom().pseudoRapidity();
   double phi = hTrk->gMom().phi();
   double dca = hTrk->dca();
+  double nHitFit = hTrk->nHitsFit();
+  double nHitdEdx = hTrk->nHitsDedx();
   if(charge!=0 && 
       mHadPtCut[0] < pt  && pt  < mHadPtCut[1] &&
       mHadEtaCut[0]< eta && eta < mHadEtaCut[1] &&
-      mHadDcaCut[0]< dca && dca < mHadDcaCut[1]) 
+      mHadDcaCut[0]< dca && dca < mHadDcaCut[1] && 
+      mHadHitsFitCut[0] < nHitFit && nHitFit< mHadHitsFitCut[1] &&
+      mHadHitsdEdxCut[0] < nHitdEdx && nHitdEdx< mHadHitsdEdxCut[1] &&
+      fabs(eta)>0.01) // To remove spike at (eta = 0) for now 
   {
     return true;
   }
@@ -1431,6 +1444,22 @@ Bool_t StMyAnaTreeMaker::isBHT3()
 Bool_t StMyAnaTreeMaker::isMinBias()
 { 
   return checkTriggers(4);
+}
+
+void StMyAnaTreeMaker::fillTrigTypeHist()
+{
+  bool ht0 = isBHT0();
+  bool ht1 = isBHT1();
+  bool ht2 = isBHT2();
+  bool mb = isMinBias();
+  if(mb) hTrigType->Fill(1);
+  if(ht0) hTrigType->Fill(2);
+  if(ht1) hTrigType->Fill(3);
+  if(ht2) hTrigType->Fill(4);
+  if(mb && (ht0 || ht1 || ht2)) hTrigType->Fill(6);
+  if(ht0 && ht1) hTrigType->Fill(7);
+  if(ht0 && ht2) hTrigType->Fill(8);
+  if(ht1 && ht2) hTrigType->Fill(9);
 }
 
 bool StMyAnaTreeMaker::tagEIDCuts(StElectronTrack *eTrk) {

@@ -109,7 +109,7 @@ ClassImp(StPicoAnaTreeMaker)
   mPhoEPairDcaCut = 1;
   mPhoEMassCut = 0.24;
 
-  mEmcEPtCut[0] = 1.2; mEmcEPtCut[1] = 100;
+  mEmcEPtCut[0] = 0.8; mEmcEPtCut[1] = 100;
   mEmcEEtaCut[0] = -1.; mEmcEEtaCut[1] = 1.;
   mEmcEPveCut[0] = 0.2; mEmcEPveCut[1] = 4.;
 
@@ -118,7 +118,7 @@ ClassImp(StPicoAnaTreeMaker)
   mEZDistCut[0] = -3; mEZDistCut[1] = 3;
   mEPhiDistCut[0] = -0.08; mEPhiDistCut[1] = 0.08;
 
-  mMuPtCut[0] = 1.2; mMuPtCut[1] = 100.;
+  mMuPtCut[0] = 0.8; mMuPtCut[1] = 100.;
   mMuEtaCut[0] = -0.65; mMuEtaCut[1] = 0.65;
   mMunSigPiCut[0] = -1.5; mMunSigPiCut[1] = 3.5;
   mMudTCut[0] = -4; mMudTCut[1] = 4;

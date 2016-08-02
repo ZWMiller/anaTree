@@ -36,8 +36,8 @@ StHadronTrack::StHadronTrack(StPicoDst *picoDst, StPicoTrack* t, Int_t idx)
       int q      = t->charge();
       mNHitsFit  = t->nHitsFit()*q;
       mNHitsDedx = (UChar_t)(t->nHitsDedx());
-      mNSigmaPion = (fabs(t->nSigmaPion() * 10.) > 128) ? 128: (Short_t)(TMath::Nint(t->nSigmaPion() * 10.));
-      mNSigmaKaon = (fabs(t->nSigmaKaon() * 10.) > 128) ? 128 : (Short_t)(TMath::Nint(t->nSigmaKaon() * 10.));
+      mNSigmaPion = (fabs(t->nSigmaPion() * 1000.) > 32768) ? 32768: (Short_t)(TMath::Nint(t->nSigmaPion() * 1000.));
+      mNSigmaKaon = (fabs(t->nSigmaKaon() * 1000.) > 32768) ? 32768 : (Short_t)(TMath::Nint(t->nSigmaKaon() * 1000.));
       //mNSigmaElectron = (fabs(t->nSigmaElectron() * 100.) > 32768) ? 32768 : (Short_t)(TMath::Nint(t->nSigmaElectron() * 100.));
 
 	   StThreeVectorF vertexPos = picoDst->event()->primaryVertex();
