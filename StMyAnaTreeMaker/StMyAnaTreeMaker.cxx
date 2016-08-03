@@ -784,9 +784,9 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
     StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
     if(!passHadronCuts(hTrk)|| hTrk->id() == eTrk->id()) return;
     int charge = hTrk->charge();
-    double hpt = hTrk->gMom().perp();
-    double heta = hTrk->gMom().pseudoRapidity();
-    double hphi = hTrk->gMom().phi();
+    double hpt = hTrk->pMom().perp();
+    double heta = hTrk->pMom().pseudoRapidity();
+    double hphi = hTrk->pMom().phi();
     double hdca = hTrk->dca();
     double dphi = hphi - phi;
 
@@ -827,9 +827,9 @@ void StMyAnaTreeMaker::fillHadronHists(StHadronTrack* hTrk)
 {
   if(!passHadronCuts(hTrk)) return;
   int charge = hTrk->charge();
-  double hpt = hTrk->gMom().perp();
-  double heta = hTrk->gMom().pseudoRapidity();
-  double hphi = hTrk->gMom().phi();
+  double hpt = hTrk->pMom().perp();
+  double heta = hTrk->pMom().pseudoRapidity();
+  double hphi = hTrk->pMom().phi();
   double hdca = hTrk->dca();
 
   hHadPt    ->Fill(hpt);
@@ -1207,9 +1207,9 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
       StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
       if(!passHadronCuts(hTrk) || hTrk->id() == eTrk1->id() || hTrk->id() == eTrk2->id()) return;
       int charge = hTrk->charge();
-      double hpt = hTrk->gMom().perp();
-      double heta = hTrk->gMom().pseudoRapidity();
-      double hphi = hTrk->gMom().phi();
+      double hpt = hTrk->pMom().perp();
+      double heta = hTrk->pMom().pseudoRapidity();
+      double hphi = hTrk->pMom().phi();
       double hdca = hTrk->dca();
 
       double dphi = hphi - phi1;
@@ -1380,9 +1380,9 @@ bool StMyAnaTreeMaker::passHadronCuts(StHadronTrack* hTrk)
 {
 
   int charge = hTrk->charge();
-  double pt = hTrk->gMom().perp();
-  double eta = hTrk->gMom().pseudoRapidity();
-  double phi = hTrk->gMom().phi();
+  double pt = hTrk->pMom().perp();
+  double eta = hTrk->pMom().pseudoRapidity();
+  double phi = hTrk->pMom().phi();
   double dca = hTrk->dca();
   double nHitFit = hTrk->nHitsFit();
   double nHitdEdx = hTrk->nHitsDedx();

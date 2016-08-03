@@ -9,7 +9,7 @@ StChain *chain;
 void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRunsShort.list", const Char_t *outputFile="anaTree.hists.root", int trigSelect = 2, bool mixedEvent=false)
 {
 
-	//  Int_t nEvents = 1000;	
+	//nEvents = 1000;	
 	//Load all the System libraries
 
 	gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
