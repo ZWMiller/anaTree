@@ -32,6 +32,8 @@ ClassImp(StMyAnaTreeMaker)
   StMyAnaTreeMaker::StMyAnaTreeMaker(const char* name, StPicoAnaTreeMaker *treeMaker, const char* outName, bool mixedEvent=false)
 : StMaker(name)
 {
+  DEBUG = !false;
+  eventCounter = 0;
   mPicoAnaTreeMaker = treeMaker;
   mAnaTree = 0;
   TH1F:: SetDefaultSumw2();//zaochen add
@@ -492,22 +494,45 @@ Int_t StMyAnaTreeMaker::Make() {
   double Vz = mAnaTree->event()->primaryVertex().z();
   int vzBufferPointer=int((Vz-mVzCut[0])/(mVzCut[1]-mVzCut[0])*nVzBin);
 
-
-
   int current_nePlus = 0, current_neMinus = 0;
   int current_nmuPlus = 0, current_nmuMinus = 0;
-  int nE = mAnaTree->numberOfETracks();
+  
+  if(DEBUG) cout << "Event: " << eventCounter++ << endl;
 
+  int nE = mAnaTree->numberOfETracks();
   memset(current_ePlusFlag,0,sizeof(current_ePlusFlag));
   memset(current_eMinusFlag,0,sizeof(current_eMinusFlag));
   memset(current_ePlusIsHFT,0,sizeof(current_ePlusIsHFT));
   memset(current_eMinusIsHFT,0,sizeof(current_eMinusIsHFT));
   for(int i=0;i<nE;i++){
+    if(DEBUG) cout << "Fill eTrk" << endl;
     StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(i);
     fillElectronHists(eTrk);  
   }
 
-  memset(current_muPlusFlag,0,sizeof(current_muPlusFlag));
+  int nHad = mAnaTree->numberOfHTracks(); 
+  for(int j=0; j < nHad; j++)
+  {
+    if(DEBUG) cout << "Fill hTrk" << endl;
+    StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
+    fillHadronHists(hTrk);
+  }
+
+  int nEEPairs = mAnaTree->numberOfEEPairs();
+  for(int iee=0; iee< nEEPairs;iee++){	
+    if(DEBUG) cout << "Fill eeTrk" << endl;
+    StEEPair* ee = (StEEPair*) mAnaTree->eePair(iee);
+    fillEEHists(ee);
+  }
+
+  int nPhoEEPairs = mAnaTree->numberOfPhoEEPairs();   
+  for(int iphoEE=0; iphoEE< nPhoEEPairs;iphoEE++){
+    if(DEBUG) cout << "Fill peTrk" << endl;
+    StPhoEEPair *phoEE = (StPhoEEPair*) mAnaTree->phoEEPair(iphoEE);
+    fillPhoEEHists(phoEE);
+  }
+
+ /* memset(current_muPlusFlag,0,sizeof(current_muPlusFlag));
   memset(current_muMinusFlag,0,sizeof(current_muMinusFlag));
   memset(current_muPlusIsHFT,0,sizeof(current_muPlusIsHFT));
   memset(current_muMinusIsHFT,0,sizeof(current_muMinusIsHFT));
@@ -515,19 +540,6 @@ Int_t StMyAnaTreeMaker::Make() {
   for(int i=0;i<nMu;i++){
     StMuonTrack *muTrk = (StMuonTrack*)mAnaTree->muTrack(i);
     fillMuonHists(muTrk);    
-  }
-
-  int nHad = mAnaTree->numberOfHTracks(); 
-  for(int j=0; j < nHad; j++)
-  {
-    StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
-    fillHadronHists(hTrk);
-  }
-
-  int nEEPairs = mAnaTree->numberOfEEPairs();
-  for(int iee=0; iee< nEEPairs;iee++){	
-    StEEPair* ee = (StEEPair*) mAnaTree->eePair(iee);
-    fillEEHists(ee);
   }
 
   int nEMuPairs = mAnaTree->numberOfEMuPairs();
@@ -540,13 +552,7 @@ Int_t StMyAnaTreeMaker::Make() {
   for(int imumu=0; imumu< nMuMuPairs;imumu++){
     StMuMuPair* mumu = (StMuMuPair*) mAnaTree->MuMuPair(imumu);
     fillMuMuHists(mumu);
-  }
-
-  int nPhoEEPairs = mAnaTree->numberOfPhoEEPairs();   
-  for(int iphoEE=0; iphoEE< nPhoEEPairs;iphoEE++){
-    StPhoEEPair *phoEE = (StPhoEEPair*) mAnaTree->phoEEPair(iphoEE);
-    fillPhoEEHists(phoEE);
-  }
+  }*/
 
   hNe->Fill(current_nePlus,current_neMinus);
   hNemu->Fill(current_nePlus+current_neMinus, current_nmuPlus+current_nmuMinus);

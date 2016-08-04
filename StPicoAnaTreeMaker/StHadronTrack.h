@@ -34,8 +34,8 @@ class StHadronTrack : public TObject {
   Int_t   nHitsFit() const       { return (mNHitsFit>0) ? (Int_t)mNHitsFit : (Int_t)(-1*mNHitsFit); }
   Int_t   nHitsDedx() const      { return (Int_t)mNHitsDedx; }
   //Int_t   nHitsMax() const       { return (Int_t)mNHitsMax; }
-  Float_t nSigmaPion() const     { return (Float_t)mNSigmaPion/1000.; }
-  Float_t nSigmaKaon() const     { return (Float_t)mNSigmaKaon/1000.; }
+  Float_t nSigmaPion() const     { return (Float_t)mNSigmaPion/10.; }
+  Float_t nSigmaKaon() const     { return (Float_t)mNSigmaKaon/10.; }
   Float_t dca() const           { return (Float_t)abs(mDca)/40.; }
   //Float_t dcaXY() const            { return (Float_t)mDcaXY/10000.; }
   //Float_t dcaZ() const            { return (Float_t)mDcaZ/10000.; }
@@ -60,8 +60,8 @@ class StHadronTrack : public TObject {
   Char_t   mNHitsFit;         // q*nHitsFit
   //Char_t   mNHitsMax;         // nHitsMax - TPC
   UChar_t  mNHitsDedx;        // nHitsDedx
-  Short_t  mNSigmaPion;       // nsigmaPi * 1000
-  Short_t  mNSigmaKaon;       // nsigmaKaon * 1000
+  Char_t  mNSigmaPion;       // nsigmaPi * 10
+  Char_t  mNSigmaKaon;       // nsigmaKaon * 10
   
   friend class StPicoDst;
 

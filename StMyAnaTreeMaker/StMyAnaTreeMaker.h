@@ -87,6 +87,8 @@ class StMyAnaTreeMaker : public StMaker {
       bool isHT3;
       bool isMB;
       bool makeMixedEvent;
+      bool DEBUG;
+      int eventCounter;
       vector<int> triggers[5]; //0-HT0, 1-HT1 ... 4-MB
 
       void fillElectronHists(StElectronTrack*);

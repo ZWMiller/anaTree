@@ -59,7 +59,7 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
 	cout << " Total entries = " << total << endl;
 	if(nEvents>total) nEvents = total;
 	for (Int_t i=0; i<nEvents; i++){
-		if(i%100000==0)
+		if(i%100==0)
 		cout << "Working on eventNumber " << i << endl;
 
 		chain->Clear();
