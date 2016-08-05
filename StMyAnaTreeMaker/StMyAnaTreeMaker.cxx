@@ -1060,7 +1060,6 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     StElectronTrack* tmp = eTrk1;
     eTrk1 = eTrk2;
     eTrk2 = tmp;
-    delete tmp;
   }
 
   StThreeVectorF mom1 = eTrk1->gMom();

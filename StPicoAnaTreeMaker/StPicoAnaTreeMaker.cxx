@@ -341,6 +341,8 @@ void StPicoAnaTreeMaker::openWrite() {
   }
   mhnEvents = new TH1F("mhnEvents", "hnEvents; ",40,0,40);
   mhnTracks = new TH1F("mhnTracks", "hnTracks; ",30,0,30);
+  TString title[4] = {"Raw Triggers","Triggers After Valid Pico Check", "Triggers after Vz Cut", "Triggers after dVz Cut"};
+  for(int i=0;i<4;i++) hTrigType[i] = new TH1F(Form("hTrigType_%i",i),title[i],20,0,20);
   declareHistos();
 }
 ///-----------------------------------------------------------------------
@@ -678,7 +680,9 @@ Int_t StPicoAnaTreeMaker::MakeWrite() {
 //-----------------------------------------------------------------------
 bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
   /* event selection */		
+  setTriggerFlags();
   mhnEvents->Fill(0);
+  fillTrigTypeHist(hTrigType[0]);
   if(!pico->event()){
     return false;
   }
@@ -751,17 +755,16 @@ bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
   else if(mPicoMode == 1) //Run 15 mode
   {
     mhnEvents->Fill(1);
+    fillTrigTypeHist(hTrigType[1]);
     if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return false;
     mhnEvents->Fill(2);
+    fillTrigTypeHist(hTrigType[2]);
     if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0]||vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) return false;
     mhnEvents->Fill(3);
-    int trigFound = makeTriggerWord(pico->event());
+    fillTrigTypeHist(hTrigType[3]);
 
-    if(trigFound){
-      for(int i=0;i<32;i++){
-        if(mTriggerWord>>i & 0x1) mhnEvents->Fill(4+i);
-      }
-      LOG_INFO<<"Trigger Found in Event #" << pico->event()->eventId()<<". TriggerWord: " << mTriggerWord <<endm;
+    if(isHT0 || isHT1 || isHT2 || isHT3 || isMB){
+      LOG_INFO<<"Trigger Found in Event #" << pico->event()->eventId() << endm;
       return true;
     }
     else{
@@ -1636,26 +1639,89 @@ const float *StPicoAnaTreeMaker::getRecenterCor(int runIndex, int centrality){
   return mRecenterCor;
 }
 
-Int_t StPicoAnaTreeMaker::makeTriggerWord(StPicoEvent* ev){
-  int bitCount = 0;
-  mTriggerWord = 0;
-  for(auto trg = triggers.begin(); trg < triggers.end(); ++trg)
+Bool_t StPicoAnaTreeMaker::checkTriggers(int trigType)
+{
+  for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
   {
-    cout << "Trigger Comparison Input: " << *trg << endl;
-    if(ev->isTrigger(*trg))
-      mTriggerWord |= (1U << bitCount);
-    bitCount++;
+    if(mPicoDst->event()->isTrigger(*trg)){
+      return true;
+    }
   }
-  return mTriggerWord;
+  return false;
+}
+
+
+Bool_t StPicoAnaTreeMaker::isBHT0()
+{ 
+  return checkTriggers(0);
+}
+
+
+Bool_t StPicoAnaTreeMaker::isBHT1()
+{ 
+  return checkTriggers(1);
+}
+
+//-----------------------------------------                                              
+Bool_t StPicoAnaTreeMaker::isBHT2()
+{
+  return checkTriggers(2);
+}
+
+//---------------------------------------------------  
+Bool_t StPicoAnaTreeMaker::isBHT3()
+{
+  return checkTriggers(3);
+}
+
+Bool_t StPicoAnaTreeMaker::isMinBias()
+{ 
+  return checkTriggers(4);
+}
+
+void StPicoAnaTreeMaker::setTriggerFlags()
+{
+  clearTriggerFlags();
+  isHT0 = isBHT0();
+  isHT1 = isBHT1();
+  isHT2 = isBHT2();
+  isHT3 = isBHT3();
+  isMB  = isMinBias();
+}
+
+void StPicoAnaTreeMaker::clearTriggerFlags()
+{
+  isHT0 = isHT1 = isHT2 = isHT3 = isMB = false;
+}
+
+void StPicoAnaTreeMaker::fillTrigTypeHist(TH1* h)
+{
+  bool ht0 = isHT0;
+  bool ht1 = isHT1;
+  bool ht2 = isHT2;
+  bool mb = isMB;
+  if(ht0) h->Fill(1);
+  if(ht1) h->Fill(2);
+  if(ht2) h->Fill(3);
+  if(mb) h->Fill(4);
+  if(mb && (ht0 || ht1 || ht2)) h->Fill(6);
+  if(ht0 && ht1) h->Fill(7);
+  if(ht0 && ht2) h->Fill(8);
+  if(ht1 && ht2) h->Fill(9);
+  TString binLabel[10] = {"","BHT0","BHT1","BHT2","MB","","MB*BHTX","BHT0*BHT1","BHT0*BHT2","BHT1*BHT2"};
+  for(int i=1;i<10;i++){
+    h->GetXaxis()->SetBinLabel(i,binLabel[i]);
+  }
 }
 
 void StPicoAnaTreeMaker::printTriggerWords(){
   LOG_INFO << "+--- Triggers Requested for AnaTree ---+" << endm;
-  for(auto trg = triggers.begin(); trg < triggers.end(); ++trg)
-  {
-    LOG_INFO << *trg << endm;
+  TString label[5] = {"HT0:","HT1:","HT2:","HT3:","MB:"};
+  for(int i=0; i<5; i++){
+    LOG_INFO << label[i] << endm;
+    for(auto trg = triggers[i].begin(); trg < triggers[i].end(); ++trg)
+    {
+      LOG_INFO << *trg << endm;
+    }
   }
-  LOG_INFO << "+--------------------------------------+" << endm;
-  LOG_INFO << "The order printed here is the order \n in the trigger word bits." << endm;
-  LOG_INFO << "+--------------------------------------+" << endm;
 }

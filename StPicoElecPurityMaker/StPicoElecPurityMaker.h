@@ -35,6 +35,7 @@ class StPicoElecPurityMaker : public StMaker {
      Bool_t isBHT2(StPicoEvent*);
      Bool_t isBHT3(StPicoEvent*);
      Double_t RotatePhi(Double_t phi) const;   
+     void setRunList(TString name) { mRunFileName = name;};
      //virtual Int_t Init();
      //virtual Int_t Make();
      //virtual void  Clear(Option_t *opt="");
@@ -83,6 +84,7 @@ class StPicoElecPurityMaker : public StMaker {
    StPicoDstMaker *mPicoDstMaker;
    StPicoDst      *mPicoDst;
    
+   TString mRunFileName;
    map<Int_t,Int_t> mTotalRunId;
    const int pp = 0;
    const int AuAu = 1;

@@ -65,7 +65,7 @@ class StPicoAnaTreeMaker : public StMaker {
 		void setBufferSize(int);
 		void setRunNumber(int);
 		void setSaveHadron(bool);
-		void addTrigger(int);
+		void addTrigger(int,int);
 
 		void assignArrays();
 		void streamerOff();
@@ -179,6 +179,7 @@ class StPicoAnaTreeMaker : public StMaker {
 	private:
 
 		TH1F *mhnEvents;
+      TH1F *hTrigType[4];
 		TH1F *mhnTracks;
 		TH2F *mhnSigEvsP;
 		TH2F *mhnSigEvsPt;
@@ -290,6 +291,20 @@ class StPicoAnaTreeMaker : public StMaker {
 		Int_t 	 mTriggerSelection; 	//! 0 = minbias; 1 = ht; 2 = st_mtd;
       Int_t     mPicoMode;          //! 0 = Run14 pico, 1 = Run15 pico;
       Int_t     mTriggerWord;
+      Bool_t checkTriggers(int);
+      Bool_t isMinBias();
+      Bool_t isBHT0();
+      Bool_t isBHT1();
+      Bool_t isBHT2();
+      Bool_t isBHT3();
+      Bool_t isHT0;
+      Bool_t isHT1;
+      Bool_t isHT2;
+      Bool_t isHT3;
+      Bool_t isMB;
+      void clearTriggerFlags();
+      void setTriggerFlags();
+      void fillTrigTypeHist(TH1*);
 
 		Bool_t	 mCalcRecenter; //! calculate Recenter 
 		Bool_t	 mDoEvtPlane; //! do Eventplane 
@@ -362,7 +377,7 @@ class StPicoAnaTreeMaker : public StMaker {
 		TClonesArray*   mAnaTreeAllArrays[__NANATREEARRAYS__];   
       TClonesArray**  mAnaTreeArrays;   //[__NANATREEARRAYS__]
       char            mStatusArrays[__NANATREEARRAYS__];
-      std::vector<int> triggers;   // vpdmb-5-p-nobsmd 
+      std::vector<int> triggers[5];   // 0-HT0,1-HT1...4-MB
 
 		ClassDef(StPicoAnaTreeMaker, 1)
 };
@@ -378,4 +393,4 @@ inline void StPicoAnaTreeMaker::setRunNumber(int run) { mRunNumber = run; }
 inline void StPicoAnaTreeMaker::setSaveHadron(bool val) { mSaveHadron = val; }
 inline void StPicoAnaTreeMaker::setMaxRunId(int val) { mNMaxRunId = val; }
 inline void StPicoAnaTreeMaker::setMaxCentrality(int val) { mNMaxCentrality = val; }
-inline void StPicoAnaTreeMaker::addTrigger(int val) { triggers.push_back((unsigned int)val); }
+inline void StPicoAnaTreeMaker::addTrigger(int val,int id) { triggers[id].push_back((unsigned int)val); }

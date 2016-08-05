@@ -18,7 +18,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
 		//    const Char_t *inputFile="/star/data79/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/145/15145024/st_physics_15145024_raw_1000048.MuDst.root",
 		//    const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/166/15166010/st_physics_15166010_raw_4500060.MuDst.root",
 	//	const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_mid_2014/ReversedFullField/P15ic/2014/094/15094070/st_physics_15094070_raw_0000007.MuDst.root",
-		const Char_t *inputFile="testFiles/st_physics_adc_16086001_raw_4000030.MuDst.root",
+		const Char_t *inputFile="../anaTreeMaker_v1_070616/testFiles/st_physics_adc_16086001_raw_4000030.MuDst.root",
 		const bool creatingPhiWgt = kFALSE, const int prodMod = 1, const int emcMode=1, const int prodType = 0
 		){
 	Int_t nEvents = 10000000;
@@ -166,6 +166,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
    outPurityFile.ReplaceAll("MuDst.root","purity.root");
    StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
    ePurMaker->setRunMode(0); // 0 - pp (no centrality), 1- AuAu (centrality on)
+   ePurMaker->setRunList("./runNumberList_run15pp_transverse");
    ePurMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
    ePurMaker->addTrigger(470211,0);
    ePurMaker->addTrigger(490201,0);
@@ -202,22 +203,22 @@ void makeAnaTree(const Int_t runnumber=16086001,
       //treeMaker->setDoEvtPlane(false); //default is true
       if(prodType==0){ // prod low and mid
         treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
-        treeMaker->addTrigger(480201); 
-        treeMaker->addTrigger(470211);
-        treeMaker->addTrigger(490201);
-        treeMaker->addTrigger(480203);
-        treeMaker->addTrigger(480202);
-        treeMaker->addTrigger(470202);
-        treeMaker->addTrigger(490202);
-        treeMaker->addTrigger(480204);
-        treeMaker->addTrigger(470204);
-        treeMaker->addTrigger(490204);
-        treeMaker->addTrigger(480206);
-        treeMaker->addTrigger(480205);
-        treeMaker->addTrigger(470205);
-        treeMaker->addTrigger(490205);
-         //    treeMaker->setInputRecenterFile("./recenter_correction.root");
-         treeMaker->setMaxRunId(1700);
+        treeMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+        treeMaker->addTrigger(470211,0);
+        treeMaker->addTrigger(490201,0);
+        treeMaker->addTrigger(480203,0);
+        treeMaker->addTrigger(480202,1);
+        treeMaker->addTrigger(470202,1);
+        treeMaker->addTrigger(490202,1);
+        treeMaker->addTrigger(480204,1);
+        treeMaker->addTrigger(470204,1);
+        treeMaker->addTrigger(490204,1);
+        treeMaker->addTrigger(480206,1);
+        treeMaker->addTrigger(480205,2);
+        treeMaker->addTrigger(470205,2);
+        treeMaker->addTrigger(490205,2);
+        //    treeMaker->setInputRecenterFile("./recenter_correction.root");
+        treeMaker->setMaxRunId(1700);
       }
       if(prodType==1){ // prod high
       treeMaker->setInputRunList("./runNumberList_run15pp_transverse");

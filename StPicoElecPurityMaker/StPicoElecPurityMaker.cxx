@@ -51,6 +51,7 @@ ClassImp(StPicoElecPurityMaker)
   mNHotTower1 = sizeof(mHotTower1)/sizeof(int);
   mNHotTower2 = sizeof(mHotTower2)/sizeof(int);
   mNHotTower3 = sizeof(mHotTower3)/sizeof(int);
+  mRunFileName = "StRoot/StPicoElecPurityMaker/mTotalRunList15.dat";
 
   // ZWM Add (declare default cut values, can change in Ana with same function)
   SetDefaultCuts();
@@ -79,7 +80,7 @@ Int_t StPicoElecPurityMaker::Init() {
   if(fillhistflag){
     //read in the runlist.dat
     ifstream indata;
-    indata.open("StRoot/StPicoElecPurityMaker/mTotalRunList15.dat");
+    indata.open(mRunFileName);
     mTotalRunId.clear();
     if(indata.is_open()){
       cout<<"read in total run number list and recode run number ...";
