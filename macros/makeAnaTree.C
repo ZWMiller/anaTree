@@ -161,6 +161,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
 	outQAFile.ReplaceAll("MuDst.root","qa.root");
    StPicoQAMaker *qaMaker = new StPicoQAMaker("ana",picoMaker,outQAFile);
    qaMaker->setRunList("./runNumberList_run15pp_transverse");
+   qaMaker->setNumberOfRuns(900);
    
    TString outPurityFile=mInputFileName;
    outPurityFile.ReplaceAll("MuDst.root","purity.root");

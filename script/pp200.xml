@@ -3,11 +3,11 @@
 
  <SandBox installer="ZIP">
 	<Package name="LocalPackage">
-		<File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/StRoot</File>
-      <File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/.sl64_gcc447</File>
-      <File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/.sl64_gcc477</File>
-		<File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/.sl64_gcc482</File>
-		<File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/runNumberList_run15pp_transverse</File>
+		<File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/StRoot</File>
+      <File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/.sl64_gcc447</File>
+      <File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/.sl64_gcc477</File>
+		<File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/.sl64_gcc482</File>
+		<File>file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/runNumberList_run15pp_transverse</File>
    </Package>
 </SandBox>
 

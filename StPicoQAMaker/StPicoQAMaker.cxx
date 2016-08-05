@@ -26,7 +26,6 @@ Bool_t fillhistflag=1;
 ofstream runidfiles;
 Int_t runIndex;
 Int_t randomId;
-Int_t mTotalRun = 1655;//603
 
 
 ClassImp(StPicoQAMaker)
@@ -38,6 +37,7 @@ ClassImp(StPicoQAMaker)
   mPicoDst = NULL;
   TH1F:: SetDefaultSumw2();//zaochen add
   mOutName = outName;
+  mTotalRun = 1000;
 
   mNBadRuns = sizeof(mBadRuns)/sizeof(int);
   mRunFileName = "StRoot/StPicoQAMaker/mTotalRunList.dat";

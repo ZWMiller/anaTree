@@ -21,6 +21,7 @@ class StPicoQAMaker : public StMaker {
       void  Clear(Option_t *opt="");
       Int_t Finish();
       void  setRunList(TString name) {mRunFileName = name;};
+      void  setNumberOfRuns(int rns) {mTotalRun = rns;};
    private:
       Bool_t Isgoodtrack(StPicoTrack* ); 
       Bool_t Ismuontrack(StPicoTrack* );
@@ -36,6 +37,7 @@ class StPicoQAMaker : public StMaker {
       TString    mOutName;
       Int_t   mNBadRuns;       
       TString mRunFileName;
+      Int_t mTotalRun;
 
       map<Int_t,Int_t> mTotalRunId;
       TFile*	   fout;
