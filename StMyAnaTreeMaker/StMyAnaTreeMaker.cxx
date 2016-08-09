@@ -114,9 +114,9 @@ ClassImp(StMyAnaTreeMaker)
   nMassBins = 500;
   massMin = 0.;
   massMax = 5.;
-  nPtBins = 200;
+  nPtBins = 400;
   ptMin = 0.;
-  ptMax = 10.;
+  ptMax = 20.;
 
   iran = 231;
   current_centrality = 0;

@@ -36,7 +36,7 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    anaMaker->addTrigger(480204,1);
    anaMaker->addTrigger(470204,1);
    anaMaker->addTrigger(490204,1);
-   anaMaker->addTrigger(480206,1);
+   //anaMaker->addTrigger(480206,1);
    anaMaker->addTrigger(480205,2);
    anaMaker->addTrigger(470205,2);
    anaMaker->addTrigger(490205,2);

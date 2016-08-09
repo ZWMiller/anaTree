@@ -759,9 +759,11 @@ bool StPicoAnaTreeMaker::passEvent(StPicoDst *pico){
     if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return false;
     mhnEvents->Fill(2);
     fillTrigTypeHist(hTrigType[2]);
-    if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0]||vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) return false;
-    mhnEvents->Fill(3);
-    fillTrigTypeHist(hTrigType[3]);
+    
+    // Removed Since Not all events have VPD
+    //if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0]||vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) return false;
+   // mhnEvents->Fill(3);
+   // fillTrigTypeHist(hTrigType[3]);
 
     if(isHT0 || isHT1 || isHT2 || isHT3 || isMB){
       LOG_INFO<<"Trigger Found in Event #" << pico->event()->eventId() << endm;

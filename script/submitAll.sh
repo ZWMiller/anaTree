@@ -38,7 +38,7 @@ if [ -f runNumber_$1_$2 ]; then
    rm runNumber_$1_$2
 fi
 
-get_file_list.pl -keys 'runnumber' -cond 'production=P16id,trgsetupname=production_pp200trans_2015,filetype=daq_reco_mudst,filename~st_physics,storage!=hpss' -limit 3 >& runNumber_$1_$2
+get_file_list.pl -keys 'runnumber' -cond 'production=P16id,trgsetupname=production_pp200trans_2015,filetype=daq_reco_mudst,filename~st_physics,storage!=hpss' -limit 0 >& runNumber_$1_$2
 #get_file_list.pl -keys 'runnumber' -cond 'production=P15ic,collision=auau200,trgsetupname=AuAu_200_production_2014||AuAu_200_production_mid_2014||AuAu_200_production_low_2014,filename~st_physics,filetype=daq_reco_Mudst,storage=local' -limit 0 >& runNumber_$1_$2
 cp runNumber_$1_$2 ../.
 
