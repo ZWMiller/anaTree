@@ -158,8 +158,8 @@ inline StPhysicalHelixD StElectronTrack::helix(float bField) const
 inline Float_t StElectronTrack::pve() const
 {
     float p = pMom().mag();
-    float e = e0();
-    if(e!=0) return p/e;
+    float eTow = e();
+    if(eTow!=0) return p/eTow;
     else return -999.;
 }        
 #endif

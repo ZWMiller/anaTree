@@ -16,10 +16,10 @@
 ClassImp(StHadronTrack)
 
 //----------------------------------------------------------------------------------
-StHadronTrack::StHadronTrack() : mId(-1), 
-   //mGPt(0),mGEta(32768),mGPhi(32768),
-   mBeta(0), mDca(128), 
-   mNHitsFit(0), mNHitsDedx(0), mNSigmaPion(128), mNSigmaKaon(128)
+StHadronTrack::StHadronTrack() : mId(-1),
+  //mGPt(0),mGEta(32768),mGPhi(32768),
+   mBeta(0), mDca(32768), 
+   mNHitsFit(0), mNHitsDedx(0), mNSigmaPion(32768), mNSigmaKaon(32768)
 {
 
 }
@@ -29,8 +29,8 @@ StHadronTrack::StHadronTrack() : mId(-1),
 /////////////////////////////////////////////////////////////////////////////////////////
 //----------------------------------------------------------------------------------
 StHadronTrack::StHadronTrack(StPicoDst *picoDst, StPicoTrack* t, Int_t idx)
-   : mId(idx)//, 
-  // mGPt(0),mGEta(32768),mGPhi(32768)
+   : mId(idx)
+     //,mGPt(0),mGEta(32768),mGPhi(32768)
 {
       mPMom      = t->pMom();
       int q      = t->charge();
@@ -44,7 +44,7 @@ StHadronTrack::StHadronTrack(StPicoDst *picoDst, StPicoTrack* t, Int_t idx)
       StPhysicalHelixD helix = t->helix();
       double thePath = helix.pathLength(vertexPos);
       StThreeVectorF dcaPos = helix.at(thePath);
-      mDca = fabs((dcaPos-vertexPos).mag()*10000.)>32768? 32768: (Char_t)((dcaPos-vertexPos).mag()*10000.);
+      mDca = fabs((dcaPos-vertexPos).mag()*10000.)>32768? 32768: (Short_t)((dcaPos-vertexPos).mag()*10000.);
       bool isHft = t->isHFTTrack();
       if(isHft) mDca *= -1;
       

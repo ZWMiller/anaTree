@@ -53,7 +53,7 @@ class StMyAnaTreeMaker : public StMaker {
 		bool	passEEPairCuts(double, double);
 		bool	passEMuPairCuts(double );
 		bool	passMuMuPairCuts(double );
-      bool  isElectronInValidPair(StElectronTrack*);
+      bool  isElectronInValidPair(StElectronTrack*,int);
 		int	getCentrality();
 		void	printCuts();
 		void	setTrigSelect(int val){ mTrigSelect = val; }
@@ -87,6 +87,8 @@ class StMyAnaTreeMaker : public StMaker {
       bool isHT3;
       bool isMB;
       bool makeMixedEvent;
+      bool DEBUG;
+      int eventCounter;
       vector<int> triggers[5]; //0-HT0, 1-HT1 ... 4-MB
 
       void fillElectronHists(StElectronTrack*);

@@ -2,15 +2,23 @@
 
 bool DEBUG = !kTRUE;
 
-void histMaker(const char* fileName="test")
+void histMaker(const char* fileName="test", int trg=1)
 {
+  trigSelect = trg; // tell analyze what sample, see getTriggerLabel()
+  getTriggerLabel();
+
   //Get TFile
   TFile* f = new TFile(fileName, "READ");
-  if(!f->IsOpen())
-  { std::cout << "!!! File Not Found !!!" << std::endl;
-    exit(1); }  
-  else
-    std::cout<< "Opened " << fileName << std::endl;
+  bool inFile = checkIfFileOpen(f);
+  stringstream ss;
+  TString outfile; 
+  ss << fileName;
+  ss >> outfile;
+  outfile.ReplaceAll(".root",Form("%s_processed.root",trigLabel));
+  TFile* oF = new TFile(outfile, "RECREATE");
+  bool outFile = checkIfFileOpen(oF);
+  if(!inFile || !outFile) exit(1);
+
 
   getHistograms(f);
   declareHistograms();
@@ -35,6 +43,18 @@ void histMaker(const char* fileName="test")
   drawCutEfficiencyHists();
   getdNdpT();
   makePDF(fileName);
+  f->Close();
+  oF->Close();
+}
+
+bool checkIfFileOpen(TFile* f)
+{
+  if(!f->IsOpen())
+  { std::cout << "!!! File Not Found !!!" << std::endl;
+    return false;}  
+  else
+    std::cout<< "Opened " << f->GetName() << std::endl;
+  return true;
 }
 
 void drawQAHists()
@@ -66,7 +86,7 @@ void drawEventHists()
 void drawPartECutEffic()
 {
   TH1F* histList[3];
-  char titlename[4][100] = {"EMC Matched","EMC eID","SMD Matched","SMD eID"};
+  char titlename[4][100] = {"EMC Matched","+ EMC eID","+ SMD Matched","+ SMD eID"};
   for(int i=0; i < 5; i++)
   {
     if(i==0) for(int l=0;l<3;l++) histList[l] = TPCTracks[l];
@@ -95,21 +115,21 @@ void drawPartECutEffic()
       TPCTracks[1]->Draw("hist same");
       eIDCutEffic[i-1]->cd(3);
 
-      Double_t xbins[numPtBins];
-      int segs = numPtBins - 1;
-      for(int ii=0;ii<numPtBins;ii++) xbins[ii] = lowpt[ii];
+      Double_t xbins[numPtBinsEFF];
+      int segs = numPtBinsEFF - 1;
+      for(int ii=0;ii<numPtBinsEFF;ii++) xbins[ii] = lowptEFF[ii];
       TH1F* numerator = (TH1F*)histList[2]->Clone();
       TH1F* denominator = (TH1F*)TPCTracks[2]->Clone();
-      numerator->Rebin(segs,"numerator",xbins);
-      denominator->Rebin(segs,"denominator",xbins);
-      numerator->Rebin(10);
-      denominator->Rebin(10);
-      numerator->SetTitle("Cut Efficiency;P_{T} (GeV/c);Efficiency");
-      pretty1DHist(numerator,kRed,20);
-      numerator->GetYaxis()->SetRangeUser(0.,1.3);
-      numerator->Divide(denominator);
-      numerator->Draw();
-      partECutEfficiency[i-1] = (TH1F*)numerator->Clone();
+      TH1F* numRebin = numerator->Rebin(segs,"numRebin",xbins);
+      TH1F* denRebin = denominator->Rebin(segs,"denRebin",xbins);
+      //numerator->Rebin(20);
+      //denominator->Rebin(20);
+      numRebin->SetTitle("Cut Efficiency;P_{T} (GeV/c);Efficiency");
+      pretty1DHist(numRebin,kRed,20);
+      numRebin->GetYaxis()->SetRangeUser(0.,1.3);
+      numRebin->Divide(denRebin);
+      numRebin->Draw();
+      partECutEfficiency[i-1] = (TH1F*)numRebin->Clone();
       partECutEfficiency[i-1]->SetTitle(titlename[i-1]);
     }
   }
@@ -275,8 +295,16 @@ void pretty1DHistFill(TH1* h, int col, int style)
 
 void prepareLabels()
 {
+  getTriggerLabel();
   char textLabel[100];
-
+  int numEvents = vertexZ->Integral();  
+  float nEvents = (float)numEvents/1e6;
+  sampleLabel = new TPaveText(.11,.83,.5,.89,"NB NDC");
+  sprintf(textLabel,"Run 15, 200 GeV p+p Collisions");
+  sampleLabel->AddText(textLabel);
+  sprintf(textLabel,"%.2fM %s Events",nEvents,trigLabel);
+  sampleLabel->AddText(textLabel);
+  sampleLabel->SetFillColor(kWhite);
   for(int ptbin=0; ptbin<numPtBins; ptbin++)
   {
     lbl[ptbin] = new TPaveText(.12,.83,.45,.88,Form("NB NDC%i",ptbin));
@@ -286,10 +314,22 @@ void prepareLabels()
   }
 }
 
+void getTriggerLabel()
+{
+  if(trigSelect == 0)
+    sprintf(trigLabel,"BHT0");
+  if(trigSelect == 1)
+    sprintf(trigLabel,"BHT1");
+  if(trigSelect == 2)
+    sprintf(trigLabel,"BHT2");
+}
+
 void drawInvMassHists()
 {
   TLegend* leg = new TLegend(0.35,0.65,0.75,0.85);
   TString legLab[3] = {"Unlike Sign","Like Sign","US - LS"};
+  TString legLab2[3] = {"Unlike Sign","Like Sign Pos","Like Sign Neg"};
+  TH2F* tempMassSpec = (TH2F*)eeInvMassPt[0]->Clone();
   for(int pairType=0; pairType<3; pairType++) //0 = UnlikeSign, 1 = LikeSign ++&-- Combined, 3 = US - LS
   {
     invMass->cd();
@@ -312,7 +352,18 @@ void drawInvMassHists()
       lbl[ptbin]->Draw("same");
       if(pairType==2 && ptbin == 0) leg->Draw("same");
     }
+    invMassVsPt->cd(pairType+1);
+    gPad->SetLogz();
+    eeInvMassPt[pairType]->SetTitle(legLab2[pairType]);
+    eeInvMassPt[pairType]->GetYaxis()->SetRangeUser(0,0.5);
+    eeInvMassPt[pairType]->Draw("colz");
   }
+  invMassVsPt->cd(4);
+  gPad->SetLogy();
+  TH1D* massSpectrum = tempMassSpec->ProjectionY();
+  setTitleAndAxisLabels(massSpectrum,"Unlike Sign Mass Spectrum","M_{ee} (GeV/c^{2})","Counts");
+  pretty1DHist(massSpectrum,kRed,20);
+  massSpectrum->Draw();
 }
 
 void drawnSigE()
@@ -378,7 +429,9 @@ void drawnSigE()
 void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, const double* meanErr, const double* sigma, const double* sigmaErr)
 {
   TGraphErrors* mn = new TGraphErrors(numPtBins,pT,mean,pTErr,meanErr);
+  mn->SetName("nSigmaMeanVsPt");
   TGraphErrors* sg = new TGraphErrors(numPtBins,pT,sigma,pTErr,sigmaErr);
+  sg->SetName("nSigmaSigmaVsPt");
   prettyTGraph(mn,colors[0],20,-1.,3.);
   prettyTGraph(sg,colors[1],21,-1.,3.);
   TLegend* leg = new TLegend(.12,.75,.45,.87);
@@ -391,6 +444,8 @@ void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, 
   mn->Draw("SAME PE");
   mn->Fit("pol1","R","",1.3,6.);
   leg->Draw("SAME");
+  mn->Write();
+  sg->Write();
 }
 
 void getnSigEeff()
@@ -414,7 +469,7 @@ void getnSigEeff()
     //TF1 *Gaus=new TF1("Gaus","exp(-0.5*pow((x-[0])/[1],2))/sqrt(2.*TMath::Pi())/[1]",-4,4);
     TF1 *Gaus=new TF1("Gaus","gausn(0)",-4,4);
     for(int j=0;j<10000;j++){
-      if(j%1000==0) cout << "begin " << j << "th entry...." << endl;
+      if(j%5000==0) cout << "begin " << j << "th entry...." << endl;
       double mean1,sigma1;
       twogaus[ptbin]->GetRandom2(mean1,sigma1);
       Gaus->SetParameter(0,1.0);
@@ -444,11 +499,13 @@ void getnSigEeff()
       lbl[ptbin]->Draw("same");
   }
   TGraphErrors* grnSigCut = new TGraphErrors(numPtBins,pT,cutEff,pTErr,cutEffErr);
+  grnSigCut->SetName("nSigmaEfficVsPt");
   prettyTGraph(grnSigCut,kRed,20,0.,1.2);
   nSigCutPlot->cd();
   grnSigCut->SetTitle("n#sigma_{E} Cut Efficiency;P_{T} (GeV/c);Efficiency");
   grnSigCut->Draw("APE");
   grnSigCut->Fit("pol1","R","",1.3,6.);
+  grnSigCut->Write();
 
 }
 
@@ -571,6 +628,8 @@ void prepareCanvas()
     
   }
   invMass     = new TCanvas("invMass","Invariant Mass All pT",50,50,1050,1050);
+  invMassVsPt = new TCanvas("invMassVsPt","Invariant Mass Vs pT",50,50,1050,1050);
+  invMassVsPt->Divide(2,2);
   ptCompare     = new TCanvas("ptCompare","pT Comparison",50,50,1050,1050);
   cutEfficiency = new TCanvas("cutEfficiency","Cut Efficiency",50,50,1050,1050);
   cutEfficiency -> Divide(2,2);
@@ -733,13 +792,40 @@ void getHistograms(TFile* f)
 
 void getdNdpT()
 {
+  TString histName[3] = {"inclusivePt","USPt","LSPt"}; 
+  TString legName[3] = {"Inclusive Electron", "Unlike Sign Photonic", "Like Sign Photonic"};
+
+  Double_t xbins[numPtBins];
+  int segs = numPtBins - 1;
+  for(int ii=0;ii<numPtBins;ii++) xbins[ii] = lowpt[ii];
+
+  TLegend* leg = new TLegend(.53,.74,.88,.88);
+  dndpt->cd();
+  gPad->SetLogy(1);
+  for(int i=0; i<3; i++)
+  {
+    TH1F* ptSpectra = ePt[i];//->Rebin(segs,histName[i],xbins);
+    pretty1DHist(ptSpectra,colors[i],20+i);
+    leg->AddEntry(ptSpectra,legName[i],"lpe");
+    ptSpectra->Scale(1./ptSpectra->GetXaxis()->GetBinWidth(5));
+    if(i==0){
+      ptSpectra->GetYaxis()->SetRangeUser(1,1e7);
+      ptSpectra->SetTitle("Electron Spectra; p_{T} (GeV/c); Raw dN/dpT");
+    }
+    ptSpectra->Draw((i==0)?"pe":"same pe");
+  }
+  leg->Draw("same");
+  sampleLabel->Draw("SAME");
+}
+/*void getdNdpT()
+{
   Double_t pT[numPtBins], pTErr[numPtBins], num[2][numPtBins], numErr[2][numPtBins];
   for(int ptbin=0; ptbin<numPtBins; ptbin++)
   {
     elecDcaForInt[ptbin] = (TH1D*)elecDcaPt->ProjectionY(Form("elecDcaForInt_%i",ptbin),elecDcaPt->GetXaxis()->FindBin(lowpt[ptbin]),elecDcaPt->GetXaxis()->FindBin(highpt[ptbin])-1); 
     for(int etype=0;etype<3;etype++)
     {
-      eeDcaForInt[etype][ptbin] = (TH1D*)eeDcaPt[etype]->ProjectionY(Form("eeDcaForInt_%i",ptbin),eeDcaPt[etype]->GetXaxis()->FindBin(lowpt[ptbin]),eeDcaPt[etype]->GetXaxis()->FindBin(highpt[ptbin])-1); 
+      eeDcaForInt[etype][ptbin] = (TH1D*)eeDcaPt[etype]->ProjectionY(Form("eeDcaForInt_%i_%i",etype,ptbin),eeDcaPt[etype]->GetXaxis()->FindBin(lowpt[ptbin]),eeDcaPt[etype]->GetXaxis()->FindBin(highpt[ptbin])-1); 
       if(etype==2)
       {
         eeDcaForInt[1][ptbin]->Add(eeDcaForInt[2][ptbin]);
@@ -752,20 +838,28 @@ void getdNdpT()
     numErr[0][ptbin] = (num[0][ptbin]>0.) ? 1/sqrt(num[0][ptbin]) : 0.;
     num[1][ptbin] = eeDcaForInt[0][ptbin]->Integral()/(pTErr[ptbin]*2.);
     numErr[1][ptbin] = (num[1][ptbin]>1.) ? 1/sqrt(num[1][ptbin]) : 0.;
+    cout << "ptbin " << ptbin << " e: " << num[0][ptbin] << " ee: " << num[1][ptbin] << endl;
   }
+  
   TGraphErrors* dNdptIncl = new TGraphErrors(numPtBins,pT,num[0],pTErr,numErr[0]);
+  dNdptIncl->SetName("dNdptInclVsPt");
   TGraphErrors* dNdptee = new TGraphErrors(numPtBins,pT,num[1],pTErr,numErr[1]);
+  dNdptee->SetName("dNdpteeVsPt");
   dndpt->cd();
   gPad->SetLogy();
   prettyTGraph(dNdptIncl,kBlack,20,1,1e6);
   prettyTGraph(dNdptee,kRed,20,1e-9,1e6);
-  TLegend* leg = new TLegend(.6,.6,.84,.75);
-  leg->AddEntry(dNdptIncl,"Semi-Inclusive Elec","lpe");
-  leg->AddEntry(dNdptee,"Unlike-Like Elec","lpe");
+  TLegend* leg = new TLegend(.53,.74,.88,.88);
+  leg->AddEntry(dNdptIncl,"Inclusive Electron","lpe");
+  leg->AddEntry(dNdptee,"Photonic Electron","lpe");
   dNdptIncl->SetTitle("Raw Electron Yield; P_{T} (GeV/c); dN/dp_{T}");
   dNdptIncl->Draw("APE");
   dNdptee->Draw("SAME PE");
-}
+  sampleLabel->Draw("SAME");
+  leg->Draw("SAME");
+  dNdptIncl->Write();
+  dNdptee->Write();
+}*/
 
 void makeUnlikeMinusLikePartnerElectrons()
 {
@@ -866,6 +960,8 @@ void makePDF(const char* fileName)
   }
 
   temp = invMass;
+  temp->Print(name);
+  temp = invMassVsPt;
   temp->Print(name);
   temp = cutEfficiency;
   temp->Print(name);

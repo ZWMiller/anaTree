@@ -32,6 +32,8 @@ ClassImp(StMyAnaTreeMaker)
   StMyAnaTreeMaker::StMyAnaTreeMaker(const char* name, StPicoAnaTreeMaker *treeMaker, const char* outName, bool mixedEvent=false)
 : StMaker(name)
 {
+  DEBUG = false;
+  eventCounter = 0;
   mPicoAnaTreeMaker = treeMaker;
   mAnaTree = 0;
   TH1F:: SetDefaultSumw2();//zaochen add
@@ -43,8 +45,8 @@ ClassImp(StMyAnaTreeMaker)
   mHTAdc0th = 0;
   mEmcPtth = 2.5;
 
-  mVzCut[0] = -100; mVzCut[1] = 100;
-  mVzDiffCut[0] = -3; mVzDiffCut[1] = 3;
+  mVzCut[0] = -30; mVzCut[1] = 30;
+  mVzDiffCut[0] = -6; mVzDiffCut[1] = 6;
   mnHitsFitCut[0] = 20; mnHitsFitCut[1] = 50;
   mnHitsDedxCut[0] = 15; mnHitsDedxCut[1] = 50;
   mRatioCut[0] = 0.52; mRatioCut[1] = 1.;
@@ -101,6 +103,7 @@ ClassImp(StMyAnaTreeMaker)
   mEMuYCut[0] = -1.; mEMuYCut[1] = 1.;
   mMuMuYCut[0] = -0.65; mMuMuYCut[1] = 0.65;
 
+  //mPEMassCut[0] = 0.1; mPEMassCut[1] = 0.18; // to try to explain strange bump at 0.15 GeV/c^2
   mPEMassCut[0] = 0.; mPEMassCut[1] = 0.24;
 
   mHadPtCut[0]  = 0.5;  mHadPtCut[1] = 20.0;
@@ -470,7 +473,12 @@ Int_t StMyAnaTreeMaker::Make() {
   hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
   if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return kStOK;
   hnEvents->Fill(3);
-  if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0]||vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) return kStOK;
+  if(fabs(vzVpd) > 100)
+  {
+    if(DEBUG) cout << "No VPD Vz, skip dVz cut" << endl;
+  }
+  else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
+    return kStOK;
   hnEvents->Fill(4);
 
   hRefMultCut->Fill(mAnaTree->event()->grefMult());
@@ -492,61 +500,75 @@ Int_t StMyAnaTreeMaker::Make() {
   double Vz = mAnaTree->event()->primaryVertex().z();
   int vzBufferPointer=int((Vz-mVzCut[0])/(mVzCut[1]-mVzCut[0])*nVzBin);
 
-
-
   int current_nePlus = 0, current_neMinus = 0;
   int current_nmuPlus = 0, current_nmuMinus = 0;
-  int nE = mAnaTree->numberOfETracks();
 
+  if(DEBUG) cout << "Event: " << eventCounter++ << endl;
+
+  int nE = mAnaTree->numberOfETracks();
   memset(current_ePlusFlag,0,sizeof(current_ePlusFlag));
   memset(current_eMinusFlag,0,sizeof(current_eMinusFlag));
   memset(current_ePlusIsHFT,0,sizeof(current_ePlusIsHFT));
   memset(current_eMinusIsHFT,0,sizeof(current_eMinusIsHFT));
-  for(int i=0;i<nE;i++){
-    StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(i);
-    fillElectronHists(eTrk);  
-  }
-
-  memset(current_muPlusFlag,0,sizeof(current_muPlusFlag));
-  memset(current_muMinusFlag,0,sizeof(current_muMinusFlag));
-  memset(current_muPlusIsHFT,0,sizeof(current_muPlusIsHFT));
-  memset(current_muMinusIsHFT,0,sizeof(current_muMinusIsHFT));
-  int nMu = mAnaTree->numberOfMuTracks();
-  for(int i=0;i<nMu;i++){
-    StMuonTrack *muTrk = (StMuonTrack*)mAnaTree->muTrack(i);
-    fillMuonHists(muTrk);    
+  if(nE){
+    for(int i=0;i<nE;i++){
+      if(DEBUG) cout << "Fill eTrk" << endl;
+      StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(i);
+      // If the electron is in a photonic pair, don't count in inclusive
+      //if(isElectronInValidPair(eTrk,i)) continue; 
+      fillElectronHists(eTrk);  
+    }
   }
 
   int nHad = mAnaTree->numberOfHTracks(); 
-  for(int j=0; j < nHad; j++)
-  {
-    StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
-    fillHadronHists(hTrk);
+  if(nHad){
+    for(int j=0; j < nHad; j++)
+    {
+      if(DEBUG) cout << "Fill hTrk" << endl;
+      StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
+      fillHadronHists(hTrk);
+    }
   }
 
-  int nEEPairs = mAnaTree->numberOfEEPairs();
-  for(int iee=0; iee< nEEPairs;iee++){	
-    StEEPair* ee = (StEEPair*) mAnaTree->eePair(iee);
-    fillEEHists(ee);
-  }
+  /*int nEEPairs = mAnaTree->numberOfEEPairs();
+  if(nEEPairs){
+    for(int iee=0; iee< nEEPairs;iee++){	
+      if(DEBUG) cout << "Fill eeTrk" << endl;
+      StEEPair* ee = (StEEPair*) mAnaTree->eePair(iee);
+      fillEEHists(ee);
+    }
+  }*/
 
-  int nEMuPairs = mAnaTree->numberOfEMuPairs();
-  for(int iemu=0; iemu< nEMuPairs;iemu++){
-    StEMuPair* emu = (StEMuPair*) mAnaTree->eMuPair(iemu);
-    fillEMuHists(emu);
-  }
-
-  int nMuMuPairs = mAnaTree->numberOfMuMuPairs();
-  for(int imumu=0; imumu< nMuMuPairs;imumu++){
-    StMuMuPair* mumu = (StMuMuPair*) mAnaTree->MuMuPair(imumu);
-    fillMuMuHists(mumu);
-  }
 
   int nPhoEEPairs = mAnaTree->numberOfPhoEEPairs();   
-  for(int iphoEE=0; iphoEE< nPhoEEPairs;iphoEE++){
-    StPhoEEPair *phoEE = (StPhoEEPair*) mAnaTree->phoEEPair(iphoEE);
-    fillPhoEEHists(phoEE);
+  if(nPhoEEPairs){
+    for(int iphoEE=0; iphoEE< nPhoEEPairs;iphoEE++){
+      if(DEBUG) cout << "Fill peTrk" << endl;
+      StPhoEEPair *phoEE = (StPhoEEPair*) mAnaTree->phoEEPair(iphoEE);
+      fillPhoEEHists(phoEE);
+    }
   }
+  /* memset(current_muPlusFlag,0,sizeof(current_muPlusFlag));
+     memset(current_muMinusFlag,0,sizeof(current_muMinusFlag));
+     memset(current_muPlusIsHFT,0,sizeof(current_muPlusIsHFT));
+     memset(current_muMinusIsHFT,0,sizeof(current_muMinusIsHFT));
+     int nMu = mAnaTree->numberOfMuTracks();
+     for(int i=0;i<nMu;i++){
+     StMuonTrack *muTrk = (StMuonTrack*)mAnaTree->muTrack(i);
+     fillMuonHists(muTrk);    
+     }
+
+     int nEMuPairs = mAnaTree->numberOfEMuPairs();
+     for(int iemu=0; iemu< nEMuPairs;iemu++){
+     StEMuPair* emu = (StEMuPair*) mAnaTree->eMuPair(iemu);
+     fillEMuHists(emu);
+     }
+
+     int nMuMuPairs = mAnaTree->numberOfMuMuPairs();
+     for(int imumu=0; imumu< nMuMuPairs;imumu++){
+     StMuMuPair* mumu = (StMuMuPair*) mAnaTree->MuMuPair(imumu);
+     fillMuMuHists(mumu);
+     }*/
 
   hNe->Fill(current_nePlus,current_neMinus);
   hNemu->Fill(current_nePlus+current_neMinus, current_nmuPlus+current_nmuMinus);
@@ -731,14 +753,13 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   if(isHTTrigE(eTrk)) isTrgE = 1;
   if(isTrgE&&eHTflag) etrgflag = 1;
   if(passETrackQualityCuts(eTrk)) qualFlag = 1;
-  if(isElectronInValidPair(eTrk)) return; // If the electron is in a photonic pair, don't count in inclusive
 
   if(qualFlag)             hEPt_eff[0]->Fill(pt);
   if(qualFlag && eflag)    hEPt_eff[1]->Fill(pt);
   if(qualFlag && eHTflag)  hEPt_eff[2]->Fill(pt);
   if(qualFlag && isTrgE)   hEPt_eff[3]->Fill(pt);
 
-  if(!eHTflag&&!eflag) return;
+  if(!eHTflag || !eflag) return;
   double eta = eTrk->gMom().pseudoRapidity();
   double phi = eTrk->gMom().phi();
   if(charge>0){ 
@@ -776,7 +797,6 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 
 
   // Hadron Comparisons only done for trigger electrons
-  if(!eHTflag || !isTrgE) return;
   hEPt->Fill(pt); // need for normalization
   int nHad = mAnaTree->numberOfHTracks(); 
   for(int j=0; j < nHad; j++)
@@ -796,15 +816,15 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   }
 }
 
-bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk)
+bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk, int index)
 {
-  int nEEPairs = mAnaTree->numberOfEEPairs();
-  for(int iee=0; iee< nEEPairs;iee++){	
-    StEEPair* ee = (StEEPair*) mAnaTree->eePair(iee);
-    int dauIndex1 = ee->dauIndex1();
-    int dauIndex2 = ee->dauIndex2();
-    StElectronTrack *pTrk1 = mAnaTree->eTrack(dauIndex1);
-    StElectronTrack *pTrk2 = mAnaTree->eTrack(dauIndex2);
+  int nPhoEEPairs = mAnaTree->numberOfPhoEEPairs();   
+  for(int iphoEE=0; iphoEE< nPhoEEPairs;iphoEE++){
+    StPhoEEPair *ee = (StPhoEEPair*) mAnaTree->phoEEPair(iphoEE);
+    int tagEIndex  = ee->primEIndex();
+    int partEIndex = ee->partEIndex();
+    StElectronTrack *pTrk1 = mAnaTree->eTrack(tagEIndex);
+   /* StPartElectronTrack *pTrk2 = mAnaTree->partETrack(partEIndex);
     StLorentzVectorF pair;
     StThreeVectorF mom1 = pTrk1->gMom();
     StThreeVectorF mom2 = pTrk2->gMom();
@@ -815,8 +835,8 @@ bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk)
     double y = pair.rapidity();
     double pmass = pair.m();
     double dauDcaDist = ee->pairDca();
-
-    if((eTrk == pTrk1 || eTrk == pTrk2) && passEEPairCuts(y,dauDcaDist))
+*/
+    if(index == tagEIndex)
       return true;
   }
 
@@ -908,6 +928,16 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
 
   double mass = phoEE->pairMass();
   double pairDca = phoEE->pairDca();
+  StLorentzVectorF pair;
+  StThreeVectorF mom1 = tagETrk->gMom();
+  StThreeVectorF mom2 = partETrk->gMom();
+  StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
+  StLorentzVectorF dau2(mom2,mom2.massHypothesis(eMass));
+  pair = dau1+dau2;
+  double pt = pair.perp();
+  double y = pair.rapidity();
+  double eta = pair.pseudoRapidity();
+  double phi = pair.phi();
   StThreeVectorF origin = phoEE->pairOrigin();
   if(pairDca>1) return;
 
@@ -944,10 +974,10 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
     StEmcTrigger *emcTrgPart = (StEmcTrigger*)mAnaTree->emcTrigger(nEmc);
     int emcTrgIDPart=emcTrgPart->id();
     if(emcTrgIDPart==emcTowerIdPart){
-      dsmadcPart = emcTrgPart->adc();
-      continue;
+    dsmadcPart = emcTrgPart->adc();
+    continue;
     }
-  }*/
+    }*/
   double  TofYlocalTag           =  tagETrk->localY();
   double  TofBetaTag             =  tagETrk->beta();
   double  TofYlocalPart           =  partETrk->localY();
@@ -1015,6 +1045,89 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
       }
     }
   }
+
+  if(!partEIDCuts(partETrk)) return;
+  if(mass>mPEMassCut[0]&&mass<mPEMassCut[1]&&pairDca>mDauEDcaDistCut[0]&&pairDca<mDauEDcaDistCut[1]){
+    double pt1 = tagETrk->gMom().perp();
+    double dca1 = tagETrk->dca();
+    double dcaXY1 = tagETrk->dcaXY();
+    double dcaZ1 = tagETrk->dcaZ();
+    int    isHft1 = tagETrk->isHFTTrack();
+
+    double pt2 = partETrk->gMom().perp();
+    double dca2 = partETrk->dca();
+    double dcaXY2 = partETrk->dcaXY();
+    double dcaZ2 = partETrk->dcaZ();
+    int    isHft2 = partETrk->isHFTTrack();
+
+    float pve1 = tagETrk->pve();
+    float pve2 = partETrk->pve();
+    float evp1 = pve1==0?0:1./pve1;
+    float evp2 = pve2==0?0:1./pve2;
+
+    if(charge1!=charge2){ 
+      hEENumInvMassvsPtMB->Fill(pt,mass);
+      hEENumInvMassvsPt->Fill(pt,mass,centrality);
+      hEEUSEtavsPhi->Fill(phi,eta);
+      hEEUSPairDcavsPt->Fill(pt,pairDca);
+    }
+    if(charge1==1&&charge2==1){ 
+      hEEDenInvMassvsPtLikePosMB->Fill(pt,mass);
+      hEEDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
+      hEELSPosEtavsPhi->Fill(phi,eta);
+      hEELSPosPairDcavsPt->Fill(pt,pairDca);
+    }
+    if(charge1==-1&&charge2==-1){ 
+      hEEDenInvMassvsPtLikeNegMB->Fill(pt,mass);
+      hEEDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
+      hEELSNegEtavsPhi->Fill(phi,eta);
+      hEELSNegPairDcavsPt->Fill(pt,pairDca);
+    }
+    if(charge1!=charge2){
+      hPEUSOyOx->Fill(origin.x(),origin.y());
+      hPEUSOxOz->Fill(origin.z(),origin.x());
+      hPEUSOrOz->Fill(origin.z(),origin.perp());
+
+      if(passHTEIDCuts(tagETrk)){ 
+        hPEEvPvsPt->Fill(pt1,evp1);
+        hPEPvEvsPt->Fill(pt1,pve1);
+      }
+    }
+    else{
+      hPELSOyOx->Fill(origin.x(),origin.y());
+      hPELSOxOz->Fill(origin.z(),origin.x());
+      hPELSOrOz->Fill(origin.z(),origin.perp());
+    }
+
+    // Loop over hadrons for Eh correlation
+    double phi1 = tagETrk->gMom().phi();
+    double phi2 = partETrk->gMom().phi();
+
+    if(charge1==charge2)hEEPt_LS->Fill(pt1); // need for normalization
+    if(charge1!=charge2)hEEPt_US->Fill(pt1); // need for normalization
+    int nHad = mAnaTree->numberOfHTracks(); 
+    for(int j=0; j < nHad; j++)
+    {
+      StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
+      if(!passHadronCuts(hTrk) || hTrk->id() == tagETrk->id() || hTrk->id() == partETrk->id()) return;
+      int charge = hTrk->charge();
+      double hpt = hTrk->pMom().perp();
+      double heta = hTrk->pMom().pseudoRapidity();
+      double hphi = hTrk->pMom().phi();
+      double hdca = hTrk->dca();
+
+      double dphi = hphi - phi1;
+      dphi = delPhiCorrect(dphi);
+      if(charge1==charge2) 
+      {
+        hHadEEDelPhiPt_LS->Fill(pt1,dphi); // Electron pt
+      }
+      if(charge1!=charge2) 
+      {
+        hHadEEDelPhiPt_US->Fill(pt1,dphi); // Muon pt
+      }
+    }
+  }
 }
 
 bool StMyAnaTreeMaker::passPartEQuality(double eta, int nHitsFit, int nHitsDedx, double dca)
@@ -1040,15 +1153,15 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5){
     if(!passETrackQualityCuts(eTrk1) || !passETrackQualityCuts(eTrk2)) return; 
     if(isHTTrigE(eTrk1)&&passHTEIDCuts(eTrk1)) htTrkFlag += 1;
-    //if(isHTTrigE(eTrk1)&&isHTTrigE(eTrk2)) return;
     if(isHTTrigE(eTrk2)&&passHTEIDCuts(eTrk2)) htTrkFlag += 2;
+    if(htTrkFlag >= 3) return;
     if(passEIDCuts(eTrk1)||passHTEIDCuts(eTrk1)) eTrkFlag++;
     if(passEIDCuts(eTrk2)||passHTEIDCuts(eTrk2)) eTrkFlag++;
     if(htTrkFlag>=1&&eTrkFlag==2) flag = 1;
   }
   if(flag==0) return;
-  
-  if(htTrkFlag == 3) // if both pass htTrig randomly choose one to be trk1
+
+  /*if(htTrkFlag == 3) // if both pass htTrig randomly choose one to be trk1
   {
     int rndSeed = (int)(eTrk1->gMom().perp()+eTrk2->gMom().perp())*1000;
     gRandom->SetSeed(rndSeed);
@@ -1061,6 +1174,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
     eTrk1 = eTrk2;
     eTrk2 = tmp;
   }
+  */
 
   StThreeVectorF mom1 = eTrk1->gMom();
   StThreeVectorF mom2 = eTrk2->gMom();
@@ -1084,7 +1198,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   int charge1 = eTrk1->charge();
   int charge2 = eTrk2->charge();
 
-  //if(centrality<=0) return;
+  /*//if(centrality<=0) return;
   if(charge1!=charge2){ 
     //if(pt>=0.8&&pt<0.85&&mass>=1.45&&mass<1.455){
     //	cout<<"pt = "<<pt<<" mass = "<<mass<<" y = "<<y<<endl;
@@ -1121,7 +1235,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
       hEEDenInvMassvsPtLikeNegMBwHft->Fill(pt,mass);
       hEEDenInvMassvsPtLikeNegwHft->Fill(pt,mass,centrality);
     }
-  }
+  }*/
 
   //photonic electron
   if(charge1!=charge2){
@@ -1134,8 +1248,8 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
   double vcut = fPhiVm->Eval(mass);
   StThreeVectorF origin = ee->pairOrigin();
   //if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]){//&&phiV<vcut){
-  
-  if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]&&dauDcaDist>mDauEDcaDistCut[0]&&dauDcaDist<mDauEDcaDistCut[1]){
+
+/* if(pmass>mPEMassCut[0]&&pmass<mPEMassCut[1]&&dauDcaDist>mDauEDcaDistCut[0]&&dauDcaDist<mDauEDcaDistCut[1]){
     double pt1 = eTrk1->gMom().perp();
     double dca1 = eTrk1->dca();
     double dcaXY1 = eTrk1->dcaXY();
@@ -1224,7 +1338,7 @@ void StMyAnaTreeMaker::fillEEHists(StEEPair* ee)
         hHadEEDelPhiPt_US->Fill(pt1,dphi); // Muon pt
       }
     }
-  }
+  }*/
 }
 
 void StMyAnaTreeMaker::fillEMuHists(StEMuPair* emu)
@@ -1385,6 +1499,7 @@ bool StMyAnaTreeMaker::passHadronCuts(StHadronTrack* hTrk)
   double dca = hTrk->dca();
   double nHitFit = hTrk->nHitsFit();
   double nHitdEdx = hTrk->nHitsDedx();
+  if(DEBUG) cout << "Fill hTrk 2" << endl;
   if(charge!=0 && 
       mHadPtCut[0] < pt  && pt  < mHadPtCut[1] &&
       mHadEtaCut[0]< eta && eta < mHadEtaCut[1] &&
@@ -1395,6 +1510,7 @@ bool StMyAnaTreeMaker::passHadronCuts(StHadronTrack* hTrk)
   {
     return true;
   }
+  return false;
 }
 
 double StMyAnaTreeMaker::delPhiCorrect(double p)

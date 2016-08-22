@@ -13,8 +13,15 @@
     const int colors[5] = {kBlack,kRed,kAzure+1,kMagenta,kYellow};
 
 
+    const int numPtBinsEFF = 26;
+
+    const float lowptEFF[numPtBinsEFF]  = 
+     {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 
+      1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 8.0, 10.0, 13.0};
+
     TCanvas* dPhiPt[3][numCanvas];
     TCanvas* invMassPt[numCanvas];
+    TCanvas* invMassVsPt;
     TCanvas* nSigEPt[numCanvas];
     TCanvas* invMass;
     TCanvas* ptCompare;
@@ -35,6 +42,7 @@
     TCanvas* dndpt;
 
     TPaveText* lbl[numPtBins];
+    TPaveText* sampleLabel;
 
     TH2F* eHadDelPhiPt[3];
     TH2F* eeInvMassPt[3];
@@ -89,6 +97,8 @@
     TH1F* refMult;
     TH1F* vertexZ;
 
+    int trigSelect;
+    char trigLabel[100];
     float trigCount[3][numPtBins];
     float eHadNorm;
     double *nSigCovariance[numPtBins];
@@ -101,7 +111,9 @@
     void doProjections();
     void prepareCanvas();
     void prepareLabels();
+    TString getTriggerLabel();
     void declareHistograms();
+    bool checkIfFileOpen(TFile*);
     void getHistograms(TFile*);
     void pretty1DHist(TH1*, int, int);
     void pretty1DHistFill(TH1*, int, int);

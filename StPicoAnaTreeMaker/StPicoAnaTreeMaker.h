@@ -161,7 +161,7 @@ class StPicoAnaTreeMaker : public StMaker {
 		Bool_t isMuon(StPicoTrack* );
 		Bool_t isHadron(StPicoTrack* );
 		Bool_t passEEPair(StElectronTrack *, StElectronTrack *, Int_t , Int_t);
-		Bool_t passPhoEEPair(StPicoTrack *, StElectronTrack *, Int_t , Int_t);
+		Bool_t passPhoEEPair(StPicoTrack *, StElectronTrack *, Int_t , Int_t, Int_t);
 		Bool_t passEMuPair(StElectronTrack *, StMuonTrack *, Int_t, Int_t);
 		Bool_t passMuMuPair(StMuonTrack *, StMuonTrack *, Int_t, Int_t);
 

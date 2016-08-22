@@ -833,7 +833,7 @@ void StPicoAnaTreeMaker::fillTracks() {
     if(isEmcElectron(t)) isEmcE = 1;
     if(isTofE==1&&isEmcE==0) fElecFlag = 1;
     if(isTofE==0&&isEmcE==1) fElecFlag = 2;
-    if(isTofE==1&&isEmcE==1)  fElecFlag = 3;
+    if(isTofE==1&&isEmcE==1) fElecFlag = 3;
 
     //primary e
     if(fElecFlag>0){
@@ -883,7 +883,7 @@ void StPicoAnaTreeMaker::fillPairs() {
     Bool_t isPhoton = false;
     for(int j=0;j<nElec;j++){ // primary
       StElectronTrack *eTrk2 = (StElectronTrack*)mAnaTree->eTrack(j);
-      if(passPhoEEPair(eTrk1,eTrk2,index,j)) isPhoton = true;
+      if(passPhoEEPair(eTrk1,eTrk2,index,j,idx)) isPhoton = true;
     }
 
     if(isPhoton){ 
@@ -1405,7 +1405,7 @@ Bool_t StPicoAnaTreeMaker::passEEPair(StElectronTrack *t1, StElectronTrack *t2, 
   return true;
 }
 //---------------------------------------------------------------
-Bool_t StPicoAnaTreeMaker::passPhoEEPair(StPicoTrack *t1, StElectronTrack *t2, Int_t index1, Int_t index2)
+Bool_t StPicoAnaTreeMaker::passPhoEEPair(StPicoTrack *t1, StElectronTrack *t2, Int_t index1, Int_t index2, Int_t idx1InPico)
 {
   /* pho ee pair cut */
   StThreeVectorF mom(0,0,0);
@@ -1418,7 +1418,7 @@ Bool_t StPicoAnaTreeMaker::passPhoEEPair(StPicoTrack *t1, StElectronTrack *t2, I
   if(q1==1&&q2==1) type = 2;
   if(q1==-1&&q2==-1) type = 3;
 
-  Int_t id1 = t1->id();
+  Int_t id1 = idx1InPico;
   Int_t id2 = t2->id();
 
   if(id1==id2) return false;

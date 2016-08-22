@@ -21,7 +21,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
 		const Char_t *inputFile="../anaTreeMaker_v1_070616/testFiles/st_physics_adc_16086001_raw_4000030.MuDst.root",
 		const bool creatingPhiWgt = kFALSE, const int prodMod = 1, const int emcMode=1, const int prodType = 0
 		){
-	Int_t nEvents = 10000000;
+	Int_t nEvents = 100000000;
 	//Int_t nEvents = 10;
 	//Int_t nEvents = 1000;	
 	//Load all the System libraries
@@ -172,13 +172,17 @@ void makeAnaTree(const Int_t runnumber=16086001,
    ePurMaker->addTrigger(470211,0);
    ePurMaker->addTrigger(490201,0);
    ePurMaker->addTrigger(480203,0);
+   ePurMaker->addTrigger(490203,0);
+   ePurMaker->addTrigger(470213,0);
    ePurMaker->addTrigger(480202,1);
    ePurMaker->addTrigger(470202,1);
    ePurMaker->addTrigger(490202,1);
    ePurMaker->addTrigger(480204,1);
    ePurMaker->addTrigger(470204,1);
    ePurMaker->addTrigger(490204,1);
+   ePurMaker->addTrigger(470206,1);
    ePurMaker->addTrigger(480206,1);
+   ePurMaker->addTrigger(490206,1);
    ePurMaker->addTrigger(480205,2);
    ePurMaker->addTrigger(470205,2);
    ePurMaker->addTrigger(490205,2);
@@ -208,13 +212,17 @@ void makeAnaTree(const Int_t runnumber=16086001,
         treeMaker->addTrigger(470211,0);
         treeMaker->addTrigger(490201,0);
         treeMaker->addTrigger(480203,0);
+        treeMaker->addTrigger(490203,0);
+        treeMaker->addTrigger(470213,0);
         treeMaker->addTrigger(480202,1);
         treeMaker->addTrigger(470202,1);
         treeMaker->addTrigger(490202,1);
         treeMaker->addTrigger(480204,1);
         treeMaker->addTrigger(470204,1);
         treeMaker->addTrigger(490204,1);
+        treeMaker->addTrigger(470206,1);
         treeMaker->addTrigger(480206,1);
+        treeMaker->addTrigger(490206,1);
         treeMaker->addTrigger(480205,2);
         treeMaker->addTrigger(470205,2);
         treeMaker->addTrigger(490205,2);
