@@ -8,7 +8,7 @@ class StMuDstMaker;
 
 
 StChain *chain;
-void makeAnaTree(const Int_t runnumber=16086001,
+void makeAnaTree(const Int_t runnumber=16125039,
 		//    const Char_t *inputFile="/star/data54/reco/AuAu200_production_2011/FullField/P11id/2011/169/12169026/st_physics_adc_12169026_raw_4510001.MuDst.root",
 		//    const Char_t *inputFile="/star/data78/reco/pp200_production_2012/ReversedFullField/P12id/2012/040/13040016/st_physics_13040016_raw_1010001.MuDst.root",
 		//    const Char_t *inputFile="/star/data43/reco/pp500_production_2013/ReversedFullField/P14ia/2013/115/14115072/st_physics_14115072_raw_3690004.MuDst.root",
@@ -18,7 +18,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
 		//    const Char_t *inputFile="/star/data79/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/145/15145024/st_physics_15145024_raw_1000048.MuDst.root",
 		//    const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/166/15166010/st_physics_15166010_raw_4500060.MuDst.root",
 	//	const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_mid_2014/ReversedFullField/P15ic/2014/094/15094070/st_physics_15094070_raw_0000007.MuDst.root",
-		const Char_t *inputFile="../anaTreeMaker_v1_070616/testFiles/st_physics_adc_16086001_raw_4000030.MuDst.root",
+		const Char_t *inputFile="testFiles/st_physics_16125039_raw_3000001.MuDst.root",
 		const bool creatingPhiWgt = kFALSE, const int prodMod = 1, const int emcMode=1, const int prodType = 0
 		){
 	Int_t nEvents = 100000000;
@@ -156,37 +156,27 @@ void makeAnaTree(const Int_t runnumber=16086001,
 		mInputFileName.Append(inputFileName(i));
 	}
 
-	TString outputFile,outQAFile;
-	outQAFile=mInputFileName;
-	outQAFile.ReplaceAll("MuDst.root","qa.root");
+   TString outputFile,outQAFile;
+   outQAFile=mInputFileName;
+   outQAFile.ReplaceAll("MuDst.root","qa.root");
    StPicoQAMaker *qaMaker = new StPicoQAMaker("ana",picoMaker,outQAFile);
-   qaMaker->setRunList("./runNumberList_run15pp_transverse");
+   qaMaker->setRunList("./runNumberList_run15pAu");
    qaMaker->setNumberOfRuns(900);
-   
+
    TString outPurityFile=mInputFileName;
    outPurityFile.ReplaceAll("MuDst.root","purity.root");
    StPicoElecPurityMaker *ePurMaker = new StPicoElecPurityMaker("purity",picoMaker,outPurityFile);
    ePurMaker->setRunMode(0); // 0 - pp (no centrality), 1- AuAu (centrality on)
-   ePurMaker->setRunList("./runNumberList_run15pp_transverse");
-   ePurMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
-   ePurMaker->addTrigger(470211,0);
-   ePurMaker->addTrigger(490201,0);
-   ePurMaker->addTrigger(480203,0);
-   ePurMaker->addTrigger(490203,0);
-   ePurMaker->addTrigger(470213,0);
-   ePurMaker->addTrigger(480202,1);
-   ePurMaker->addTrigger(470202,1);
-   ePurMaker->addTrigger(490202,1);
-   ePurMaker->addTrigger(480204,1);
-   ePurMaker->addTrigger(470204,1);
-   ePurMaker->addTrigger(490204,1);
-   ePurMaker->addTrigger(470206,1);
-   ePurMaker->addTrigger(480206,1);
-   ePurMaker->addTrigger(490206,1);
-   ePurMaker->addTrigger(480205,2);
-   ePurMaker->addTrigger(470205,2);
-   ePurMaker->addTrigger(490205,2);
-	
+   ePurMaker->setRunList("./runNumberList_run15pAu");
+   ePurMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   ePurMaker->addTrigger(500213,0);
+   ePurMaker->addTrigger(500201,0);
+   ePurMaker->addTrigger(500204,1);
+   ePurMaker->addTrigger(500214,1);
+   ePurMaker->addTrigger(500202,1);
+   //ePurMaker->addTrigger(500206,1);
+   ePurMaker->addTrigger(500205,2);
+   ePurMaker->addTrigger(500215,2);
    outputFile=mInputFileName;
 	outputFile.ReplaceAll("MuDst.root","anaTree.root");
 	
@@ -196,7 +186,7 @@ void makeAnaTree(const Int_t runnumber=16086001,
 	if(prodMod==0){
 		treeMaker->setVzCut(-8,8);
 		treeMaker->setVzDiffCut(-4,4);
-      treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
+      treeMaker->setInputRunList("./runNumberList_run15pAu");
       treeMaker->addTrigger(480202);
    //   treeMaker->setInputRecenterFile("./recenter_correction.root");
       treeMaker->setPhoEPairMassCut(0.2);
@@ -207,30 +197,21 @@ void makeAnaTree(const Int_t runnumber=16086001,
       treeMaker->setSaveHadron(true);
       //treeMaker->setDoEvtPlane(false); //default is true
       if(prodType==0){ // prod low and mid
-        treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
-        treeMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
-        treeMaker->addTrigger(470211,0);
-        treeMaker->addTrigger(490201,0);
-        treeMaker->addTrigger(480203,0);
-        treeMaker->addTrigger(490203,0);
-        treeMaker->addTrigger(470213,0);
-        treeMaker->addTrigger(480202,1);
-        treeMaker->addTrigger(470202,1);
-        treeMaker->addTrigger(490202,1);
-        treeMaker->addTrigger(480204,1);
-        treeMaker->addTrigger(470204,1);
-        treeMaker->addTrigger(490204,1);
-        treeMaker->addTrigger(470206,1);
-        treeMaker->addTrigger(480206,1);
-        treeMaker->addTrigger(490206,1);
-        treeMaker->addTrigger(480205,2);
-        treeMaker->addTrigger(470205,2);
-        treeMaker->addTrigger(490205,2);
+        treeMaker->setInputRunList("./runNumberList_run15pAu");
+        treeMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+        treeMaker->addTrigger(500213,0);
+        treeMaker->addTrigger(500201,0);
+        treeMaker->addTrigger(500204,1);
+        treeMaker->addTrigger(500214,1);
+        treeMaker->addTrigger(500202,1);
+        treeMaker->addTrigger(500206,1);
+        treeMaker->addTrigger(500205,2);
+        treeMaker->addTrigger(500215,2);
         //    treeMaker->setInputRecenterFile("./recenter_correction.root");
         treeMaker->setMaxRunId(1700);
       }
       if(prodType==1){ // prod high
-      treeMaker->setInputRunList("./runNumberList_run15pp_transverse");
+      treeMaker->setInputRunList("./runNumberList_run15pAu");
       //   treeMaker->setInputRecenterFile("./recenter_correction_ht_high.root");
          treeMaker->setMaxRunId(1000); //need to check
       }

@@ -268,7 +268,7 @@ Int_t StPicoAnaTreeMaker::Init() {
     }
     cout<<"[ok]"<<endl;
   }else{
-    cout << "failed to load the runnumber list !!!"<<endl;
+    cout << "failed to load the runnumber list " << mRunList.Data() <<"!!!"<<endl;
     return kStErr;
   }
 

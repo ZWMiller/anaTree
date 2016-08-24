@@ -387,7 +387,7 @@ void StMyAnaTreeMaker::declareHistograms() {
   hEPt  = new TH1F("hEPt","Electron Branch Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
   hEEPt_US  = new TH1F("hEEPt_US","Electron Pair US Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
   hEEPt_LS  = new TH1F("hEEPt_LS","Electron Pair LS Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
-  hHadDca = new TH1F("hHadDca","Hadron Branch DCA; DCA (cm); Counts",1000,0,1); 
+  hHadDca = new TH1F("hHadDca","Hadron Branch DCA; DCA (cm); Counts",1000,0,3); 
   hHadPhi = new TH1F("hHadPhi","Hadron Branch Phi; Phi; Counts",300,-3.2,3.2); 
 
   hHadEtaPhi = new TH2F("hHadEtaPhi","Hadron Branch Phi vs Pseudorapidity; Eta; Phi",200,-1,1,300,-3.2,3.2); 

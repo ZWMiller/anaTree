@@ -4,8 +4,8 @@
 <command>
   starver SL16d
 <!-- Set tags file directory -->
-setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log 
-setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/out
+setenv EMLOGS /gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log 
+setenv EMOUTPUT /gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/out
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
@@ -26,7 +26,7 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
     <File>file:./.sl64_gcc482</File>
     <File>file:./.sl64_gcc477</File>
     <File>file:./StRoot</File>
-    <File>file:./runNumberList_run15pp_transverse</File>
+    <File>file:./runNumberList_run15pAu</File>
 	</Package>
 </SandBox>
 
@@ -35,14 +35,14 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
 
 <!-- Define locations of log/elog files -->
-<stdout URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/$JOBID.log"/>
-<stderr URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/$JOBID.elog"/>
+<stdout URL="file:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.log"/>
+<stderr URL="file:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.elog"/>
 
 <!-- Input daq files -->
 <!--<input URL="file:/star/data01/pwg/zamiller/misAlignSim/05-27-2016-simmis/out8/rcf16001_*_fieldoff_misalign_sdt20141216_500evts.event.root"/>-->
 <!-- csh/list files -->
 <Generator>
-  <Location>/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/list</Location>
+  <Location>/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/list</Location>
 </Generator>
 
 </job>

@@ -15,31 +15,27 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
 	gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
 	loadSharedLibraries();
 
-	gSystem->Load("StPicoDstMaker");
-	gSystem->Load("StPicoAnaTreeMaker");
-	gSystem->Load("StMyAnaTreeMaker");
+   gSystem->Load("StPicoDstMaker");
+   gSystem->Load("StPicoAnaTreeMaker");
+   gSystem->Load("StMyAnaTreeMaker");
 
-	chain = new StChain();
-   
+   chain = new StChain();
+
    StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(0,inputFile,0);
-	StMyAnaTreeMaker *anaMaker = new StMyAnaTreeMaker("ana",treeMaker,outputFile,mixedEvent);
-	//-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
-	cout<<"Trigger chosen: "<<trigSelect<<endl;
-	anaMaker->setTrigSelect(trigSelect);
-   anaMaker->addTrigger(480201,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
-   anaMaker->addTrigger(470211,0);
-   anaMaker->addTrigger(490201,0);
-   anaMaker->addTrigger(480203,0);
-   anaMaker->addTrigger(480202,1);
-   anaMaker->addTrigger(470202,1);
-   anaMaker->addTrigger(490202,1);
-   anaMaker->addTrigger(480204,1);
-   anaMaker->addTrigger(470204,1);
-   anaMaker->addTrigger(490204,1);
-   //anaMaker->addTrigger(480206,1);
-   anaMaker->addTrigger(480205,2);
-   anaMaker->addTrigger(470205,2);
-   anaMaker->addTrigger(490205,2);
+   treeMaker->setInputRunList("./runNumberList_run15pAu");
+   StMyAnaTreeMaker *anaMaker = new StMyAnaTreeMaker("ana",treeMaker,outputFile,mixedEvent);
+   //-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
+   cout<<"Trigger chosen: "<<trigSelect<<endl;
+   anaMaker->setTrigSelect(trigSelect);
+   anaMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   anaMaker->addTrigger(500213,0);
+   anaMaker->addTrigger(500201,0);
+   anaMaker->addTrigger(500204,1);
+   anaMaker->addTrigger(500214,1);
+   anaMaker->addTrigger(500202,1);
+   anaMaker->addTrigger(500206,1);
+   anaMaker->addTrigger(500205,2);
+   anaMaker->addTrigger(500215,2);
 	if(trigSelect==0){
 		anaMaker->setVzCut(-6,6);
 		anaMaker->setVzDiffCut(-3,3);

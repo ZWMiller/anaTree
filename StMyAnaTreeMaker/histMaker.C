@@ -300,7 +300,7 @@ void prepareLabels()
   int numEvents = vertexZ->Integral();  
   float nEvents = (float)numEvents/1e6;
   sampleLabel = new TPaveText(.11,.83,.5,.89,"NB NDC");
-  sprintf(textLabel,"Run 15, 200 GeV p+p Collisions");
+  sprintf(textLabel,"Run 15, 200 GeV p+Au Collisions");
   sampleLabel->AddText(textLabel);
   sprintf(textLabel,"%.2fM %s Events",nEvents,trigLabel);
   sampleLabel->AddText(textLabel);
@@ -918,7 +918,7 @@ void makePDF(const char* fileName)
   if(found >= 0){
     titlename.Replace(0, found+1, "");
   } 
-  sprintf(tlName, "RUN 15 p+p 200 GeV NPE-Hadron");
+  sprintf(tlName, "RUN 15 p+Au 200 GeV NPE-Hadron");
   tl.SetTextSize(0.05);
   tl.SetTextColor(kWhite);
   tl.DrawLatex(0.05, 0.92,tlName);
