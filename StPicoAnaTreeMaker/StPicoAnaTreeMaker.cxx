@@ -89,7 +89,7 @@ ClassImp(StPicoAnaTreeMaker)
   mRunList = "./runNumberList_run15pp_transverse";
   //	mRecenterFile = "./recenter_correction.root";
 
-  mVzCut[0] = -6; mVzCut[1] = 6;
+  mVzCut[0] = -100; mVzCut[1] = 100;
   mVzDiffCut[0] = -3; mVzDiffCut[1] = 3;
   mPtCut[0] = 0.2; mPtCut[1] = 100;
   mEtaCut[0] = -1.; mEtaCut[1] = 1.;

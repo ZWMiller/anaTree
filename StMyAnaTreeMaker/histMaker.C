@@ -333,7 +333,7 @@ void drawInvMassHists()
   for(int pairType=0; pairType<3; pairType++) //0 = UnlikeSign, 1 = LikeSign ++&-- Combined, 3 = US - LS
   {
     invMass->cd();
-    gPad->SetLogy();
+    gPad->SetLogy(0);
     pretty1DHist(eeInvMassAll[pairType],colors[pairType],20+pairType);
     eeInvMassAll[pairType]->GetXaxis()->SetRangeUser(0.,0.5);
     eeInvMassAll[pairType]->Draw((pairType==0) ? "pe" : "same pe");

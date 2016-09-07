@@ -22,7 +22,10 @@ void setpad(TVirtualPad *pad,float left, float right, float top, float bottom, i
 TLegend* myLeg(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup,Int_t textFont=42,Double_t textSize=0.05);
 bool isHFT(TString name);
 bool isRunIndex(TString name);
-TH1F* makeMeanHist(TH2F* h);
+TH1F* makeMeanHist(TH2F* h, float &currentHistStDev);
+TH1F* findBadRuns(TH1F* h, float lowLim, float highLim, int* runList, TPaveText* lbl, TString badRunList);
+bool getRunList(int* runList);
+void addToBadRunList(int run, TString badRunList);
 
 void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
 {
@@ -34,6 +37,17 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
     gStyle->SetOptFit(1);
     gStyle->SetOptTitle(1);
     TGaxis::SetMaxDigits(3);
+
+    int runList[834];
+    bool haveRunlist= getRunList(runList);
+    TString badRunList = "badRunList.txt";
+    TString nameCheck = FileName;
+    if(nameCheck.Index("hists") > 0)
+      badRunList.ReplaceAll(".txt","AnaTreeCheck.txt");
+    if( remove( badRunList ) != 0 )
+      perror( "Error deleting badRunList.txt" );
+    else
+      puts( "Old badRunList.txt successfully deleted" );
 
     char name[100];
     sprintf(name, "%s", FileName);
@@ -49,8 +63,10 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
     TObject *t;
 
     TString outpdf = FileName;
-    outpdf.ReplaceAll(".root","RunLevelQA.pdf");
-    TPDF *pdf = new TPDF(outpdf.Data());
+    outpdf.ReplaceAll(".root","RunLevelQA");
+   // TPDF *pdf = new TPDF(outpdf.Data());
+    TCanvas* temp = new TCanvas("temp","temp",50,50,1050,1050);
+    temp->Print(Form("%s.pdf[",outpdf.Data()));
     //Set front page
     c1->cd();
     //pad->cd();
@@ -85,8 +101,10 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
     tl.SetTextColor(kBlack);
     tl.SetTextSize(0.04);
     //tl.DrawLatex(0.1, 0.55, titlename);
-    c1->cd();
-    c1->Update();
+    temp = c1;
+    temp->Print(Form("%s.pdf",outpdf.Data()));
+  //  c1->cd();
+  //  c1->Update();
 
     c1->cd();
     int nCounts = 0;
@@ -97,6 +115,19 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
     line.SetLineWidth(1);
     TString tName;
     tl.SetTextSize(0.035);
+    float currentHistStDev = 0.;
+    TLatex tLabel;
+    tLabel.SetNDC();
+    tLabel.SetTextColor(kRed);
+    tLabel.SetTextSize(0.05);
+    TString label = "Mean #pm 4*RMS";
+
+    TPaveText* brLabel = new TPaveText(.40,.68,.65,.89,"NB NDC");
+    brLabel->SetFillColorAlpha(kWhite,0);
+    brLabel->SetTextSize(0.05);
+    brLabel->SetTextColor(kMagenta);
+    brLabel->SetTextAlign(11);
+    
 
     //Loop through TH1 and TH2 histos and place them on PDF
     while ((key = (TKey*)nextkey())) {
@@ -106,27 +137,47 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
           if(isHFT(tName)||!isRunIndex(tName)) continue;
           if(!strcmp(t->ClassName(),"TH2D")||!strcmp(t->ClassName(),"TH2F")||!strcmp(t->ClassName(),"TH2S")){
                 TH2F *h2 = (TH2F*)t;
-                TH1F* hM1 = makeMeanHist(h2);
-                TF1* poly = new TF1("poly","pol0",0,810);
-                TF1* polyH = new TF1("polyH","pol0",0,810);
-                TF1* polyL = new TF1("polyL","pol0",0,810);
-                hM1->Draw("pe");
+                TH1F* hM1 = makeMeanHist(h2,currentHistStDev);
+                TF1* poly = new TF1("poly","pol0",0,833);
+                TF1* polyH = new TF1("polyH","pol0",0,833);
+                TF1* polyL = new TF1("polyL","pol0",0,833);
                 poly->SetLineColor(kRed);
                 polyH->SetLineColor(kRed);
                 polyL->SetLineColor(kRed);
                 polyH->SetLineStyle(9);
                 polyL->SetLineStyle(9);
-                hM1->Fit("poly","RW");
+                hM1->Fit("poly","RWQ");
                 float p0 = poly->GetParameter(0);
-                float err = poly->GetParError(0);
-                polyH->SetParameter(0,p0+3*err);
-                polyL->SetParameter(0,p0-3*err);
+                float err = currentHistStDev;//poly->GetParError(0);
+                polyH->SetParameter(0,p0+4*err);
+                polyL->SetParameter(0,p0-4*err);
+
+                brLabel->Clear();
+                brLabel->AddText("Bad Runs:");
+
+                TH1F* hM1c = (TH1F*)hM1->Clone("hM1c");
+                TCanvas *c2 = new TCanvas("c2", "c2",0,0,1000,1000);
+                c2->Divide(1,2);
+                c2->cd(1);
+                hM1c->Draw("pe");
                 polyH->Draw("same");
                 polyL->Draw("same");
+                tLabel.DrawLatex(0.16,0.85,label);
+                hM1->GetYaxis()->SetRangeUser(p0-5*err,p0+5*err);
+                TH1F* badRuns = findBadRuns(hM1,p0-4*err,p0+4*err, runList, brLabel, badRunList);
+                badRuns->Draw("same pe");
+                brLabel->Draw("same");
+                
+                c2->cd(2);
+                hM1->SetStats(kFALSE);
+                hM1->Draw("pe");
+                polyH->Draw("same");
+                polyL->Draw("same");
+                
                 nCounts++;
                 nFig++;
-                c1->cd();
-                c1->Update();
+                temp = c2;
+                temp->Print(Form("%s.pdf",outpdf.Data()));
             }
             if(!strcmp(t->ClassName(),"TH1D")||!strcmp(t->ClassName(),"TH1F")||!strcmp(t->ClassName(),"TH1S")){
               continue;
@@ -141,8 +192,8 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
                         TF1* poly = new TF1("poly","pol1",0,810);
                         hM1->Fit("poly","RQ");
                         hM1->Draw("pe");
-                        c1->cd();
-                        c1->Update();
+                        //c1->cd();
+                        //c1->Update();
                     }
                     if(!strcmp(obj->ClassName(),"TH1D")||!strcmp(obj->ClassName(),"TH1F")||!strcmp(obj->ClassName(),"TH1S")){
                       continue;
@@ -152,32 +203,119 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
         }
     }
 
-    pdf->Close();
+    //pdf->Close();
+    temp->Print(Form("%s.pdf]",outpdf.Data()));
     f->Close(); 
     return;
 }
 
-TH1F* makeMeanHist(TH2F* h)
+TH1F* findBadRuns(TH1F* h, float lowLim, float highLim, int* runList, TPaveText* lbl, TString badRunList)
 {
   int maxBins = h->GetXaxis()->GetNbins();
+  int lowX = h->GetXaxis()->GetBinLowEdge(1);
+  int highX = h->GetXaxis()->GetBinUpEdge(maxBins);
+  TH1F* newH = new TH1F("name","title",maxBins,lowX,highX);
+  for(int i=1;i<maxBins+1;i++)
+  {
+    float binval = h->GetBinContent(i);
+    if(binval <= lowLim || binval >= highLim)
+    {
+      newH->SetBinContent(i,binval+1e-6);
+      if(i<=834 && (highLim !=0 || lowLim != 0)){
+        addToBadRunList(runList[i-1], badRunList);
+        lbl->AddText(Form("%i",runList[i-1]));
+        cout << "badrun: " << runList[i-1] << endl;
+      }
+    }
+    else 
+      newH->SetBinContent(i,1e7);
+  }
+  newH->SetMarkerStyle(20);
+  newH->SetMarkerColor(kMagenta);
+  newH->SetMarkerSize(2.0);
+  return newH;
+}
+
+void addToBadRunList(int run, TString badRunList)
+{
+  ifstream indata;
+  indata.open(badRunList);
+  if(indata.is_open()){
+    Int_t runnum;
+    while(indata>>runnum){
+      if(run == runnum)
+        return;
+    }
+  }
+  std::ofstream ofs(badRunList,std::ofstream::app);
+  ofs << run << endl;
+  ofs.close();
+}
+
+bool getRunList(int* runList)
+{
+  ifstream indata;
+  indata.open("runNumberList_run15pAu");
+  if(indata.is_open()){
+    cout<<"read in total run number list and recode run number ...";
+    Int_t runnum;
+    Int_t newId=0;
+    while(indata>>runnum){
+      runList[newId] = runnum;
+      newId++;
+    }
+    cout<<" [OK]"<<endl;  
+    indata.close();
+    return kTRUE;
+  }else{
+    cout<<"Failed to load the total run number list !!!"<<endl;
+    indata.close();
+    return kFALSE;
+  }
+
+}
+
+TH1F* makeMeanHist(TH2F* h, float &currentHistStDev)
+{
+  int maxBins = h->GetXaxis()->GetNbins();
+  float* means[1000] = {0.};
+  float averageVal = 0;
   int lowX = h->GetXaxis()->GetBinLowEdge(1);
   int highX = h->GetXaxis()->GetBinUpEdge(maxBins);
   int maxBinsY = h->GetYaxis()->GetNbins();
   float lowY = h->GetYaxis()->GetBinLowEdge(1);
   float highY = h->GetYaxis()->GetBinUpEdge(maxBinsY);
+  
   std::ostringstream oss,oss2;
   oss << h->GetName() << ";" << h->GetXaxis()->GetTitle() << ";Mean " << h->GetYaxis()->GetTitle();
   TString title = oss.str();
   oss2 << h->GetName() << "_MEAN";
   TString name = oss2.str();
   TH1F* newH = new TH1F(name,title,maxBins,lowX,highX);
+  TH1F* getErr = new TH1F("getErr","getErr",maxBinsY,lowY,highY);
   newH->Sumw2();
+
   for(int i=0;i<maxBins;i++)
   {
-     TH1D* temp = h->ProjectionY("temp",i+1,i+2);
-     Double_t mean = temp->GetMean();
+     TH1D* tempH = h->ProjectionY("tempH",i+1,i+2);
+     Double_t mean = tempH->GetMean();
      newH->SetBinContent(i,mean);
+     getErr->Fill(mean);
+     means[i] = mean;
+     averageVal+=mean;
   }
+  averageVal = averageVal/(float)maxBins;
+  for(int i=0;i<maxBins;i++)
+  {
+    if(i < 833)
+      currentHistStDev += (means[i]-averageVal)*(means[i]-averageVal);
+  }
+  currentHistStDev = currentHistStDev/(float)maxBins;
+  currentHistStDev = sqrt(currentHistStDev);
+  //TF1* gau = new TF1("gau","gaus");
+  //getErr->Fit("gau");
+  //currentHistStDev = gau->GetParameter(2);
+  currentHistStDev = getErr->GetRMS();
   newH->SetMarkerStyle(20);
   newH->SetMarkerColor(kBlack);
   newH->SetMarkerSize(0.7);

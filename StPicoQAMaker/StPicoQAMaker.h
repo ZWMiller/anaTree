@@ -44,10 +44,10 @@ class StPicoQAMaker : public StMaker {
       //-----event QA-----
       TH1F*      hNEvents;
       //TH1F*    	htriggerindex;
-      //TH1F*      mVz_vpd;
-      //TH1F*      mVz_tpc;
+      TH1F*      mVz_vpd;
+      TH1F*      mVz_tpc;
       TH2F*      mVz_vpdtpc;
-      //TH1F*      mdVz;
+      TH1F*      mdVz;
       TH2F*      mdVz_tpcVz;
       TH2F*      mVxy;
       TH2F*      mVRvsVZ;
@@ -237,7 +237,7 @@ class StPicoQAMaker : public StMaker {
       //-----------BEMC end-------------------
 
       //----------after pid------------
-      /*
+      
       TH2F *htofPiondcavsPT;
       TH2F *htofKaondcavsPT;
       TH2F *htofProtondcavsPT;
@@ -269,7 +269,7 @@ class StPicoQAMaker : public StMaker {
       TH2F *htpctofPiondcawHFTvsPT;
       TH2F *htpctofKaondcawHFTvsPT;
       TH2F *htpctofProtondcawHFTvsPT;
-      */
+      
       ClassDef(StPicoQAMaker,1)
 };
 

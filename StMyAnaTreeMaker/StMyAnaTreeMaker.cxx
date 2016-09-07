@@ -39,13 +39,15 @@ ClassImp(StMyAnaTreeMaker)
   TH1F:: SetDefaultSumw2();//zaochen add
   mOutName = outName;
   makeMixedEvent = mixedEvent;
+  mRunFileName = "StRoot/StPicoQAMaker/mTotalRunList.dat";
+  mTotalRun = 1000;
 
   mTrigSelect = -1;
   mHTth = 0;
   mHTAdc0th = 0;
   mEmcPtth = 2.5;
 
-  mVzCut[0] = -30; mVzCut[1] = 30;
+  mVzCut[0] = -40; mVzCut[1] = 40;
   mVzDiffCut[0] = -6; mVzDiffCut[1] = 6;
   mnHitsFitCut[0] = 20; mnHitsFitCut[1] = 50;
   mnHitsDedxCut[0] = 15; mnHitsDedxCut[1] = 50;
@@ -53,12 +55,14 @@ ClassImp(StMyAnaTreeMaker)
   mHFTTrackCut = false;
 
   mEPtCut[0] = 1.0; mEPtCut[1] = 30;
+  mEPPtCut[0] = 0.2; mEPPtCut[1] = 30;
   mEEtaCut[0] = -0.7; mEEtaCut[1] = 0.7;
   mEDcaCut[0] = 0.; mEDcaCut[1] = 1.5;
   mEInvBetaCut[0] = 0.975; mEInvBetaCut[1] = 1.025;
   mELocalYCut[0] = -1.8; mELocalYCut[1] = 1.8;
   mELocalZCut[0] = -3.05; mELocalZCut[1] = 3.05;
   mEnSigECut[0] = -1.0; mEnSigECut[1] = 3.0;
+  mEPnSigECut[0] = -3.0; mEPnSigECut[1] = 3.0;
   mHTEnSigECut[0] = -1.0; mHTEnSigECut[1] = 3.0;
 
   mPEEtaCut[0] = -0.7; mPEEtaCut[1] = 0.7;
@@ -106,15 +110,15 @@ ClassImp(StMyAnaTreeMaker)
   //mPEMassCut[0] = 0.1; mPEMassCut[1] = 0.18; // to try to explain strange bump at 0.15 GeV/c^2
   mPEMassCut[0] = 0.; mPEMassCut[1] = 0.24;
 
-  mHadPtCut[0]  = 0.5;  mHadPtCut[1] = 20.0;
-  mHadEtaCut[0] = -0.7; mHadEtaCut[1]= 0.7;
+  mHadPtCut[0]  = 0.3;  mHadPtCut[1] = 20.0;
+  mHadEtaCut[0] = -1.0; mHadEtaCut[1]= 1.0;
   mHadDcaCut[0] = 0.; mHadDcaCut[1] = 1.0;
   mHadHitsFitCut[0] = 15.; mHadHitsFitCut[1] = 50.0;
   mHadHitsdEdxCut[0] = 10.; mHadHitsdEdxCut[1] = 50.0;
 
   mNBadRuns = sizeof(mBadRuns)/sizeof(int);
 
-  nMassBins = 500;
+  nMassBins = 1000;
   massMin = 0.;
   massMax = 5.;
   nPtBins = 400;
@@ -141,6 +145,34 @@ Int_t StMyAnaTreeMaker::Init() {
   }else{
     fout = new TFile("test.ana.root","RECREATE");
   }
+
+  //read in the runlist.dat
+  ifstream indata;
+  indata.open(mRunFileName);
+  mTotalRunId.clear();
+  if(indata.is_open()){
+    cout<<"read in total run number list and recode run number ...";
+    Int_t oldId;
+    Int_t newId=0;
+    while(indata>>oldId){
+      mTotalRunId[oldId] = newId;
+      newId++;
+    }
+    cout<<" [OK]"<<endl;  
+
+  }else{
+    cout<<"Failed to load the total run number list !!!"<<endl;
+    return kFALSE;
+  }
+  indata.close();
+
+  for(int q=0; q<mTotalRun; q++)
+  {
+    avgZDC.push_back(0);
+    avgRefMult.push_back(0);
+    avgZDCCount.push_back(0);
+    avgRefMultCount.push_back(0);
+  }  
 
   fEDcaCut = new TF1("fEDcaCut","[0]*pow(1/x,[1])+[2]",0,100);
   fEDcaCut->SetParameters(0.0121809,0.52427,0.00586945);
@@ -191,6 +223,7 @@ Int_t StMyAnaTreeMaker::Init() {
 
 //----------------------------------------------------------------------------- 
 Int_t StMyAnaTreeMaker::Finish() {
+  fillFinishHists();
   fout->cd();
   fout->Write();
   fout->Close();
@@ -205,8 +238,8 @@ void StMyAnaTreeMaker::declareHistograms() {
   hnEvents = new TH1F("hnEvents","hnEvents",10,0,10);
   hnTracks = new TH1F("hnTracks","hnTracks",10,0,10);
   hTrigType = new TH1F("hTrigType","Trigger Type",20,0,20);
-  hVzVpdVz = new TH2F("hVzVpdVz","hVzVpdVz;Vz (cm); Vz_{VPD} (cm);",400,-100,100,400,-100,100);
-  hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",400,-100,100,400,-10,10);
+  hVzVpdVz = new TH2F("hVzVpdVz","hVzVpdVz;Vz (cm); Vz_{VPD} (cm);",1600,-400,400,1600,-400,400);
+  hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",1600,-400,400,1600,-400,400);
   hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
   hVertexZCut = new TH1F("hVertexZCut","vertexZ after cut;Vz (cm);Couts",400,-100,100);
 
@@ -422,6 +455,19 @@ void StMyAnaTreeMaker::declareHistograms() {
     hSMDMatchedTracks[i] = new TH1F(Form("hSMDMatchedTracks_%i",i),Form("SMD Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
     hSMDIdTracks[i] = new TH1F(Form("hSMDIdTracks_%i",i),Form("SMD eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
   }
+
+  // RunIndex Hists
+  hnEtavsRunIndex= new TH2F("hnEtavsRunIndex","hnEtavsRunIndex;Run Index; nEta;",mTotalRun,0,mTotalRun,10,0,10);
+  hnPhivsRunIndex= new TH2F("hnPhivsRunIndex","hnPhivsRunIndex;Run Index; nPhi;",mTotalRun,0,mTotalRun,10,0,10);
+  hzDistvsRunIndex= new TH2F("hzDistvsRunIndex","hzDistvsRunIndex;Run Index; zDist;",mTotalRun,0,mTotalRun,1000,-10,10);
+  hphiDistvsRunIndex= new TH2F("hphiDistvsRunIndex","hphiDistvsRunIndex;Run Index; phiDist;",mTotalRun,0,mTotalRun,1000,-0.2,0.2);
+  hPvEvsRunIndex= new TH2F("hPvEvsRunIndex","hPvEvsRunIndex;Run Index; PvE;",mTotalRun,0,mTotalRun,500,0,10);
+  hadc0vsRunIndex= new TH2F("hadc0vsRunIndex","hadc0vsRunIndex;Run Index; adc0;",mTotalRun,0,mTotalRun,1000,0,1000);
+  hbetavsRunIndex= new TH2F("hbetavsRunIndex","hbetavsRunIndex;Run Index; 1/beta;",mTotalRun,0,mTotalRun,2000,0,4);
+  hgRefMultZDCvsRunIndex = new TH2F("hgRefMultZDCvsRunIndex","(gRefMult/ZDCx)*10^{3} vs RunIndex; Run Index; gRefMult/ZDCx;",mTotalRun,0,mTotalRun,1000,0,15);
+
+  // Other QA Hists
+  hgRefMultvsZDCx = new TH2F("hgRefMultvsZDCx","gRefMult vs ZDCx; <ZDCx>; <gRefMult>;",400,0,40000,300,0,30);
 }
 
 
@@ -455,8 +501,8 @@ Int_t StMyAnaTreeMaker::Make() {
   int eventPass = 0;
   if(mTrigSelect<0) eventPass = 1;
   else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
-  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 180
-  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 15; mHTAdc0th = 250; mEmcPtth = 2.5;}  //HT1 240
+  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 180
+  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 250; mEmcPtth = 2.5;}  //HT1 240
   else if(mTrigSelect==3&& isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 3.0;}  //HT2 300
   else if(mTrigSelect==4&& isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 400
   else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
@@ -473,7 +519,7 @@ Int_t StMyAnaTreeMaker::Make() {
   hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
   if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return kStOK;
   hnEvents->Fill(3);
-  if(fabs(vzVpd) > 100)
+  if(fabs(vzVpd) > 300)
   {
     if(DEBUG) cout << "No VPD Vz, skip dVz cut" << endl;
   }
@@ -633,7 +679,8 @@ bool StMyAnaTreeMaker::isHTTrigE(StElectronTrack *eTrk) {
   }else{
     return false;
   }
-  if((mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5)&&adc0<=mHTAdc0th&&pt<=mEmcPtth)  return false;
+  if((mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5)&&(adc0<=mHTAdc0th||pt<=mEmcPtth))  return false;
+ if(DEBUG) cout << "passHTEIDCuts TRUE" << endl;
   return true;
 }
 
@@ -670,7 +717,7 @@ bool StMyAnaTreeMaker::passEIDCuts(StElectronTrack *eTrk) {
   }else{
     if(nSigE<mEnSigECut[0]||nSigE>mEnSigECut[1]) return false;
   }
-
+ if(DEBUG) cout << "passEIDCuts TRUE" << endl;
   return true;
 }
 
@@ -744,6 +791,8 @@ bool StMyAnaTreeMaker::passMuMuPairCuts(double y) {
 
 void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 {
+  fillRunIndexHists(eTrk);
+  if(DEBUG) cout << "Fill eTrk2" << endl;
   int charge = eTrk->charge();
   int qualFlag = 0, eHTflag = 0, eflag = 0, isTrgE = 0, 
       etrgflag = 0, isInPair = 0;
@@ -753,6 +802,7 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   if(isHTTrigE(eTrk)) isTrgE = 1;
   if(isTrgE&&eHTflag) etrgflag = 1;
   if(passETrackQualityCuts(eTrk)) qualFlag = 1;
+  if(DEBUG) cout << "Fill eTrk3" << endl;
 
   if(qualFlag)             hEPt_eff[0]->Fill(pt);
   if(qualFlag && eflag)    hEPt_eff[1]->Fill(pt);
@@ -760,6 +810,7 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   if(qualFlag && isTrgE)   hEPt_eff[3]->Fill(pt);
 
   if(!eHTflag || !eflag) return;
+  if(DEBUG) cout << "Fill eTrk4" << endl;
   double eta = eTrk->gMom().pseudoRapidity();
   double phi = eTrk->gMom().phi();
   if(charge>0){ 
@@ -794,6 +845,7 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
     hEDcaXYvsPtwHft->Fill(pt*charge,dcaXY);
     hEDcaZvsPtwHft->Fill(pt*charge,dcaZ);
   }
+  if(DEBUG) cout << "Fill eTrk5" << endl;
 
 
   // Hadron Comparisons only done for trigger electrons
@@ -802,7 +854,7 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   for(int j=0; j < nHad; j++)
   {
     StHadronTrack *hTrk = (StHadronTrack*)mAnaTree->hTrack(j);
-    if(!passHadronCuts(hTrk)|| hTrk->id() == eTrk->id()) return;
+    if(!passHadronCuts(hTrk) || (hTrk->pMom().x() == eTrk->pMom().x() && hTrk->pMom().y() == eTrk->pMom().y())) return;
     int charge = hTrk->charge();
     double hpt = hTrk->pMom().perp();
     double heta = hTrk->pMom().pseudoRapidity();
@@ -816,6 +868,35 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   }
 }
 
+void StMyAnaTreeMaker::fillRunIndexHists(StElectronTrack* eTrk)
+{
+// Fill runIndex hists before any cuts besides Track Quality in anaTree Make
+  int runIndex;
+  int runId = mAnaTree->event()->runId();
+  map<Int_t, Int_t>::iterator iter = mTotalRunId.find(runId);
+  if(iter != mTotalRunId.end())
+    runIndex = iter->second;
+  else{
+    runIndex = -1;
+    cout<<"sorry, no runNumber in runNumber list"<<endl;
+    cout<<"the RUNID:="<<runId<<endl;
+  }
+
+  if(runIndex<0)return;
+  hPvEvsRunIndex     -> Fill(runIndex,eTrk->pve());
+  hnEtavsRunIndex    -> Fill(runIndex,eTrk->nEta());
+  hnPhivsRunIndex    -> Fill(runIndex,eTrk->nPhi());
+  hzDistvsRunIndex   -> Fill(runIndex,eTrk->zDist());
+  hphiDistvsRunIndex -> Fill(runIndex,eTrk->phiDist());
+  hadc0vsRunIndex    -> Fill(runIndex,eTrk->adc0());
+  hbetavsRunIndex    -> Fill(runIndex,(eTrk->beta()!=0)?1./eTrk->beta():0);
+
+  avgRefMult[runIndex]+=mAnaTree->event()->grefMult();
+  avgZDC[runIndex]+=mAnaTree->event()->ZDCx();
+  avgZDCCount[runIndex]+=1.;
+  avgRefMultCount[runIndex]+=1.;
+}
+
 bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk, int index)
 {
   int nPhoEEPairs = mAnaTree->numberOfPhoEEPairs();   
@@ -824,8 +905,8 @@ bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk, int index)
     int tagEIndex  = ee->primEIndex();
     int partEIndex = ee->partEIndex();
     StElectronTrack *pTrk1 = mAnaTree->eTrack(tagEIndex);
-   /* StPartElectronTrack *pTrk2 = mAnaTree->partETrack(partEIndex);
-    StLorentzVectorF pair;
+    StPartElectronTrack *pTrk2 = mAnaTree->partETrack(partEIndex);
+   /* StLorentzVectorF pair;
     StThreeVectorF mom1 = pTrk1->gMom();
     StThreeVectorF mom2 = pTrk2->gMom();
     StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
@@ -836,7 +917,7 @@ bool StMyAnaTreeMaker::isElectronInValidPair(StElectronTrack* eTrk, int index)
     double pmass = pair.m();
     double dauDcaDist = ee->pairDca();
 */
-    if(index == tagEIndex)
+    if(eTrk->gMom() == pTrk1->gMom() || eTrk->gMom() == pTrk2->gMom())
       return true;
   }
 
@@ -909,6 +990,7 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   int    idTag      = tagETrk->id();
   int    idPart     = partETrk->id();
   if(idTag==idPart) return; 
+  int type = phoEE->type(); // 1 = +-, 2 = ++, 3 = --
 
   int flag = 0;
   if(mTrigSelect==0){
@@ -917,7 +999,7 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   }
 
   if(mTrigSelect==1||mTrigSelect==2||mTrigSelect==3||mTrigSelect==4||mTrigSelect==5){
-    if(tagEIDCuts(tagETrk)&&tagEEMCCuts(tagETrk))//&&partEIDCuts(partETrk))
+    if(tagEIDCuts(tagETrk) && tagEEMCCuts(tagETrk) && partEIDCuts(partETrk))
       flag=1;//tagETrkFlag += 1;
   }
   if(mTrigSelect==-1){
@@ -926,7 +1008,6 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
 
   if(flag==0) return;
 
-  double mass = phoEE->pairMass();
   double pairDca = phoEE->pairDca();
   StLorentzVectorF pair;
   StThreeVectorF mom1 = tagETrk->gMom();
@@ -934,10 +1015,12 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   StLorentzVectorF dau1(mom1,mom1.massHypothesis(eMass));
   StLorentzVectorF dau2(mom2,mom2.massHypothesis(eMass));
   pair = dau1+dau2;
-  double pt = pair.perp();
-  double y = pair.rapidity();
-  double eta = pair.pseudoRapidity();
-  double phi = pair.phi();
+  double mass = phoEE->pairMass();
+  double pt = phoEE->pairPt();
+  double pairpt = pt;
+  double y = phoEE->pairY();
+  double eta = phoEE->pairEta();
+  double phi = phoEE->pairPhi();
   StThreeVectorF origin = phoEE->pairOrigin();
   if(pairDca>1) return;
 
@@ -1047,7 +1130,6 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   }
 
   if(!partEIDCuts(partETrk)) return;
-  if(mass>mPEMassCut[0]&&mass<mPEMassCut[1]&&pairDca>mDauEDcaDistCut[0]&&pairDca<mDauEDcaDistCut[1]){
     double pt1 = tagETrk->gMom().perp();
     double dca1 = tagETrk->dca();
     double dcaXY1 = tagETrk->dcaXY();
@@ -1064,47 +1146,51 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
     float pve2 = partETrk->pve();
     float evp1 = pve1==0?0:1./pve1;
     float evp2 = pve2==0?0:1./pve2;
-
-    if(charge1!=charge2){ 
+    
+    if(type == 1){ 
       hEENumInvMassvsPtMB->Fill(pt,mass);
       hEENumInvMassvsPt->Fill(pt,mass,centrality);
-      hEEUSEtavsPhi->Fill(phi,eta);
-      hEEUSPairDcavsPt->Fill(pt,pairDca);
     }
-    if(charge1==1&&charge2==1){ 
+    if(type == 2){ 
       hEEDenInvMassvsPtLikePosMB->Fill(pt,mass);
       hEEDenInvMassvsPtLikePos->Fill(pt,mass,centrality);
-      hEELSPosEtavsPhi->Fill(phi,eta);
-      hEELSPosPairDcavsPt->Fill(pt,pairDca);
     }
-    if(charge1==-1&&charge2==-1){ 
+    if(type == 3){ 
       hEEDenInvMassvsPtLikeNegMB->Fill(pt,mass);
       hEEDenInvMassvsPtLikeNeg->Fill(pt,mass,centrality);
-      hEELSNegEtavsPhi->Fill(phi,eta);
-      hEELSNegPairDcavsPt->Fill(pt,pairDca);
     }
-    if(charge1!=charge2){
+
+  if(mass>mPEMassCut[0]&&mass<mPEMassCut[1]&&pairDca>mDauEDcaDistCut[0]&&pairDca<mDauEDcaDistCut[1]){
+    if(type == 1){ 
+      hEEUSEtavsPhi->Fill(phi,eta);
+      hEEUSPairDcavsPt->Fill(pt,pairDca);
       hPEUSOyOx->Fill(origin.x(),origin.y());
       hPEUSOxOz->Fill(origin.z(),origin.x());
       hPEUSOrOz->Fill(origin.z(),origin.perp());
 
       if(passHTEIDCuts(tagETrk)){ 
-        hPEEvPvsPt->Fill(pt1,evp1);
-        hPEPvEvsPt->Fill(pt1,pve1);
+        hPEEvPvsPt->Fill(pairpt,evp1);
+        hPEPvEvsPt->Fill(pairpt,pve1);
       }
     }
-    else{
+    if(type == 2){ 
+      hEELSPosEtavsPhi->Fill(phi,eta);
+      hEELSPosPairDcavsPt->Fill(pt,pairDca);
+      hPELSOyOx->Fill(origin.x(),origin.y());
+      hPELSOxOz->Fill(origin.z(),origin.x());
+      hPELSOrOz->Fill(origin.z(),origin.perp());
+    }
+    if(type == 3){ 
+      hEELSNegEtavsPhi->Fill(phi,eta);
+      hEELSNegPairDcavsPt->Fill(pt,pairDca);
       hPELSOyOx->Fill(origin.x(),origin.y());
       hPELSOxOz->Fill(origin.z(),origin.x());
       hPELSOrOz->Fill(origin.z(),origin.perp());
     }
 
     // Loop over hadrons for Eh correlation
-    double phi1 = tagETrk->gMom().phi();
-    double phi2 = partETrk->gMom().phi();
-
-    if(charge1==charge2)hEEPt_LS->Fill(pt1); // need for normalization
-    if(charge1!=charge2)hEEPt_US->Fill(pt1); // need for normalization
+    if(type == 2 || type == 3)hEEPt_LS->Fill(pairpt); // need for normalization
+    if(type == 1)hEEPt_US->Fill(pairpt); // need for normalization
     int nHad = mAnaTree->numberOfHTracks(); 
     for(int j=0; j < nHad; j++)
     {
@@ -1116,15 +1202,15 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
       double hphi = hTrk->pMom().phi();
       double hdca = hTrk->dca();
 
-      double dphi = hphi - phi1;
+      double dphi = hphi - phi;
       dphi = delPhiCorrect(dphi);
-      if(charge1==charge2) 
+      if(type == 2 || type == 3) 
       {
-        hHadEEDelPhiPt_LS->Fill(pt1,dphi); // Electron pt
+        hHadEEDelPhiPt_LS->Fill(pairpt,dphi); // Electron pt
       }
-      if(charge1!=charge2) 
+      if(type == 1) 
       {
-        hHadEEDelPhiPt_US->Fill(pt1,dphi); // Muon pt
+        hHadEEDelPhiPt_US->Fill(pairpt,dphi); // Muon pt
       }
     }
   }
@@ -1561,6 +1647,18 @@ Bool_t StMyAnaTreeMaker::isMinBias()
   return checkTriggers(4);
 }
 
+void StMyAnaTreeMaker::fillFinishHists()
+{
+  for(int rI=0; rI < mTotalRun; rI++)
+  {
+    float zdcAv = avgZDC[rI]/avgZDCCount[rI];
+    float grefMultAv = avgRefMult[rI]/avgRefMultCount[rI];
+    float grefDivZdc = (grefMultAv/zdcAv)*1e3;
+    hgRefMultvsZDCx->Fill(zdcAv,grefMultAv);
+    hgRefMultZDCvsRunIndex->Fill(rI,grefDivZdc);
+  }
+}
+
 void StMyAnaTreeMaker::fillTrigTypeHist()
 {
   bool ht0 = isBHT0();
@@ -1602,21 +1700,21 @@ bool StMyAnaTreeMaker::tagEIDCuts(StElectronTrack *eTrk) {
 }
 bool StMyAnaTreeMaker::tagEEMCCuts(StElectronTrack *eTrk) {
   double pve     = eTrk->pve();
-  //int    nEta    = eTrk->nEta();
-  //int    nPhi    = eTrk->nPhi();
-  //double zDist   = eTrk->zDist();
-  //double phiDist = eTrk->phiDist();
+  int    nEta    = eTrk->nEta();
+  int    nPhi    = eTrk->nPhi();
+  double zDist   = eTrk->zDist();
+  double phiDist = eTrk->phiDist();
 
   if(pve<mEmcEPveCut[0] || pve>mEmcEPveCut[1]) return false;
   hnTracks->Fill(16);
-  /*if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
+  if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
     hnTracks->Fill(17);
     if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
     hnTracks->Fill(18);
     if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
     hnTracks->Fill(19);
     if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
-    hnTracks->Fill(20);      */ 
+    hnTracks->Fill(20);      
   return true;
 }
 
@@ -1628,7 +1726,7 @@ bool StMyAnaTreeMaker::partEIDCuts(StPartElectronTrack *parteTrk) {
   int    nHitsDedx = parteTrk->nHitsDedx();
   double nSigE     = parteTrk->nSigmaElectron();
 
-  if(pt<mEPtCut[0] || pt>mEPtCut[1]) return false;
+  if(pt<mEPPtCut[0] || pt>mEPPtCut[1]) return false;
   hnTracks->Fill(11);
   if(eta<mEEtaCut[0] || eta>mEEtaCut[1]) return false;
   hnTracks->Fill(12);
@@ -1636,7 +1734,7 @@ bool StMyAnaTreeMaker::partEIDCuts(StPartElectronTrack *parteTrk) {
   hnTracks->Fill(13);
   if(nHitsDedx<=mnHitsDedxCut[0] || nHitsDedx>mnHitsDedxCut[1]) return false;
   hnTracks->Fill(14);
-  if(nSigE<mEnSigECut[0] || nSigE>mEnSigECut[1]) return false;
+  if(nSigE<mEPnSigECut[0] || nSigE>mEPnSigECut[1]) return false;
   hnTracks->Fill(15);
   return true;
 }

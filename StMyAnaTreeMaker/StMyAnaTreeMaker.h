@@ -37,7 +37,6 @@ class StMyAnaTreeMaker : public StMaker {
 	public:
 		StMyAnaTreeMaker(const Char_t *name, StPicoAnaTreeMaker *treeMaker, const Char_t *outName, bool mixedEvent);
 		virtual ~StMyAnaTreeMaker();
-
 		virtual Int_t Init();
 		virtual Int_t Make();
 		virtual void  Clear(Option_t *opt="");
@@ -60,6 +59,8 @@ class StMyAnaTreeMaker : public StMaker {
 		void  setVzCut(double min, double max){ mVzCut[0] = min; mVzCut[1] = max; }
 		void  setVzDiffCut(double min, double max){ mVzDiffCut[0] = min; mVzDiffCut[1] = max; }
 		Double_t	mtddTCor(double dT, int channel);
+      void  setRunList(TString name) {mRunFileName = name;};
+      void  setNumberOfRuns(int rns) {mTotalRun = rns;};
 		
 		void  	setMassBinning(int nBins, double min, double max){ nMassBins = nBins; massMin = min, massMax = max; }
 		void  	setPtBinning(int nBins, double min, double max){ nPtBins = nBins; ptMin = min, ptMax = max; }
@@ -74,6 +75,7 @@ class StMyAnaTreeMaker : public StMaker {
       void fillTrigTypeHist();
       void clearTriggers();
       bool passHadronCuts(StHadronTrack*);
+      void fillFinishHists();
       double delPhiCorrect(double);
       Bool_t checkTriggers(int);
       Bool_t isMinBias();
@@ -98,6 +100,7 @@ class StMyAnaTreeMaker : public StMaker {
       void fillPhoEEHists(StPhoEEPair*);
       void fillEMuHists(StEMuPair*);
       void fillMuMuHists(StMuMuPair*);
+      void fillRunIndexHists(StElectronTrack*);
 
       bool passPartEQuality(double, int, int, double);
       bool partEIDCuts(StPartElectronTrack*);
@@ -108,6 +111,9 @@ class StMyAnaTreeMaker : public StMaker {
 		StAnaTree          *mAnaTree;
 
 		TString    mOutName;
+      TString mRunFileName;
+      map<Int_t,Int_t> mTotalRunId;
+      Int_t mTotalRun;
 
 		TFile*	   fout;
 		TF1 	*fPhiVm;
@@ -121,6 +127,12 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hVzdVz;
 		TH1F *hRefMultCut;
 		TH1F *hVertexZCut;
+		TH2F *hgRefMultvsZDCx;
+		TH2F *hgRefMultZDCvsRunIndex; 
+      vector<float> avgZDC;
+      vector<float> avgZDCCount;
+      vector<float> avgRefMult;
+      vector<float> avgRefMultCount;
 
 		TH2F *hNe;
 		TH2F *hNemu;
@@ -294,6 +306,15 @@ class StMyAnaTreeMaker : public StMaker {
       TH1F *hSMDMatchedTracks[2];
       TH1F *hSMDIdTracks[2];
 
+      //RunIndex
+      TH2F* hPvEvsRunIndex;
+      TH2F* hnEtavsRunIndex;
+      TH2F* hnPhivsRunIndex;
+      TH2F* hzDistvsRunIndex;
+      TH2F* hphiDistvsRunIndex;
+      TH2F* hadc0vsRunIndex;
+      TH2F* hbetavsRunIndex;
+
       TH1F *hTrigType;
 
 		//TH2F *hDenInvMassvsPtMixLikePosMB;
@@ -323,12 +344,14 @@ class StMyAnaTreeMaker : public StMaker {
         Bool_t      mHFTTrackCut;
 
         Float_t     mEPtCut[2];
+        Float_t     mEPPtCut[2];
         Float_t     mEEtaCut[2];
         Float_t     mEDcaCut[2];
         Float_t     mEInvBetaCut[2];
         Float_t     mELocalYCut[2];
         Float_t     mELocalZCut[2];
         Float_t     mEnSigECut[2];
+        Float_t     mEPnSigECut[2];
         Float_t     mHTEnSigECut[2];
 
         Float_t     mPEEtaCut[2];

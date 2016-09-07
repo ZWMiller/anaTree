@@ -27,13 +27,15 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    //-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
    cout<<"Trigger chosen: "<<trigSelect<<endl;
    anaMaker->setTrigSelect(trigSelect);
+   anaMaker->setRunList("./runNumberList_run15pAu");
+   anaMaker->setNumberOfRuns(900);
    anaMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
    anaMaker->addTrigger(500213,0);
    anaMaker->addTrigger(500201,0);
    anaMaker->addTrigger(500204,1);
    anaMaker->addTrigger(500214,1);
    anaMaker->addTrigger(500202,1);
-   anaMaker->addTrigger(500206,1);
+   //anaMaker->addTrigger(500206,1);
    anaMaker->addTrigger(500205,2);
    anaMaker->addTrigger(500215,2);
 	if(trigSelect==0){
@@ -41,8 +43,8 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
 		anaMaker->setVzDiffCut(-3,3);
 	}	
 	if(trigSelect==2||trigSelect==3){
-		anaMaker->setVzCut(-30,30);
-		anaMaker->setVzDiffCut(-3,3);
+	//	anaMaker->setVzCut(-30,30);
+	//	anaMaker->setVzDiffCut(-3,3);
 	}	
 
 	if(trigSelect==-1||trigSelect==4||trigSelect==5||trigSelect==6){

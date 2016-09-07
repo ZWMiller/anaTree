@@ -171,12 +171,12 @@ void makeAnaTree(const Int_t runnumber=16125039,
    ePurMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
    ePurMaker->addTrigger(500213,0);
    ePurMaker->addTrigger(500201,0);
-   ePurMaker->addTrigger(500204,1);
-   ePurMaker->addTrigger(500214,1);
    ePurMaker->addTrigger(500202,1);
-   //ePurMaker->addTrigger(500206,1);
+   //ePurMaker->addTrigger(459995,1);
    ePurMaker->addTrigger(500205,2);
    ePurMaker->addTrigger(500215,2);
+   ePurMaker->addTrigger(500008,4);
+   ePurMaker->addTrigger(500018,4);
    outputFile=mInputFileName;
 	outputFile.ReplaceAll("MuDst.root","anaTree.root");
 	
@@ -184,16 +184,17 @@ void makeAnaTree(const Int_t runnumber=16125039,
 	treeMaker->setTriggerSelection(prodMod); //0-mb, 1-ht, 2-mtd
    treeMaker->setPicoMode(1); //0-Run14 PicoDstMaker, 1-Run15+ PicoDstMaker
 	if(prodMod==0){
-		treeMaker->setVzCut(-8,8);
-		treeMaker->setVzDiffCut(-4,4);
+		treeMaker->setVzCut(-100,100);
+      treeMaker->setPhoEPairMassCut(0.35);
+      treeMaker->setSaveHadron(true);
       treeMaker->setInputRunList("./runNumberList_run15pAu");
-      treeMaker->addTrigger(480202);
+      treeMaker->addTrigger(500008,4);
+      treeMaker->addTrigger(500018,4);
    //   treeMaker->setInputRecenterFile("./recenter_correction.root");
-      treeMaker->setPhoEPairMassCut(0.2);
 	}	
 	if(prodMod==1){
 		treeMaker->setVzCut(-100,100);
-      treeMaker->setPhoEPairMassCut(0.24);
+      treeMaker->setPhoEPairMassCut(0.35);
       treeMaker->setSaveHadron(true);
       //treeMaker->setDoEvtPlane(false); //default is true
       if(prodType==0){ // prod low and mid
@@ -201,19 +202,14 @@ void makeAnaTree(const Int_t runnumber=16125039,
         treeMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
         treeMaker->addTrigger(500213,0);
         treeMaker->addTrigger(500201,0);
-        treeMaker->addTrigger(500204,1);
-        treeMaker->addTrigger(500214,1);
         treeMaker->addTrigger(500202,1);
-        treeMaker->addTrigger(500206,1);
+        treeMaker->addTrigger(459995,1);
         treeMaker->addTrigger(500205,2);
         treeMaker->addTrigger(500215,2);
+        treeMaker->addTrigger(500008,4);
+        treeMaker->addTrigger(500018,4);
         //    treeMaker->setInputRecenterFile("./recenter_correction.root");
         treeMaker->setMaxRunId(1700);
-      }
-      if(prodType==1){ // prod high
-      treeMaker->setInputRunList("./runNumberList_run15pAu");
-      //   treeMaker->setInputRecenterFile("./recenter_correction_ht_high.root");
-         treeMaker->setMaxRunId(1000); //need to check
       }
 	}
 	if(prodMod==2){
