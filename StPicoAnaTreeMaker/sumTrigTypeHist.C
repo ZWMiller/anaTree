@@ -1,4 +1,4 @@
-void sumTrigTypeHist(const Char_t *inputFile="processedRuns.list", TString outputFile="trigTypeHists.root", TString title="Run 15 pA 200 GeV")
+void sumTrigTypeHist(const Char_t *inputFile="processedRuns2.list", TString outputFile="trigTypeHists.root", TString title="Run 15 pp 200 GeV")
 {
   TH1::AddDirectory(kFALSE); // option needed to allow opening many files
 
@@ -43,6 +43,13 @@ void sumTrigTypeHist(const Char_t *inputFile="processedRuns.list", TString outpu
     trigOut[i]->SetLineWidth(2);
     trigOut[i]->GetXaxis()->SetRange(0,12);
     leg->AddEntry(trigOut[i],legName[i],"f");
+    if(i==0)
+    {
+      TString binLabel[11] = {"","","BHT0","BHT1","BHT2","MB","","MB*BHTX","BHT0*BHT1","BHT0*BHT2","BHT1*BHT2"};
+      for(int l=1; l<11;l++){
+        trigOut[i]->GetXaxis()->SetBinLabel(l,binLabel[l]);
+      }
+    }
     trigOut[i]->Draw((i==0)?"hist":"hist same");
     trigOut[i]->SetTitle(title);
   }
