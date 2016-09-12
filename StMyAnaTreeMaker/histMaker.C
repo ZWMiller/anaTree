@@ -81,6 +81,12 @@ void drawEventHists()
   refMult->GetXaxis()->SetRangeUser(0,150);
   refMult->Draw();
 
+  zdcQA->cd(1);
+  pretty1DHist(refMultZDCvsRunIndex,kRed,24);
+  refMultZDCvsRunIndex->Draw();
+  zdcQA->cd(2);
+  pretty1DHist(refMultvsZDCx,kRed,24);
+  refMultvsZDCx->Draw();
 }
 
 void drawPartECutEffic()
@@ -304,7 +310,7 @@ void prepareLabels()
   sampleLabel->AddText(textLabel);
   sprintf(textLabel,"%.2fM %s Events",nEvents,trigLabel);
   sampleLabel->AddText(textLabel);
-  sampleLabel->SetFillColor(kWhite);
+  sampleLabel->SetFillColorAlpha(kWhite,0);
   for(int ptbin=0; ptbin<numPtBins; ptbin++)
   {
     lbl[ptbin] = new TPaveText(.12,.83,.45,.88,Form("NB NDC%i",ptbin));
@@ -335,7 +341,7 @@ void drawInvMassHists()
     invMass->cd();
     gPad->SetLogy(0);
     pretty1DHist(eeInvMassAll[pairType],colors[pairType],20+pairType);
-    eeInvMassAll[pairType]->GetXaxis()->SetRangeUser(0.,0.5);
+    eeInvMassAll[pairType]->GetXaxis()->SetRangeUser(0.,0.25);
     eeInvMassAll[pairType]->Draw((pairType==0) ? "pe" : "same pe");
     leg->AddEntry(eeInvMassAll[pairType],legLab[pairType],"lpe"); 
     if(pairType==2) leg->Draw("same");
@@ -345,9 +351,9 @@ void drawInvMassHists()
       int activeCanvas = (int) ptbin/9;
       int activeBin = ptbin - activeCanvas*9; 
       invMassPt[activeCanvas]->cd(activeBin+1);
-      gPad->SetLogy();
+      gPad->SetLogy(0);
       pretty1DHist(eeInvMass[pairType][ptbin],colors[pairType],20+pairType);
-      eeInvMass[pairType][ptbin]->GetXaxis()->SetRangeUser(0.,0.5);
+      eeInvMass[pairType][ptbin]->GetXaxis()->SetRangeUser(0.,0.25);
       eeInvMass[pairType][ptbin]->Draw((pairType==0) ? "pe" : "same pe");
       lbl[ptbin]->Draw("same");
       if(pairType==2 && ptbin == 0) leg->Draw("same");
@@ -359,7 +365,7 @@ void drawInvMassHists()
     eeInvMassPt[pairType]->Draw("colz");
   }
   invMassVsPt->cd(4);
-  gPad->SetLogy();
+  gPad->SetLogy(0);
   TH1D* massSpectrum = tempMassSpec->ProjectionY();
   setTitleAndAxisLabels(massSpectrum,"Unlike Sign Mass Spectrum","M_{ee} (GeV/c^{2})","Counts");
   pretty1DHist(massSpectrum,kRed,20);
@@ -663,6 +669,8 @@ void prepareCanvas()
   
   eventHists = new TCanvas("eventHists","Event Level Hists",50,50,1050,1050);
   eventHists->Divide(1,2);
+  zdcQA = new TCanvas("zdcQA","ZDC QA Hists",50,50,1050,1050);
+  zdcQA->Divide(1,2);
   if(DEBUG) cout << "Canvas made." << endl;
 }
 
@@ -787,6 +795,10 @@ void getHistograms(TFile* f)
     }
   }
 
+  // ZDC Hists
+  refMultZDCvsRunIndex =  (TH2F*)f->Get("hgRefMultZDCvsRunIndex");
+  refMultvsZDCx =  (TH2F*)f->Get("hfRefMultvsZDCx");
+
   if(DEBUG) cout << "Get Hist." << endl;
 }
 
@@ -805,6 +817,7 @@ void getdNdpT()
   for(int i=0; i<3; i++)
   {
     TH1F* ptSpectra = ePt[i];//->Rebin(segs,histName[i],xbins);
+    ptSpectra->SetStats(0);
     pretty1DHist(ptSpectra,colors[i],20+i);
     leg->AddEntry(ptSpectra,legName[i],"lpe");
     ptSpectra->Scale(1./ptSpectra->GetXaxis()->GetBinWidth(5));
@@ -817,49 +830,6 @@ void getdNdpT()
   leg->Draw("same");
   sampleLabel->Draw("SAME");
 }
-/*void getdNdpT()
-{
-  Double_t pT[numPtBins], pTErr[numPtBins], num[2][numPtBins], numErr[2][numPtBins];
-  for(int ptbin=0; ptbin<numPtBins; ptbin++)
-  {
-    elecDcaForInt[ptbin] = (TH1D*)elecDcaPt->ProjectionY(Form("elecDcaForInt_%i",ptbin),elecDcaPt->GetXaxis()->FindBin(lowpt[ptbin]),elecDcaPt->GetXaxis()->FindBin(highpt[ptbin])-1); 
-    for(int etype=0;etype<3;etype++)
-    {
-      eeDcaForInt[etype][ptbin] = (TH1D*)eeDcaPt[etype]->ProjectionY(Form("eeDcaForInt_%i_%i",etype,ptbin),eeDcaPt[etype]->GetXaxis()->FindBin(lowpt[ptbin]),eeDcaPt[etype]->GetXaxis()->FindBin(highpt[ptbin])-1); 
-      if(etype==2)
-      {
-        eeDcaForInt[1][ptbin]->Add(eeDcaForInt[2][ptbin]);
-        eeDcaForInt[0][ptbin]->Add(eeDcaForInt[1][ptbin],-1.);
-      }
-    }
-    pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
-    pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
-    num[0][ptbin] = elecDcaForInt[ptbin]->Integral()/(pTErr[ptbin]*2.);
-    numErr[0][ptbin] = (num[0][ptbin]>0.) ? 1/sqrt(num[0][ptbin]) : 0.;
-    num[1][ptbin] = eeDcaForInt[0][ptbin]->Integral()/(pTErr[ptbin]*2.);
-    numErr[1][ptbin] = (num[1][ptbin]>1.) ? 1/sqrt(num[1][ptbin]) : 0.;
-    cout << "ptbin " << ptbin << " e: " << num[0][ptbin] << " ee: " << num[1][ptbin] << endl;
-  }
-  
-  TGraphErrors* dNdptIncl = new TGraphErrors(numPtBins,pT,num[0],pTErr,numErr[0]);
-  dNdptIncl->SetName("dNdptInclVsPt");
-  TGraphErrors* dNdptee = new TGraphErrors(numPtBins,pT,num[1],pTErr,numErr[1]);
-  dNdptee->SetName("dNdpteeVsPt");
-  dndpt->cd();
-  gPad->SetLogy();
-  prettyTGraph(dNdptIncl,kBlack,20,1,1e6);
-  prettyTGraph(dNdptee,kRed,20,1e-9,1e6);
-  TLegend* leg = new TLegend(.53,.74,.88,.88);
-  leg->AddEntry(dNdptIncl,"Inclusive Electron","lpe");
-  leg->AddEntry(dNdptee,"Photonic Electron","lpe");
-  dNdptIncl->SetTitle("Raw Electron Yield; P_{T} (GeV/c); dN/dp_{T}");
-  dNdptIncl->Draw("APE");
-  dNdptee->Draw("SAME PE");
-  sampleLabel->Draw("SAME");
-  leg->Draw("SAME");
-  dNdptIncl->Write();
-  dNdptee->Write();
-}*/
 
 void makeUnlikeMinusLikePartnerElectrons()
 {
@@ -959,6 +929,8 @@ void makePDF(const char* fileName)
     temp->Print(name);
   }
 
+  temp = zdcQA;
+  temp->Print(name);
   temp = invMass;
   temp->Print(name);
   temp = invMassVsPt;

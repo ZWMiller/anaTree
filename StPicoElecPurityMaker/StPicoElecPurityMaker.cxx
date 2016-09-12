@@ -174,10 +174,10 @@ void StPicoElecPurityMaker::DeclareHistograms() {
     hNTracks[tr] = new TH1F(Form("hNTracks_%i",tr),"Number of Tracks before (0) and after cuts (2);",10,0,10);
 
     //--------------------Eta Dependence Study----------------
-    int ndims = 5; //pT, nSigmaE, Eta, Centrality, Vz
-    int nbins[5] = {400,200,40,20,400};
-    double xmin[5] = {0,-nSigLim,-1,0,-100};
-    double xmax[5] = {20,nSigLim,1,20,100};
+    int ndims = 8; //pT, nSigmaE, Eta, Centrality, Vz, nsigpi, nsigp, nsigk
+    int nbins[8] = {400,200,40,20,400,200,200,200};
+    double xmin[8] = {0,-nSigLim,-1,0,-100,-nSigLim,-nSigLim,-nSigLim};
+    double xmax[8] = {20,nSigLim,1,20,100,nSigLim,nSigLim,nSigLim};
     mnSigmaE_SMD[tr][0]  = new THnSparseF(Form("nSigmaE_SMD_%i",tr),"nSigmaE nDim Hist",ndims,nbins,xmin,xmax);
     mnSigmaE_SMD2[tr][0] = new THnSparseF(Form("nSigmaE_SMD2_%i",tr),"nSigmaE nDim Hist",ndims,nbins,xmin,xmax);
     mnSigmaE_BEMC[tr][0] = new THnSparseF(Form("nSigmaE_BEMC_%i",tr),"nSigmaE nDim Hist",ndims,nbins,xmin,xmax);
@@ -400,7 +400,7 @@ Int_t StPicoElecPurityMaker::FillHistograms(Int_t trig, StPicoEvent* event)
       mcharge=track->charge();
       mdedx=track->dEdx();
 
-      if(mcharge==0||meta==0||mphi==0||mdedx==0/*||track->pMom().mag()!=0*/) continue; //remove neutral, untracked, or primary tracks
+//      if(mcharge==0||meta==0||mphi==0||mdedx==0/*||track->pMom().mag()!=0*/) continue; //remove neutral, untracked, or primary tracks
       hNTracks[trig]->Fill(4);
       if(track->isHFTTrack()){
         nhftmatchcount++;
@@ -430,7 +430,7 @@ Int_t StPicoElecPurityMaker::FillHistograms(Int_t trig, StPicoEvent* event)
 
       mdedx_Pt[trig]->Fill(mpt*mcharge,track->dEdx());
 
-      double sparseFill[5] = {mpt, nsige, meta, cent16_grefmult, event->primaryVertex().z()};
+      double sparseFill[8] = {mpt, nsige, meta, cent16_grefmult, event->primaryVertex().z(), nsigpi, nsigp, nsigk};
 
       // BEMC nSig
       if(passBEMCCuts(event, track, trig))
@@ -541,7 +541,7 @@ Int_t StPicoElecPurityMaker::dVzStudy(StPicoEvent* event){
     Double_t vztpc = event->primaryVertex().z();
     Double_t dvz = vzvpd - vztpc;
 
-    if(mcharge==0||meta==0||mphi==0||mdedx==0/*||track->pMom().mag()!=0*/) continue; //remove neutral, untracked, or primary tracks
+   // if(mcharge==0||meta==0||mphi==0||mdedx==0/*||track->pMom().mag()!=0*/) continue; //remove neutral, untracked, or primary tracks
 
     // BEMC nSig
     if(passBEMCCuts(event, track, trig))
@@ -612,7 +612,17 @@ Bool_t StPicoElecPurityMaker::passGoodTrack(StPicoEvent* event, StPicoTrack* tra
   double PtCut = 0.2;
 
   double mdca;
-  // Get DCA info
+  StThreeVectorF vertexPos = mPicoDst->event()->primaryVertex();
+  StPhysicalHelixD helix = track->helix();
+  StThreeVectorF dcaPoint = helix.at(helix.pathLength(vertexPos.x(), vertexPos.y()));
+  float dcaZ = (dcaPoint.z() - vertexPos.z())*10000.;
+  float dcaXY = (helix.geometricSignedDistance(vertexPos.x(),vertexPos.y()))*10000.;
+  double thePath = helix.pathLength(vertexPos);
+  StThreeVectorF dcaPos = helix.at(thePath);
+  mdca = fabs((dcaPos-vertexPos).mag());
+  
+  //// OLD METHOD OF GETTING DCA - REMOVED Sep 12, 2016 ZWM
+  /*// Get DCA info
   StThreeVectorF vertexPos;
   vertexPos = event->primaryVertex();
   StDcaGeometry *dcaG = new StDcaGeometry();
@@ -625,7 +635,7 @@ Bool_t StPicoElecPurityMaker::passGoodTrack(StPicoEvent* event, StPicoTrack* tra
   double dcaXY= ( (dcaPoint-vertexPos).x()*dcaP.y()-(dcaPoint-vertexPos).y()*dcaP.x() )/dcaP.perp();
   double dcaZ= dcaPoint.z() - vertexPos.z();
   mdca = dcamag;
-
+*/
   if(pt> PtCut && fhitsFit >= nhitsFitCut && fhitsdEdx >= nhitsdEdxCut && fithitfrac >= nhitsRatioCut && fabs(chargeq)>0 && fabs(feta) <= etaCut && mdca < dcaCut && mdca > 0.) return true;
   else return false;
 }

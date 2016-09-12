@@ -40,6 +40,7 @@
     TCanvas* nSigCutPlot;
     TCanvas* nSigMeanSig;
     TCanvas* dndpt;
+    TCanvas* zdcQA;
 
     TPaveText* lbl[numPtBins];
     TPaveText* sampleLabel;
@@ -96,6 +97,8 @@
     
     TH1F* refMult;
     TH1F* vertexZ;
+    TH2F* refMultZDCvsRunIndex;
+    TH2F* refMultvsZDCx;
 
     int trigSelect;
     char trigLabel[100];
