@@ -3,8 +3,8 @@
 
 <command>
 <!-- Set tags file directory -->
-setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/readAnaTree_HT1_2
-setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/out/readAnaTree_HT1_2
+setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/readAnaTree_HT2_4
+setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/out/readAnaTree_HT2_4
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
@@ -12,7 +12,7 @@ echo EMOUTPUT : $EMOUTPUT
 cp ${INPUTFILE0} .
 ls *.anaTree.root > processedRuns.list
 
-root4star -l -b -q 'StRoot/macros/readAnaTree.C(20000000,"processedRuns.list","${FILEBASENAME}.hists.root",2,false)'
+root4star -l -b -q 'StRoot/macros/readAnaTree.C(20000000,"processedRuns.list","${FILEBASENAME}.hists.root",3,false)'
 ls -la .
 
 <!-- Move LOG files and csh to star disk, remove list files -->

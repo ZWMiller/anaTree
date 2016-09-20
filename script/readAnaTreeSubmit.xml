@@ -4,15 +4,15 @@
 <command>
   starver SL16d
 <!-- Set tags file directory -->
-setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log 
-setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/out
+setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log 
+setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/out
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
 echo EMOUTPUT : $EMOUTPUT
 
 <!--root4star -l -b -q 'StRoot/macros/readAnaTree.C'-->
-root4star -l -b -q 'StRoot/macros/readAnaTree.C(500000000,"processedRuns.list","anaTree15.hists.root",2,false)'
+root4star -l -b -q 'StRoot/macros/readAnaTree.C(500000000,"processedRunsTest.list","anaTree15.hists.root",2,false)'
 ls -la .
 
 <!-- Move LOG files and csh to star disk, remove list files -->
@@ -22,7 +22,7 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 
 <SandBox installer="ZIP">
   <Package name="MyAnaTreeMaker">
-    <File>file:./processedRuns.list</File>
+    <File>file:./processedRunsTest.list</File>
     <File>file:./.sl64_gcc482</File>
     <File>file:./.sl64_gcc477</File>
     <File>file:./StRoot</File>
@@ -35,14 +35,14 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
 
 <!-- Define locations of log/elog files -->
-<stdout URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/$JOBID.log"/>
-<stderr URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/$JOBID.elog"/>
+<stdout URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/$JOBID.log"/>
+<stderr URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/$JOBID.elog"/>
 
 <!-- Input daq files -->
 <!--<input URL="file:/star/data01/pwg/zamiller/misAlignSim/05-27-2016-simmis/out8/rcf16001_*_fieldoff_misalign_sdt20141216_500evts.event.root"/>-->
 <!-- csh/list files -->
 <Generator>
-  <Location>/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v1_070616/readTreeOut/log/list</Location>
+  <Location>/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/list</Location>
 </Generator>
 
 </job>

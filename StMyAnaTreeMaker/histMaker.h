@@ -22,7 +22,9 @@
     TCanvas* dPhiPt[3][numCanvas];
     TCanvas* invMassPt[numCanvas];
     TCanvas* invMassVsPt;
+    TCanvas* delPhiDelEta;
     TCanvas* nSigEPt[numCanvas];
+    TCanvas* Run12Compare;
     TCanvas* invMass;
     TCanvas* ptCompare;
     TCanvas* cutEfficiency;
@@ -40,11 +42,13 @@
     TCanvas* nSigCutPlot;
     TCanvas* nSigMeanSig;
     TCanvas* dndpt;
+    TCanvas* zdcQA;
 
     TPaveText* lbl[numPtBins];
     TPaveText* sampleLabel;
 
     TH2F* eHadDelPhiPt[3];
+    TH2F* eHadDelPhiDelEta[3];
     TH2F* eeInvMassPt[3];
     TH2F* hadPtEPt;
     TH1F* ePt[3];
@@ -96,6 +100,8 @@
     
     TH1F* refMult;
     TH1F* vertexZ;
+    TH2F* refMultZDCvsRunIndex;
+    TH2F* refMultvsZDCx;
 
     int trigSelect;
     char trigLabel[100];
@@ -116,6 +122,7 @@
     bool checkIfFileOpen(TFile*);
     void getHistograms(TFile*);
     void pretty1DHist(TH1*, int, int);
+    void pretty2DHist(TH2*, int, int);
     void pretty1DHistFill(TH1*, int, int);
     void prettyTGraph(TGraphErrors*, int, int, float, float);
     void prettyTGraph(TGraph*, int, int, float, float);
@@ -132,7 +139,8 @@
     void drawPartECutEffic();
     void overlayEfficiencies();
     void drawPartEQA();
-    void getdNdpT();
+    void getdNdpT(TFile*);
+    void getRun12Hists(TFile* f12, TH1D* h[3]);
     void drawDeltaPhi(TH1D*, TCanvas*, float, int, TPaveText*);
     void drawCutEfficiencyHists();
     void computeEfficiencyAndDraw(int, TH1F*, TH1F*);
