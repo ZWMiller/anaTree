@@ -18,17 +18,25 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    gSystem->Load("StPicoDstMaker");
    gSystem->Load("StPicoAnaTreeMaker");
    gSystem->Load("StMyAnaTreeMaker");
+   gSystem->Load("StAnaTreeQAMaker");
 
    chain = new StChain();
 
+   TString runList = "./runNumberList_completed_run15pAu";
+   int number_of_runs = 0;
+   std::string line;
+   std::ifstream myfile(runList);
+   while (std::getline(myfile, line))
+     ++number_of_runs;
+
    StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(0,inputFile,0);
-   treeMaker->setInputRunList("./runNumberList_run15pAu");
+   treeMaker->setInputRunList(runList);
    StMyAnaTreeMaker *anaMaker = new StMyAnaTreeMaker("ana",treeMaker,outputFile,mixedEvent);
    //-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
    cout<<"Trigger chosen: "<<trigSelect<<endl;
    anaMaker->setTrigSelect(trigSelect);
-   anaMaker->setRunList("./runNumberList_run15pAu");
-   anaMaker->setNumberOfRuns(900);
+   anaMaker->setRunList(runList);
+   anaMaker->setNumberOfRuns(number_of_runs);
    anaMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
    anaMaker->addTrigger(500213,0);
    anaMaker->addTrigger(500201,0);
@@ -38,19 +46,26 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    //anaMaker->addTrigger(500206,1);
    anaMaker->addTrigger(500205,2);
    anaMaker->addTrigger(500215,2);
-	if(trigSelect==0){
-		anaMaker->setVzCut(-6,6);
-		anaMaker->setVzDiffCut(-3,3);
-	}	
-	if(trigSelect==2||trigSelect==3){
-	//	anaMaker->setVzCut(-30,30);
-	//	anaMaker->setVzDiffCut(-3,3);
-	}	
+   if(trigSelect==0){
+     anaMaker->setVzCut(-6,6);
+     anaMaker->setVzDiffCut(-3,3);
+   }	
+   if(trigSelect==2||trigSelect==3){
+     //	anaMaker->setVzCut(-30,30);
+     //	anaMaker->setVzDiffCut(-3,3);
+   }	
 
-	if(trigSelect==-1||trigSelect==4||trigSelect==5||trigSelect==6){
-		anaMaker->setVzCut(-100,100);
-		anaMaker->setVzDiffCut(-3,3);
-	}
+   if(trigSelect==-1||trigSelect==4||trigSelect==5||trigSelect==6){
+     anaMaker->setVzCut(-100,100);
+     anaMaker->setVzDiffCut(-3,3);
+   }
+
+   TString qaOutName = outputFile;
+   qaOutName.ReplaceAll("anaTree","qa");
+   StAnaTreeQAMaker* qaMaker = new StAnaTreeQAMaker("qa",treeMaker,qaOutName.Data());
+   qaMaker->setRunList(runList);
+   qaMaker->setNumberOfRuns(number_of_runs);
+   
 	chain->Init();
 	cout<<"chain->Init();"<<endl;
 	int total = treeMaker->chain()->GetEntries();
