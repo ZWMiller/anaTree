@@ -22,7 +22,8 @@ void setpad(TVirtualPad *pad,float left, float right, float top, float bottom, i
 TLegend* myLeg(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup,Int_t textFont=42,Double_t textSize=0.05);
 bool isHFT(TString name);
 bool isRunIndex(TString name);
-TH1F* makeMeanHist(TH2F* h, float &currentHistStDev);
+TH1F* makeMeanHist(TH2F* h, float &currentHistStDev, TString outpdf);
+void getErrorVal(TH1* h, TH2* h2, float& curretHistStDev, float& newMean, float lowLim, float highLim, TString outpdf);
 TH1F* findBadRuns(TH1F* h, float lowLim, float highLim, int* runList, TPaveText* lbl, TString badRunList);
 bool getRunList(int* runList);
 void addToBadRunList(int run, TString badRunList);
@@ -122,9 +123,9 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
     tLabel.SetTextSize(0.05);
     TString label = "Mean #pm 4*RMS";
 
-    TPaveText* brLabel = new TPaveText(.40,.68,.65,.89,"NB NDC");
+    TPaveText* brLabel = new TPaveText(.40,.64,.65,.89,"NB NDC");
     brLabel->SetFillColorAlpha(kWhite,0);
-    brLabel->SetTextSize(0.05);
+    brLabel->SetTextSize(0.03);
     brLabel->SetTextColor(kMagenta);
     brLabel->SetTextAlign(11);
     
@@ -137,10 +138,10 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
           if(isHFT(tName)||!isRunIndex(tName)) continue;
           if(!strcmp(t->ClassName(),"TH2D")||!strcmp(t->ClassName(),"TH2F")||!strcmp(t->ClassName(),"TH2S")){
                 TH2F *h2 = (TH2F*)t;
-                TH1F* hM1 = makeMeanHist(h2,currentHistStDev);
-                TF1* poly = new TF1("poly","pol0",0,833);
-                TF1* polyH = new TF1("polyH","pol0",0,833);
-                TF1* polyL = new TF1("polyL","pol0",0,833);
+                TH1F* hM1 = makeMeanHist(h2,currentHistStDev,outpdf);
+                TF1* poly = new TF1("poly","pol0",0,832);
+                TF1* polyH = new TF1("polyH","pol0",0,832);
+                TF1* polyL = new TF1("polyL","pol0",0,832);
                 poly->SetLineColor(kRed);
                 polyH->SetLineColor(kRed);
                 polyL->SetLineColor(kRed);
@@ -148,12 +149,8 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
                 polyL->SetLineStyle(9);
                 hM1->Fit("poly","RWQ");
                 float p0 = poly->GetParameter(0);
-                float err = currentHistStDev;//poly->GetParError(0);
-                polyH->SetParameter(0,p0+4*err);
-                polyL->SetParameter(0,p0-4*err);
+                float err = currentHistStDev;
 
-                brLabel->Clear();
-                brLabel->AddText("Bad Runs:");
 
                 TH1F* hM1c = (TH1F*)hM1->Clone("hM1c");
                 TCanvas *c2 = new TCanvas("c2", "c2",0,0,1000,1000);
@@ -163,13 +160,28 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
                 polyH->Draw("same");
                 polyL->Draw("same");
                 tLabel.DrawLatex(0.16,0.85,label);
-                hM1->GetYaxis()->SetRangeUser(p0-5*err,p0+5*err);
                 TH1F* badRuns = findBadRuns(hM1,p0-4*err,p0+4*err, runList, brLabel, badRunList);
+                double newMean = p0;
+                for(int iter=0; iter<4; iter++)
+                {
+                  brLabel->Clear();
+                  brLabel->AddText("Bad Runs:");
+                  getErrorVal(hM1, h2, currentHistStDev, newMean, newMean-4*err, newMean+4*err,  outpdf); 
+                  err = currentHistStDev;
+                  badRuns = findBadRuns(hM1,newMean-4*err,newMean+4*err, runList, brLabel, badRunList);
+                }
+                c2->cd(1);
+                badRuns->GetYaxis()->SetRangeUser(newMean-9*err,newMean+9*err);
                 badRuns->Draw("same pe");
                 brLabel->Draw("same");
+                polyH->SetParameter(0,newMean+4*err);
+                polyL->SetParameter(0,newMean-4*err);
+                polyH->Draw("same");
+                polyL->Draw("same");
                 
                 c2->cd(2);
                 hM1->SetStats(kFALSE);
+                hM1->GetYaxis()->SetRangeUser(p0-8*err,p0+8*err);
                 hM1->Draw("pe");
                 polyH->Draw("same");
                 polyL->Draw("same");
@@ -178,6 +190,7 @@ void makeRunIndexQA(const char* FileName="test.picoHFMyAnaMaker.root")
                 nFig++;
                 temp = c2;
                 temp->Print(Form("%s.pdf",outpdf.Data()));
+                c2->Delete();
             }
             if(!strcmp(t->ClassName(),"TH1D")||!strcmp(t->ClassName(),"TH1F")||!strcmp(t->ClassName(),"TH1S")){
               continue;
@@ -217,12 +230,15 @@ TH1F* findBadRuns(TH1F* h, float lowLim, float highLim, int* runList, TPaveText*
   TH1F* newH = new TH1F("name","title",maxBins,lowX,highX);
   for(int i=1;i<maxBins+1;i++)
   {
+    if(i>=832) continue;
     float binval = h->GetBinContent(i);
-    if(binval <= lowLim || binval >= highLim)
+    if(binval <= lowLim || binval >= highLim && i <= 831)
     {
       newH->SetBinContent(i,binval+1e-6);
-      if(i<=834 && (highLim !=0 || lowLim != 0)){
+      //h->SetBinContent(i,1e7);
+      if(i<=831 && (highLim !=0 || lowLim != 0)){
         addToBadRunList(runList[i-1], badRunList);
+        if(runList[i-1] == 0) cout << "0 caused by id: " << i-1 << endl;
         lbl->AddText(Form("%i",runList[i-1]));
         cout << "badrun: " << runList[i-1] << endl;
       }
@@ -255,7 +271,7 @@ void addToBadRunList(int run, TString badRunList)
 bool getRunList(int* runList)
 {
   ifstream indata;
-  indata.open("runNumberList_run15pAu");
+  indata.open("runNumberList_run15pA_BACKUP092016");
   if(indata.is_open()){
     cout<<"read in total run number list and recode run number ...";
     Int_t runnum;
@@ -275,52 +291,81 @@ bool getRunList(int* runList)
 
 }
 
-TH1F* makeMeanHist(TH2F* h, float &currentHistStDev)
+TH1F* makeMeanHist(TH2F* h, float &currentHistStDev, TString outpdf)
 {
+  
   int maxBins = h->GetXaxis()->GetNbins();
-  float* means[1000] = {0.};
-  float averageVal = 0;
   int lowX = h->GetXaxis()->GetBinLowEdge(1);
   int highX = h->GetXaxis()->GetBinUpEdge(maxBins);
   int maxBinsY = h->GetYaxis()->GetNbins();
   float lowY = h->GetYaxis()->GetBinLowEdge(1);
   float highY = h->GetYaxis()->GetBinUpEdge(maxBinsY);
   
-  std::ostringstream oss,oss2;
+  std::ostringstream oss,oss2,oss3,oss4;
   oss << h->GetName() << ";" << h->GetXaxis()->GetTitle() << ";Mean " << h->GetYaxis()->GetTitle();
+  oss4 << h->GetName() << "_getErr;" << h->GetYaxis()->GetTitle() << ";Counts";
   TString title = oss.str();
+  TString title2 = oss4.str();
   oss2 << h->GetName() << "_MEAN";
+  oss3 << h->GetName() << "_getErr";
   TString name = oss2.str();
+  TString name2 = oss3.str();
   TH1F* newH = new TH1F(name,title,maxBins,lowX,highX);
-  TH1F* getErr = new TH1F("getErr","getErr",maxBinsY,lowY,highY);
   newH->Sumw2();
 
   for(int i=0;i<maxBins;i++)
   {
      TH1D* tempH = h->ProjectionY("tempH",i+1,i+2);
      Double_t mean = tempH->GetMean();
-     newH->SetBinContent(i,mean);
-     getErr->Fill(mean);
-     means[i] = mean;
-     averageVal+=mean;
+     if(i < 832){
+       newH->SetBinContent(i,mean);
+     }
   }
-  averageVal = averageVal/(float)maxBins;
-  for(int i=0;i<maxBins;i++)
-  {
-    if(i < 833)
-      currentHistStDev += (means[i]-averageVal)*(means[i]-averageVal);
-  }
-  currentHistStDev = currentHistStDev/(float)maxBins;
-  currentHistStDev = sqrt(currentHistStDev);
-  //TF1* gau = new TF1("gau","gaus");
-  //getErr->Fit("gau");
-  //currentHistStDev = gau->GetParameter(2);
-  currentHistStDev = getErr->GetRMS();
+  TF1* polT = new TF1("polT","pol0",0,832);
+  newH->Fit("polT","RWQ");
+  float p0 = polT->GetParameter(0);
+  float newMean = p0;
+  getErrorVal(newH,h,currentHistStDev, newMean, -1e6, 1e6, outpdf);
   newH->SetMarkerStyle(20);
   newH->SetMarkerColor(kBlack);
   newH->SetMarkerSize(0.7);
   newH->GetYaxis()->SetRangeUser(lowY,highY);
   return newH;
+}
+
+void getErrorVal(TH1* h, TH2* h2, float& currentHistStDev, float& newMean, float lowLim, float highLim, TString outpdf)
+{
+  TCanvas *c3 = new TCanvas("c3", "c3",0,0,1000,1000);
+  int maxBins = h->GetXaxis()->GetNbins();
+  int lowX = h->GetXaxis()->GetBinLowEdge(1);
+  int highX = h->GetXaxis()->GetBinUpEdge(maxBins);
+  int maxBinsY = h2->GetYaxis()->GetNbins();
+  float lowY = h2->GetYaxis()->GetBinLowEdge(1);
+  float highY = h2->GetYaxis()->GetBinUpEdge(maxBinsY);
+
+  std::ostringstream oss,oss2,oss3,oss4;
+  oss4 << h2->GetName() << "_getErr;" << h2->GetYaxis()->GetTitle() << ";Counts";
+  TString title2 = oss4.str();
+  oss3 << h2->GetName() << "_getErr";
+  TString name2 = oss3.str();
+  TH1F* getErr = new TH1F(name2,title2,10*maxBinsY,lowY,highY);
+
+  for(int i=1;i<maxBins;i++)
+  {
+    double val = h->GetBinContent(i);
+    if(val >= lowLim && val <= highLim && val != 0)
+    //if(fabs(val) < 1e6 && val != 0)
+      getErr->Fill(val);
+  }
+  currentHistStDev = getErr->GetRMS();
+  newMean = getErr->GetMean();
+  c3->cd();
+  gStyle->SetOptStat(111100);
+  getErr->SetStats(kTRUE);
+  getErr->Draw();
+  c3->Print(Form("%s.pdf",outpdf.Data()));
+  c3->Delete();
+ 
 }
 
 bool isHFT(TString name)
@@ -378,7 +423,7 @@ setstyle()
 {
     TStyle* myStyle = new TStyle("myStyle","Styles");
     myStyle->SetPalette(1,0); // avoid horrible default color scheme
-    myStyle->SetOptStat("e");
+    myStyle->SetOptStat(111100);
     myStyle->SetOptTitle(1);
     myStyle->SetOptDate(0);
     myStyle->SetLabelSize(0.045,"xyz"); // size of axis value font
