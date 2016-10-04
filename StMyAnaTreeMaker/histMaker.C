@@ -158,7 +158,7 @@ void calculateCrossSection()
   TH1F* ptSpectra[3];
   TString histName[3] = {"inclusivePt","USPt","LSPt"}; 
   float dEta = 1.4; // 0.7 - (-0.7)
-  float NSD = 30; // NonSingleDiffractive 30mb +/- 2.4
+  float NSD = 30e-3; // NonSingleDiffractive 30mb +/- 2.4  (xiaozhi Run12 slides)
   int numEvents = vertexZ->Integral();  
 
   Double_t xbins[numPtBinsEFF2];
@@ -169,45 +169,62 @@ void calculateCrossSection()
     ptSpectra[i] = (TH1F*)ePt[i]->Rebin(segs,histName[i],xbins);
     ptSpectra[i]->SetStats(0);
   }
-  //////// 
-  // NPE = Inclusive*purity - (US-LS)/PhoRecoEff
-  // XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*NSD_XS
-  ////////
+  TH1F* ptMult = new TH1F("ptMult","ptMult",100,0,20);
+  TH1F* axes = new TH1F("axes","axes",100,0,20);
+  axes->SetStats(0);
+  TH1F* ptMul = (TH1F*)ptMult->Rebin(segs,histName[i],xbins);
+  for(int ii=0;ii<numPtBinsEFF2-1;ii++){
+    float ptval = (xbins[ii+1]+xbins[ii])/2.;
+    ptMul->SetBinContent(ii+1, ptval);
+  }
+  
+  //////////////////////////////////////////////////////////////////
+  ////  NPE = Inclusive*purity - (US-LS)/PhoRecoEff             ////
+  ////  XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*NSD_XS  ////
+  //////////////////////////////////////////////////////////////////
   ptSpectra[0]->Multiply(purity[trigSelect-1]);
   ptSpectra[1]->Add(ptSpectra[2],-1.);
   ptSpectra[1]->Divide(effPHEReco);
   ptSpectra[0]->Add(ptSpectra[1],-1.);
 
-  TLegend* leg = new TLegend(0.4,0.68,0.77,0.89);
+  TLegend* leg = new TLegend(0.5,0.68,0.87,0.89);
   TString histLab[2] = {"Non-Photonic Electrons","Photonic Electrons"};
   npeYield->cd(1);
   gPad->SetLogy(1);
+  axes->GetYaxis()->SetRangeUser(100,1e7);
+  axes->DrawClone("pe");
   for(int i=0;i<2;i++){
-    ptSpectra[i]->SetTitle("NPE Yield;p_{T} (GeV/c); dN/dpT");
+    axes->SetTitle("NPE Yield;p_{T} (GeV/c); dN/dpT");
     pretty1DHist(ptSpectra[i],colors[i],20+i);
     leg->AddEntry(ptSpectra[i],histLab[i],"lpe");
-    ptSpectra[i]->Draw((i==0)?"pe":"same pe");
+    ptSpectra[i]->Draw("same pe");
   }
   leg->Draw("same");
   npeYield->cd(2);
   TH1F* npeDivPE = (TH1F*)ptSpectra[0]->Clone();
   npeDivPE->Divide(ptSpectra[1]);
-  npeDivPE->SetTitle("NPE/PE;p_{T} (GeV/c);Ratio NPE/PE");
-  npeDivPE->Draw();
+  axes->SetTitle("NPE/PHE;p_{T} (GeV/c);Ratio NPE/PHE");
+  axes->GetYaxis()->SetRangeUser(0,3);
+  axes->DrawClone("pe");
+  npeDivPE->Draw("same pe");
 
   NPEYield = (TH1F*)ptSpectra[0]->Clone();
   NPECrossSection = (TH1F*)ptSpectra[0]->Clone();
 
-  NPECrossSection->Scale(NSD/(2*3.1415926*dEta*numEvents));
+  NPECrossSection->Scale(NSD/(2*TMath::Pi()*dEta*numEvents));
   NPECrossSection->Scale(1.,"width"); // divide each bin by its width
-  NPECrossSection->Divide(totalEff);
-  NPECrossSection->GetXaxis()->SetRangeUser(1.49,15.01);
-  NPECrossSection->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
+  NPECrossSection->Divide(totalEff);  // divide by efficiency for finding electron
+  NPECrossSection->Divide(ptMul);     // divide by pT (why? This is what Xiaozhi does and Run 08 analysis)
+  axes->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
 
   pretty1DHist(NPECrossSection,colors[1],24);
   crossSection->cd();
   gPad->SetLogy(1);
-  NPECrossSection->Draw("pe");
+  gPad->SetLeftMargin(0.15);
+  axes->GetYaxis()->SetTitleOffset(1.5);
+  axes->GetYaxis()->SetRangeUser(1e-11,1e-2);
+  axes->DrawClone("pe");
+  NPECrossSection->Draw("same pe");
   return;
 }
 
@@ -615,10 +632,10 @@ void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, 
   leg->AddEntry(sg,"Sigma","lpe");
   sg->SetTitle("n#sigma_{e} Fit Values;P_{T} (GeV/c);");
   nSigMeanSig->cd();
+  //sg->Fit("pol1","R","",1.3,6.);
   sg->Draw("APE");
-  sg->Fit("pol1","R","",1.3,6.);
+  //mn->Fit("pol1","R","",1.3,6.);
   mn->Draw("SAME PE");
-  mn->Fit("pol1","R","",1.3,6.);
   leg->Draw("SAME");
   //mn->Write();
   //sg->Write();
@@ -1035,10 +1052,14 @@ void getdNdpT(TFile* f12)
     {
       TH1F* r15 = (TH1F*)ePt[i]->Clone();
       TH1F* r12 = (TH1F*)run12Hists[i]->Clone();
-      double r15i = r15->Integral();
-      double r12i = r12->Integral();
+      double r15i = r15->Integral(r15->FindBin(4.),r15->FindBin(10.));
+      double r12i = r12->Integral(r12->FindBin(4.),r12->FindBin(10.));
       r12->Scale(r15i/r12i);
       r15->SetTitle("Run Comparison - Scaled to Match Run 15 Yield");
+      TPaveText* normLabel = new TPaveText(.11,.83,.5,.89,"NB NDC");
+      normLabel->AddText(Form("Normalization Factor: %.3f",r15i/r12i));
+      normLabel->SetFillColorAlpha(kWhite,0);
+      
       Run12Compare->cd(i+1);
       gPad->SetLogy(1);
       r15->Draw("pe");
@@ -1047,6 +1068,7 @@ void getdNdpT(TFile* f12)
       leg12->AddEntry(r15, legName[i], "lpe");
       leg12->AddEntry(r12, legName12[i], "lpe");
       leg12->Draw("same");
+      normLabel->Draw("same");
       TH1F* ratio = (TH1F*)r15->Clone();
       ratio->Divide(r12);
       ratio->SetTitle(Form("Ratio of Run 15 to Run 12 %s;p_{T} (GeV/c);R15/R12 Normalized Yields",legName[i].Data()));
