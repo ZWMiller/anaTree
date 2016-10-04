@@ -294,7 +294,7 @@ class StMyAnaTreeMaker : public StMaker {
       TH2F *hHadEEDelPhiPt_US;
       TH2F *hHadPtEPt;
       TH2F *hHadEDelPhiDelEta[3];
-      TH2F *electronEtaPhi[11];
+      TH2F *electronEtaPhi[12];
 
       //Partner Electron Hists for Pure Electron Sample
       TH2F *hNSigEPartElec[2];

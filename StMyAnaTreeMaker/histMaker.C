@@ -5,6 +5,10 @@ bool compareRun12 = kTRUE;
 
 void histMaker(const char* fileName="test", int trg=1)
 {
+  // Set options at large
+  TH1::AddDirectory(kFALSE);
+  TH1::SetDefaultSumw2(kTRUE);
+
   trigSelect = trg; // tell analyze what sample, see getTriggerLabel()
   getTriggerLabel();
 
@@ -12,15 +16,7 @@ void histMaker(const char* fileName="test", int trg=1)
   TFile* f = new TFile(fileName, "READ");
   TFile* f12 = new TFile("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/Run12RootFile/hist_5_2.root","READ");
   bool inFile = checkIfFileOpen(f);
-  stringstream ss;
-  TString outfile; 
-  ss << fileName;
-  ss >> outfile;
-  outfile.ReplaceAll(".root",Form("%s_processed.root",trigLabel));
-  TFile* oF = new TFile(outfile, "RECREATE");
-  bool outFile = checkIfFileOpen(oF);
-  if(!inFile || !outFile) exit(1);
-
+  if(!inFile) exit(1);
 
   getHistograms(f);
   declareHistograms();
@@ -41,17 +37,18 @@ void histMaker(const char* fileName="test", int trg=1)
     gPad->SetLogz(1);
     eHadDelPhiDelEta[etype]->Draw("colz");
   }
-  
 
   drawEventHists();
   drawInvMassHists();
-  //drawQAHists();
+  drawQAHists();
   drawCutEfficiencyHists();
   getdNdpT(f12);
+  getCorrections();
+  calculateCrossSection();
   makePDF(fileName);
+  writeHistsToOutFile(fileName);
   if(f12->IsOpen()) f12->Close();
   f->Close();
-  oF->Close();
 }
 
 bool checkIfFileOpen(TFile* f)
@@ -64,17 +61,168 @@ bool checkIfFileOpen(TFile* f)
   return true;
 }
 
+void writeHistsToOutFile(const char* fileName)
+{
+  stringstream ss;
+  TString outfile; 
+  ss << fileName;
+  ss >> outfile;
+  outfile.ReplaceAll(".root",Form("_processed.root",trigLabel));
+  TFile* oF = new TFile(outfile, "RECREATE");
+  bool outFile = checkIfFileOpen(oF);
+  if(!outFile){
+    cout << "No Outfile made!" << endl;
+    return;
+  }
+  for(int i=0; i<3; i++){
+    ePt[i]->Write();
+  }
+  oF->Close();
+  return;
+}  
+
+void getCorrections(){
+  // From Run 12
+  TFile *infile_Trigger =new TFile("run12Corrections/TrigEfficiency_HT.root","read");
+  TFile *infile_Tracking =new TFile("run12Corrections/Tracking_efficiency_HT.root","read");
+  TFile *infile_PHE_re =new TFile("run12Corrections/Photonic_re_Efficiency.root","read");
+
+  effTrigger[0]=(TH1F *) infile_Trigger->Get("TrigEfficiency_HT0");
+  effTrigger[1]=(TH1F *) infile_Trigger->Get("TrigEfficiency_HT2");
+  effTracking=(TH1F *) infile_Tracking->Get("Tracking_efficiency_HT");
+  effPHEReco=(TH1F *) infile_PHE_re->Get("PHE_re_efficiency");
+
+  // From Run 15
+  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_SMD2_processed.root","read");
+  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_SMD2_processed.root","read");
+
+  TGraphErrors* purityTG0 = (TGraphErrors*)infile_purity1->Get("drawPurityFit_0_0");
+  TGraphErrors* purityTG1 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
+
+  TH1F* purityT0 = convertTGraphErrorsToTH1(purityTG0, 100, 0, 20, "PurityT0", "Purity HT1");
+  TH1F* purityT1 = convertTGraphErrorsToTH1(purityTG1, 100, 0, 20, "PurityT1", "Purity HT2");
+
+  Double_t xbins[numPtBinsEFF2];
+  int segs = numPtBinsEFF2-1;
+  for(int ii=0;ii<numPtBinsEFF2;ii++) xbins[ii] = lowptEFF2[ii];
+  purity[0] = (TH1F*)purityT0->Rebin(segs,"purity_HT1",xbins);
+  purity[1] = (TH1F*)purityT1->Rebin(segs,"purity_HT2",xbins);
+  effnSigE  = (TH1F*)efnSigE ->Rebin(segs,"effnSigE",xbins);
+
+  TH1F* temp0[6] = {effTrigger[trigSelect-1], effTracking, effnSigE, partECutEfficiency[3], purity[trigSelect-1], effPHEReco};
+  TH1F* temp[6];
+
+  char legName[6][100] = {"Trigger Efficiency", "Tracking Efficiency", "nSigmaE Efficiency", "BEMC/SMD eID Efficiency","Electron Purity", "Photonic Rec. Efficiency"};
+  TLegend* leg = new TLegend(0.45,0.68,0.88,0.89);
+
+  efficiencies->cd();
+  for(int i=0; i<6; i++){
+    // Rebin so all have the same binning
+    temp[i] = (TH1F*) temp0[i]->Rebin(segs,legName[i],xbins);
+    // make the total eff hist
+    if(i==0)
+      totalEff = (TH1F*)temp[i]->Clone();
+    else if(i < 4) // combine tracking, trigger and eID efficiency 
+      totalEff->Multiply(temp[i]);
+
+    // draw individual eff
+    pretty1DHist(temp[i],colors[i%5],20+i);
+    temp[i]->GetYaxis()->SetRangeUser(0,1.5);
+    temp[i]->SetTitle("Correction and Efficiencies;p_{T} (GeV/c); Efficiency");
+    temp[i]->Draw((i==0)?"pe":"same pe");
+    leg->AddEntry(temp[i],legName[i],"lpe");
+    if(i==3)leg->AddEntry(totalEff,"Total Electron Efficiency Correction","pe");
+  }
+  pretty1DHist(totalEff,colors[2],20);
+  totalEff->SetMarkerSize(1.4);
+  totalEff->Draw("pe same");
+  leg->Draw("same");
+  return;
+}
+
+TH1F* convertTGraphErrorsToTH1(TGraphErrors* tg, int bins, float xlow, float xhigh, TString name, TString title)
+{
+  TH1F* h = new TH1F(name, title, bins, xlow, xhigh);
+  int numPoints = tg->GetN();
+  const int nPoints = numPoints;
+  double ax[nPoints], ay[nPoints];
+  for(int i=0; i<numPoints; i++)
+  {
+    tg->GetPoint(i,ax[i],ay[i]);
+    h->SetBinContent(h->GetXaxis()->FindBin(ax[i]),ay[i]);
+  }
+  return h;
+}
+void calculateCrossSection()
+{
+  TH1F* ptSpectra[3];
+  TString histName[3] = {"inclusivePt","USPt","LSPt"}; 
+  float dEta = 1.4; // 0.7 - (-0.7)
+  float NSD = 30; // NonSingleDiffractive 30mb +/- 2.4
+  int numEvents = vertexZ->Integral();  
+
+  Double_t xbins[numPtBinsEFF2];
+  int segs = numPtBinsEFF2-1;
+  for(int ii=0;ii<numPtBinsEFF2;ii++) xbins[ii] = lowptEFF2[ii];
+  for(int i=0; i<3; i++)
+  {
+    ptSpectra[i] = (TH1F*)ePt[i]->Rebin(segs,histName[i],xbins);
+    ptSpectra[i]->SetStats(0);
+  }
+  //////// 
+  // NPE = Inclusive*purity - (US-LS)/PhoRecoEff
+  // XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*NSD_XS
+  ////////
+  ptSpectra[0]->Multiply(purity[trigSelect-1]);
+  ptSpectra[1]->Add(ptSpectra[2],-1.);
+  ptSpectra[1]->Divide(effPHEReco);
+  ptSpectra[0]->Add(ptSpectra[1],-1.);
+
+  TLegend* leg = new TLegend(0.4,0.68,0.77,0.89);
+  TString histLab[2] = {"Non-Photonic Electrons","Photonic Electrons"};
+  npeYield->cd(1);
+  gPad->SetLogy(1);
+  for(int i=0;i<2;i++){
+    ptSpectra[i]->SetTitle("NPE Yield;p_{T} (GeV/c); dN/dpT");
+    pretty1DHist(ptSpectra[i],colors[i],20+i);
+    leg->AddEntry(ptSpectra[i],histLab[i],"lpe");
+    ptSpectra[i]->Draw((i==0)?"pe":"same pe");
+  }
+  leg->Draw("same");
+  npeYield->cd(2);
+  TH1F* npeDivPE = (TH1F*)ptSpectra[0]->Clone();
+  npeDivPE->Divide(ptSpectra[1]);
+  npeDivPE->SetTitle("NPE/PE;p_{T} (GeV/c);Ratio NPE/PE");
+  npeDivPE->Draw();
+
+  NPEYield = (TH1F*)ptSpectra[0]->Clone();
+  NPECrossSection = (TH1F*)ptSpectra[0]->Clone();
+
+  NPECrossSection->Scale(NSD/(2*3.1415926*dEta*numEvents));
+  NPECrossSection->Scale(1.,"width"); // divide each bin by its width
+  NPECrossSection->Divide(totalEff);
+  NPECrossSection->GetXaxis()->SetRangeUser(1.49,15.01);
+  NPECrossSection->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
+
+  pretty1DHist(NPECrossSection,colors[1],24);
+  crossSection->cd();
+  gPad->SetLogy(1);
+  NPECrossSection->Draw("pe");
+  return;
+}
+
 void drawQAHists()
 {
   ptCompare->cd();
   gPad->SetLogz(1);
   hadPtEPt->Draw("colz");
-  
+
   drawHadQA();
   drawElecQA();
   drawEEQA();
   drawPartEQA();
   drawPartECutEffic();
+  drawnSigE();
 }
 
 void drawEventHists()
@@ -94,7 +242,6 @@ void drawEventHists()
   TF1* refZDCFit = new TF1("refZDCFit","pol2");
   refZDCFit->SetLineColor(kRed);
   refMultvsZDCx->Fit("refZDCFit");
-  
   zdcQA->cd(2);
   pretty2DHist(refMultZDCvsRunIndex,kRed,24);
   refMultZDCvsRunIndex->Draw(); 
@@ -151,7 +298,6 @@ void drawPartECutEffic()
     }
   }
   overlayEfficiencies();
-  drawnSigE();
 }
 
 void overlayEfficiencies()
@@ -236,8 +382,6 @@ void drawEEQA()
   eePhivMassLS->Add(eePhivMass[2]);
   eeQAPhiv->cd(4);
   eePhivMassLS->Draw("colz");
-
-  
 }
 
 void drawElecQA()
@@ -300,6 +444,7 @@ void pretty1DHist(TH1* h, int col, int style)
   h->SetLineColor(col);
   h->SetMarkerStyle(style);
   h->SetMarkerSize(1.2);
+  h->SetTitleOffset(1.2,"y");
 }
 
 void pretty2DHist(TH2* h, int col, int style)
@@ -307,6 +452,7 @@ void pretty2DHist(TH2* h, int col, int style)
   //h->SetMarkerColor(col);
   h->SetMarkerStyle(style);
   h->SetMarkerSize(1.2);
+  h->SetTitleOffset(1.2,"y");
 }
 
 void pretty1DHistFill(TH1* h, int col, int style)
@@ -315,6 +461,7 @@ void pretty1DHistFill(TH1* h, int col, int style)
   h->SetMarkerStyle();
   h->SetFillStyle(style);
   h->SetFillColor(col);
+  h->SetTitleOffset(1.2,"y");
 }
 
 void prepareLabels()
@@ -473,8 +620,8 @@ void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, 
   mn->Draw("SAME PE");
   mn->Fit("pol1","R","",1.3,6.);
   leg->Draw("SAME");
-  mn->Write();
-  sg->Write();
+  //mn->Write();
+  //sg->Write();
 }
 
 void getnSigEeff()
@@ -506,26 +653,27 @@ void getnSigEeff()
       Gaus->SetParameter(2,sigma1);
       nSigEeff[ptbin]->Fill((1.0*Gaus->Integral(-1.,3.))/(1.0*Gaus->Integral(-3.5,3.5)));
     }
-      int activeCanvas = (int) ptbin/9;
-      int activeBin = ptbin - activeCanvas*9; 
-      TF1 *gaus2=new TF1("gaus2","gausn",0,1);
-      gaus2->SetLineColor(kBlack);
-      nSigEff[activeCanvas]->cd(activeBin+1);
-      pretty1DHist(nSigEeff[ptbin],kRed,20);
-      nSigEeff[ptbin]->Draw("pe");
-      nSigEeff[ptbin]->Fit("gaus2");
-      lbl[ptbin]->Draw("same");
-      pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
-      pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
-      cutEff[ptbin] = nSigEeff[ptbin]->GetMean(1);
-      cutEffErr[ptbin] = nSigEeff[ptbin]->GetRMS(1);
+    int activeCanvas = (int) ptbin/9;
+    int activeBin = ptbin - activeCanvas*9; 
+    TF1 *gaus2=new TF1("gaus2","gausn",0,1);
+    gaus2->SetLineColor(kBlack);
+    nSigEff[activeCanvas]->cd(activeBin+1);
+    pretty1DHist(nSigEeff[ptbin],kRed,20);
+    nSigEeff[ptbin]->Draw("pe");
+    nSigEeff[ptbin]->Fit("gaus2");
+    lbl[ptbin]->Draw("same");
+    pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
+    pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
+    cutEff[ptbin] = nSigEeff[ptbin]->GetMean(1);
+    cutEffErr[ptbin] = nSigEeff[ptbin]->GetRMS(1);
+    efnSigE->SetBinContent(efnSigE->FindBin(pT[ptbin]),cutEff[ptbin]);
 
-      twoGaus[activeCanvas]->cd(activeBin+1);
-      twogaus[ptbin]->SetTitle("2D Gaussian of #mu and #sigma for nSigE Cut");
-      twogaus[ptbin]->GetXaxis()->SetTitle("#mu");
-      twogaus[ptbin]->GetYaxis()->SetTitle("#sigma");
-      twogaus[ptbin]->Draw("SURF2");
-      lbl[ptbin]->Draw("same");
+    twoGaus[activeCanvas]->cd(activeBin+1);
+    twogaus[ptbin]->SetTitle("2D Gaussian of #mu and #sigma for nSigE Cut");
+    twogaus[ptbin]->GetXaxis()->SetTitle("#mu");
+    twogaus[ptbin]->GetYaxis()->SetTitle("#sigma");
+    twogaus[ptbin]->Draw("SURF2");
+    lbl[ptbin]->Draw("same");
   }
   TGraphErrors* grnSigCut = new TGraphErrors(numPtBins,pT,cutEff,pTErr,cutEffErr);
   grnSigCut->SetName("nSigmaEfficVsPt");
@@ -534,16 +682,18 @@ void getnSigEeff()
   grnSigCut->SetTitle("n#sigma_{E} Cut Efficiency;P_{T} (GeV/c);Efficiency");
   grnSigCut->Draw("APE");
   grnSigCut->Fit("pol1","R","",1.3,6.);
-  grnSigCut->Write();
+  //grnSigCut->Write();
 
 }
 
 void declareHistograms(){
-  
+
   for(int ptbin=0; ptbin<numPtBins; ptbin++)
   {
     nSigEeff[ptbin] = new TH1F(Form("nSigEeff_%i",ptbin),"nSigE Cut Eff",1000,0,1);
   }
+  efnSigE = new TH1F("efnSigE","nSigE Eff. vs p_{T};p_{T};nSigE Cut Eff",1000,0,20);
+
 }
 
 void doProjections()
@@ -581,7 +731,7 @@ void doProjections()
       eeEtaPhi[1]->Add(eeEtaPhi[2]);
       eeEtaPhi[1]->Add(eeEtaPhi[2]);
     }
-     
+
   }
 
   for(int etype=0; etype<2; etype++)
@@ -597,13 +747,13 @@ void doProjections()
     }
   }
 
- /* for(int ptbin = 0; ptbin < numPtBins; ptbin++){
-    eHadNorm[ptbin] = 0;
-    for(int etype=0; etype<3; etype++)
-    {
-      eHadNorm[ptbin] += trigCount[etype][ptbin];
-    }
-  }*/
+  /* for(int ptbin = 0; ptbin < numPtBins; ptbin++){
+     eHadNorm[ptbin] = 0;
+     for(int etype=0; etype<3; etype++)
+     {
+     eHadNorm[ptbin] += trigCount[etype][ptbin];
+     }
+     }*/
 
   hadEta = (TH1D*)hadEtaPhi->ProjectionX();
   setTitleAndAxisLabels(hadEta,"Hadron Eta","#eta","Counts");
@@ -613,6 +763,7 @@ void doProjections()
   elecEta = (TH1D*)elecEtaPhi->ProjectionY();
   setTitleAndAxisLabels(elecEta,"Semi-Inclusive Electron Eta","#eta","Counts");
   elecPhi = (TH1D*)elecEtaPhi->ProjectionX();
+  elecPhi->Rebin(4);
   setTitleAndAxisLabels(elecPhi,"Semi-Inclusive Electron Phi","#phi (rad)","Counts");
   elecDca = (TH1D*)elecDcaPt->ProjectionY();
   setTitleAndAxisLabels(elecPhi,"Semi-Inclusive Electron Phi","DCA (cm)","Counts");
@@ -656,7 +807,7 @@ void prepareCanvas()
     nSigEff[q]->Divide(3,3);
     twoGaus[q] = new TCanvas(Form("twoGaus_%i",q),"Covariance Double Gaussian",50,50,1050,1050);
     twoGaus[q]->Divide(3,3);
-    
+
   }
   invMass     = new TCanvas("invMass","Invariant Mass All pT",50,50,1050,1050);
   invMassVsPt = new TCanvas("invMassVsPt","Invariant Mass Vs pT",50,50,1050,1050);
@@ -688,12 +839,18 @@ void prepareCanvas()
     eIDCutEffic[i] -> Divide(2,2);
   }
   efficOverlay = new TCanvas("efficOverlay","Partner eID Based QA",50,50,1050,1050);
+  efficiencies = new TCanvas("efficiencies","Efficiencies For Cross Section",50,50,1050,1050);
+  crossSection = new TCanvas("crossSection","NPE Cross Section",50,50,1050,1050);
+  npeYield = new TCanvas("npeYield","NPE Yield",50,50,1050,1050);
+  npeYield->Divide(1,2);
   nSigCutPlot = new TCanvas("nSigCutPlot","nSigmaE Cut Efficiency",50,50,1050,1050);
   nSigMeanSig = new TCanvas("nSigMeanSig","nSigmaE Fit Results",50,50,1050,1050);
   dndpt = new TCanvas("dndpt","dndpt",50,50,1050,1050);
   Run12Compare = new TCanvas("Run12Compare","Run12Compare",50,50,1050,1050);
   Run12Compare->Divide(2,2);
-  
+  Run12Ratio = new TCanvas("Run12Ratio","Run12Ratio",50,50,1050,1050);
+  Run12Ratio->Divide(2,2);
+
   eventHists = new TCanvas("eventHists","Event Level Hists",50,50,1050,1050);
   eventHists->Divide(1,2);
   zdcQA = new TCanvas("zdcQA","ZDC QA Hists",50,50,1050,1050);
@@ -802,7 +959,7 @@ void getHistograms(TFile* f)
   // Hadron Hists
   hadEtaPhi = (TH2F*)f->Get("hHadEtaPhi");
   hadDca =   (TH1F*)f->Get("hHadDca");
-  
+
   //Partner Elec Hists
   for(int i=0; i<2; i++) //0-Unlike, 1-Like
   {
@@ -890,8 +1047,15 @@ void getdNdpT(TFile* f12)
       leg12->AddEntry(r15, legName[i], "lpe");
       leg12->AddEntry(r12, legName12[i], "lpe");
       leg12->Draw("same");
+      TH1F* ratio = (TH1F*)r15->Clone();
+      ratio->Divide(r12);
+      ratio->SetTitle(Form("Ratio of Run 15 to Run 12 %s;p_{T} (GeV/c);R15/R12 Normalized Yields",legName[i].Data()));
+      pretty1DHist(ratio, kRed, 24);
+      Run12Ratio->cd(i+1);
+      ratio->GetYaxis()->SetRangeUser(0,4);
+      ratio->Draw("pe");
     }
-      f12->Close();
+    f12->Close();
   }
 }  
 
@@ -1002,7 +1166,15 @@ void makePDF(const char* fileName)
   if(compareRun12){
     temp = Run12Compare;
     temp->Print(name);
+    temp = Run12Ratio;
+    temp->Print(name);
   }
+  temp = efficiencies;
+  temp->Print(name);
+  temp = npeYield;
+  temp->Print(name);
+  temp = crossSection;
+  temp->Print(name);
   for(int etype=0;etype<3;etype++)
   {
     for(int q=0; q<numCanvas; q++)
@@ -1043,8 +1215,8 @@ void makePDF(const char* fileName)
     temp = eIDCutEffic[i];
     temp->Print(name);
   }
-    temp = efficOverlay;
-    temp->Print(name);
+  temp = efficOverlay;
+  temp->Print(name);
   for(int i=0;i<6;i++)
   {
     temp = pElecCuts[i];

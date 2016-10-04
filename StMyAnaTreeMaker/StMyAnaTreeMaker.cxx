@@ -54,7 +54,7 @@ ClassImp(StMyAnaTreeMaker)
   mRatioCut[0] = 0.52; mRatioCut[1] = 1.;
   mHFTTrackCut = false;
 
-  mEPtCut[0] = 1.0; mEPtCut[1] = 30;
+  mEPtCut[0] = 2.0; mEPtCut[1] = 30;
   mEPPtCut[0] = 0.2; mEPPtCut[1] = 30;
   mEEtaCut[0] = -0.7; mEEtaCut[1] = 0.7;
   mEDcaCut[0] = 0.; mEDcaCut[1] = 1.5;
@@ -68,7 +68,7 @@ ClassImp(StMyAnaTreeMaker)
   mPEEtaCut[0] = -0.7; mPEEtaCut[1] = 0.7;
   mPEDcaCut[0] = 0.; mPEDcaCut[1] = 1.5;
 
-  mEmcEPtCut[0] = 1.3; mEmcEPtCut[1] = 100;
+  mEmcEPtCut[0] = 2.0; mEmcEPtCut[1] = 100;
   mEmcEEtaCut[0] = -1.; mEmcEEtaCut[1] = 1.;
   mEmcEPveCut[0] = 0.3; mEmcEPveCut[1] = 1.5;
   mEmcEDcaCut[0] = 0.; mEmcEDcaCut[1] = 1.5;
@@ -239,254 +239,6 @@ void StMyAnaTreeMaker::declareFunctions() {
   fMudTCutHigh->SetParameters(2.5084,2.67417,0.399722);
 }
 
-//-----------------------------------------------------------------------------
-void StMyAnaTreeMaker::declareHistograms() {
-
-  fout->cd();
-  hnEvents = new TH1F("hnEvents","hnEvents",10,0,10);
-  hnTracks = new TH1F("hnTracks","hnTracks",10,0,10);
-  hTrigType = new TH1F("hTrigType","Trigger Type",20,0,20);
-  hVzVpdVz = new TH2F("hVzVpdVz","hVzVpdVz;Vz (cm); Vz_{VPD} (cm);",1600,-400,400,1600,-400,400);
-  hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",1600,-400,400,1600,-400,400);
-  hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
-  hVertexZCut = new TH1F("hVertexZCut","vertexZ after cut;Vz (cm);Couts",400,-100,100);
-
-  hNe = new TH2F("hNe","#e+ vs. #e-;#e^{+} candidate;#e^{-} candidate;Counts",100,0,100,100,0,100);
-  hNemu = new TH2F("hNemu","#e vs. #mu;#e candidate;#mu candidate;Counts",100,0,100,100,0,100);
-  hNmu = new TH2F("hNmu","#mu+ vs. #mu-;#mu^{+} candidate;#mu^{-} candidate;Counts",100,0,100,100,0,100);
-
-  hEEtavsPhi = new TH2F("hEEtavsPhi","hEEtavsPhi; #phi; #eta;",300,-3.2,3.2,200,-1,1);
-  hEPhivsPt = new TH2F("hEPhivsPt","hEPhivsPt; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
-  hEEtavsPt = new TH2F("hEEtavsPt","hEEtavsPt; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
-  hEDcavsPt = new TH2F("hEDcavsPt","hEDcavsPt; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-
-  hEEtavsPhiwHft = new TH2F("hEEtavsPhiwHft","hEEtavsPhiwHft; #phi; #eta;",300,-3.2,3.2,200,-1,1);
-  hEPhivsPtwHft = new TH2F("hEPhivsPtwHft","hEPhivsPtwHft; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
-  hEEtavsPtwHft = new TH2F("hEEtavsPtwHft","hEEtavsPtwHft; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
-  hEDcavsPtwHft = new TH2F("hEDcavsPtwHft","hEDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hEDcaXYvsPtwHft = new TH2F("hEDcaXYvsPtwHft","hEDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hEDcaZvsPtwHft = new TH2F("hEDcaZvsPtwHft","hEDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-
-  hPEUSOyOx = new TH2F("hPEUSOyOx","hPEUSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
-  hPEUSOxOz = new TH2F("hPEUSOxOz","hPEUSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
-  hPEUSOrOz = new TH2F("hPEUSOrOz","hPEUSOrOz; Oz (cm); Or (cm)",600,-30,30,300,  0,30);
-  hPELSOyOx = new TH2F("hPELSOyOx","hPELSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
-  hPELSOxOz = new TH2F("hPELSOxOz","hPELSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
-  hPELSOrOz = new TH2F("hPELSOrOz","hPELSOrOz; Oz (cm); Or (cm)",600,-30,30,300,  0,30);
-
-  hPEUSOyOxwHft = new TH2F("hPEUSOyOxwHft","hPEUSOyOxwHft; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
-  hPEUSOxOzwHft = new TH2F("hPEUSOxOzwHft","hPEUSOxOzwHft; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
-  hPEUSOrOzwHft = new TH2F("hPEUSOrOzwHft","hPEUSOrOzwHft; Oz (cm); Or (cm)",600,-30,30,300,-30,30);
-  hPELSOyOxwHft = new TH2F("hPELSOyOxwHft","hPELSOyOxwHft; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
-  hPELSOxOzwHft = new TH2F("hPELSOxOzwHft","hPELSOxOzwHft; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
-  hPELSOrOzwHft = new TH2F("hPELSOrOzwHft","hPELSOrOzwHft; Oz (cm); Or (cm)",600,-30,30,300,-30,30);
-
-  hPEUSDcavsPtwHft = new TH2F("hPEUSDcavsPtwHft","hPEUSDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hPEUSDcaXYvsPtwHft = new TH2F("hPEUSDcaXYvsPtwHft","hPEUSDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hPEUSDcaZvsPtwHft = new TH2F("hPEUSDcaZvsPtwHft","hPEUSDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hPELSDcavsPtwHft = new TH2F("hPELSDcavsPtwHft","hPELSDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hPELSDcaXYvsPtwHft = new TH2F("hPELSDcaXYvsPtwHft","hPELSDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hPELSDcaZvsPtwHft = new TH2F("hPELSDcaZvsPtwHft","hPELSDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-
-  hPEEvPvsPt = new TH2F("hPEEvPvsPt","hPEEvPvsPt; p_{T} (GeV/c); E/p;",nPtBins,0,ptMax,500,0,5);
-  hPEPvEvsPt = new TH2F("hPEPvEvsPt","hPEPvEvsPt; p_{T} (GeV/c); p/E;",nPtBins,0,ptMax,500,0,5);
-
-  hMuEtavsPhi = new TH2F("hMuEtavsPhi","hMuEtavsPhi; #phi; #eta;",300,-3.2,3.2,200,-1,1);
-  hMuPhivsPt = new TH2F("hMuPhivsPt","hMuPhivsPt; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
-  hMuEtavsPt = new TH2F("hMuEtavsPt","hMuEtavsPt; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
-  hMuDcavsPt = new TH2F("hMuDcavsPt","hMuDcavsPt; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-
-  hMuEtavsPhiwHft = new TH2F("hMuEtavsPhiwHft","hMuEtavsPhiwHft; #phi; #eta;",300,-3.2,3.2,200,-1,1);
-  hMuPhivsPtwHft = new TH2F("hMuPhivsPtwHft","hMuPhivsPtwHft; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
-  hMuEtavsPtwHft = new TH2F("hMuEtavsPtwHft","hMuEtavsPtwHft; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
-  hMuDcavsPtwHft = new TH2F("hMuDcavsPtwHft","hMuDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hMuDcaXYvsPtwHft = new TH2F("hMuDcaXYvsPtwHft","hMuDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-  hMuDcaZvsPtwHft = new TH2F("hMuDcaZvsPtwHft","hMuDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
-
-  hEEUSEtavsPhi = new TH2F("hEEUSEtavsPhi","Electron Pair Eta vs Phi US; #phi; #eta",300,-3.2,3.2,200,-1,1);
-  hEELSPosEtavsPhi = new TH2F("hEELSPosEtavsPhi","Electron Pair Eta vs Phi LS Pos; #phi; #eta",300,-3.2,3.2,200,-1,1);
-  hEELSNegEtavsPhi = new TH2F("hEELSNegEtavsPhi","Electron Pair Eta vs Phi LS Neg; #phi; #eta",300,-3.2,3.2,200,-1,1);
-
-  hEEUSPairDcavsPt = new TH2F("hEEUSPairDcavsPt","EE Pair DCA vs Pt US; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
-  hEELSPosPairDcavsPt = new TH2F("hEELSPosPairDcavsPt","EE Pair DCA vs Pt LS Pos; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
-  hEELSNegPairDcavsPt = new TH2F("hEELSNegPairDcavsPt","EE Pair DCA vs Pt LS Neg; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
-
-  hEENumInvMassvsPtMB = new TH2F("hEENumInvMassvsPtMB","same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikePosMB = new TH2F("hEEDenInvMassvsPtLikePosMB","like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikeNegMB = new TH2F("hEEDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-  hEMuNumInvMassvsPtMB = new TH2F("hEMuNumInvMassvsPtMB","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEMuDenInvMassvsPtLikePosMB = new TH2F("hEMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEMuDenInvMassvsPtLikeNegMB = new TH2F("hEMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-  hMuMuNumInvMassvsPtMB = new TH2F("hMuMuNumInvMassvsPtMB","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hMuMuDenInvMassvsPtLikePosMB = new TH2F("hMuMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hMuMuDenInvMassvsPtLikeNegMB = new TH2F("hMuMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-  hEENumInvMassvsPtMBwHft = new TH2F("hEENumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikePosMBwHft = new TH2F("hEEDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikeNegMBwHft = new TH2F("hEEDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-  hEMuNumInvMassvsPtMBwHft = new TH2F("hEMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEMuDenInvMassvsPtLikePosMBwHft = new TH2F("hEMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hEMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-  hMuMuNumInvMassvsPtMBwHft = new TH2F("hMuMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hMuMuDenInvMassvsPtLikePosMBwHft = new TH2F("hMuMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hMuMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hMuMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-
-  hEENumInvMassvsPtMBnophiv = new TH2F("hEENumInvMassvsPtMBnophiv","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikePosMBnophiv = new TH2F("hEEDenInvMassvsPtLikePosMBnophiv","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-  hEEDenInvMassvsPtLikeNegMBnophiv = new TH2F("hEEDenInvMassvsPtLikeNegMBnophiv","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
-
-
-  hUSphivM = new TH2F("hUSphivM","unlike-sign phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
-  hLSPosphivM = new TH2F("hLSPosphivM","like-sign-pos phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
-  hLSNegphivM = new TH2F("hLSNegphivM","like-sign-neg phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
-
-
-  char name[200],title[200];
-  sprintf(name,"hEENumInvMassvsPt");
-  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hEENumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hEEDenInvMassvsPtLikePos");
-  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hEEDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hEEDenInvMassvsPtLikeNeg");
-  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hEEDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hEMuNumInvMassvsPt");
-  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hEMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hEMuDenInvMassvsPtLikePos");
-  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hEMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hEMuDenInvMassvsPtLikeNeg");
-  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hEMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-
-  sprintf(name,"hMuMuNumInvMassvsPt");
-  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hMuMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hMuMuDenInvMassvsPtLikePos");
-  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hMuMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  sprintf(name,"hMuMuDenInvMassvsPtLikeNeg");
-  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
-  hMuMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  hEENumInvMassvsPtwHft = new TH3F("hEENumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  hEEDenInvMassvsPtLikePoswHft = new TH3F("hEEDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  hEEDenInvMassvsPtLikeNegwHft = new TH3F("hEEDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  hEMuNumInvMassvsPtwHft = new TH3F("hEMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  hEMuDenInvMassvsPtLikePoswHft = new TH3F("hEMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  hEMuDenInvMassvsPtLikeNegwHft = new TH3F("hEMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  hMuMuNumInvMassvsPtwHft = new TH3F("hMuMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  hMuMuDenInvMassvsPtLikePoswHft = new TH3F("hMuMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  hMuMuDenInvMassvsPtLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-  if(makeMixedEvent){
-    hEEDenInvMassvsPtMix = new TH3F("hEEDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEEDenInvMassvsPtMixLikePos = new TH3F("hEEDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEEDenInvMassvsPtMixLikeNeg = new TH3F("hEEDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-    hEMuDenInvMassvsPtMix = new TH3F("hEMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEMuDenInvMassvsPtMixLikePos = new TH3F("hEMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEMuDenInvMassvsPtMixLikeNeg = new TH3F("hEMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-    hMuMuDenInvMassvsPtMix = new TH3F("hMuMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hMuMuDenInvMassvsPtMixLikePos = new TH3F("hMuMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hMuMuDenInvMassvsPtMixLikeNeg = new TH3F("hMuMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-    //wHFT
-    hEEDenInvMassvsPtMixwHft = new TH3F("hEEDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEEDenInvMassvsPtMixLikePoswHft = new TH3F("hEEDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEEDenInvMassvsPtMixLikeNegwHft = new TH3F("hEEDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-    hEMuDenInvMassvsPtMixwHft = new TH3F("hEMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEMuDenInvMassvsPtMixLikePoswHft = new TH3F("hEMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hEMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hEMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-
-    hMuMuDenInvMassvsPtMixwHft = new TH3F("hMuMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hMuMuDenInvMassvsPtMixLikePoswHft = new TH3F("hMuMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-    hMuMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
-  }
-
-  cout << "Declare Had Hists" << endl;
-  hHadPt  = new TH1F("hHadPt","Hadron Branch Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
-  hEPt  = new TH1F("hEPt","Electron Branch Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
-  hEEPt_US  = new TH1F("hEEPt_US","Electron Pair US Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
-  hEEPt_LS  = new TH1F("hEEPt_LS","Electron Pair LS Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
-  hHadDca = new TH1F("hHadDca","Hadron Branch DCA; DCA (cm); Counts",1000,0,3); 
-  hHadPhi = new TH1F("hHadPhi","Hadron Branch Phi; Phi; Counts",300,-3.2,3.2); 
-
-  hHadEtaPhi = new TH2F("hHadEtaPhi","Hadron Branch Phi vs Pseudorapidity; Eta; Phi",200,-1,1,300,-3.2,3.2); 
-  hHadEDelPhiPt = new TH2F("hHadEDelPhiPt","Hadron-Electron DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
-  hHadEEDelPhiPt_LS = new TH2F("hHadEEDelPhiPt_LS","Hadron-EE LS DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
-  hHadEEDelPhiPt_US = new TH2F("hHadEEDelPhiPt_US","Hadron-EE US DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
-  hHadMuDelPhiPt = new TH2F("hHadMuDelPhiPt","Hadron-Muon DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
-  hHadDcaPt = new TH2F("hHadDcaPt","Hadron Branch DCA vs pT; q*p_{T} (GeV/c); DCA (cm)",2*nPtBins,-ptMax,ptMax,1000,0,3); 
-  hHadPtEPt = new TH2F("hHadPtEPt","Hadron pT vs Electron pT; Electron p_{T} (GeV/c); Hadron p_{T} (GeV/c)",nPtBins,ptMin,ptMax,nPtBins,ptMin,ptMax); 
-  for(int q=0;q<3;q++)
-  {
-    hHadEDelPhiDelEta[q] = new TH2F(Form("hHadEDelPhiDelEta_%i",q),"Hadron-Electron DeltaPhi vs DeltaEta; #Delta#eta; #Delta#phi (rads)",400,-2,2,300,-2.0,5);
-  }
-  char cutNames[11][20] = {"NoCut","pTCut","etaCut","nHitFitCut","nHistdEdxCut","nSigECut","pveCut","nEtaCut","nPhiCut","zDistCut","phiDistCut"};
-  for(int q=0;q<11;q++)
-  {
-    electronEtaPhi[q] = new TH2F(Form("electronEtaPhi_%i",q),Form("Electron Eta v Phi after %s; #eta; #phi (rad)",cutNames[q]), 400,-1,1,300,-6,6);
-  }
-
-  cout << "Declare Electron Efficiency Hists" << endl;
-  char nameeff[3][100] = {"No Cuts","EID Cuts","HT EID Cuts"};
-  for(int i=0; i<4; i++)
-  {
-    hEPt_eff[i] = new TH1F(Form("hEPt_eff_%i",i),Form("Electron Branch Pt Spectrum %s; p_{T} (GeV/c); Counts",nameeff[i]),nPtBins,ptMin,ptMax);
-  }
-
-  char namePartE[2][20] = {"Unlike Sign", "Like Sign"};
-  float offs = 1e-6;
-  for(int i=0; i<2; i++)
-  {
-    hNSigEPartElec[i] = new TH2F(Form("hNSigEPartElec_%i",i),Form("nSigmaE PartE %s;P_{T} (GeV/c^{2});n#sigma_{E}",namePartE[i]),nPtBins,ptMin,ptMax,120,-6.-offs,6.+offs);
-    hPvePartElec[i] = new TH2F(Form("hPvePartElec_%i",i),Form("p/E PartE %s;P_{T} (GeV/c^{2});p/E",namePartE[i]),nPtBins,ptMin,ptMax,200,0.,10.);
-    hnEtaPartElec[i] = new TH2F(Form("hnEtaPartElec_%i",i),Form("nEta PartE %s;P_{T} (GeV/c^{2});nEta",namePartE[i]),nPtBins,ptMin,ptMax,20,0.,20.);
-    hnPhiPartElec[i] = new TH2F(Form("hnPhiPartElec_%i",i),Form("nPhi PartE %s;P_{T} (GeV/c^{2});nPhi",namePartE[i]),nPtBins,ptMin,ptMax,20,0.,20.);
-    hphiDistPartElec[i] = new TH2F(Form("hphiDistPartElec_%i",i),Form("phiDist PartE %s;P_{T} (GeV/c^{2});phiDist",namePartE[i]),nPtBins,ptMin,ptMax,1000,0.,0.2);
-    hzDistPartElec[i] = new TH2F(Form("hzDistPartElec_%i",i),Form("zDist PartE %s;P_{T} (GeV/c^{2});zDist",namePartE[i]),nPtBins,ptMin,ptMax,1000,0.,10.);
-
-    hTPCTracks[i] = new TH1F(Form("hTPCTracks_%i",i),Form("TPC Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
-    hEMCMatchedTracks[i] = new TH1F(Form("hEMCMatchedTracks_%i",i),Form("EMC Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
-    hEMCIdTracks[i] = new TH1F(Form("hEMCIdTracks_%i",i),Form("EMC eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
-    hSMDMatchedTracks[i] = new TH1F(Form("hSMDMatchedTracks_%i",i),Form("SMD Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
-    hSMDIdTracks[i] = new TH1F(Form("hSMDIdTracks_%i",i),Form("SMD eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
-  }
-
-  // RunIndex Hists
-  hnEtavsRunIndex= new TH2F("hnEtavsRunIndex","hnEtavsRunIndex;Run Index; nEta;",mTotalRun,0,mTotalRun,10,0,10);
-  hnPhivsRunIndex= new TH2F("hnPhivsRunIndex","hnPhivsRunIndex;Run Index; nPhi;",mTotalRun,0,mTotalRun,10,0,10);
-  hzDistvsRunIndex= new TH2F("hzDistvsRunIndex","hzDistvsRunIndex;Run Index; zDist;",mTotalRun,0,mTotalRun,1000,-10,10);
-  hphiDistvsRunIndex= new TH2F("hphiDistvsRunIndex","hphiDistvsRunIndex;Run Index; phiDist;",mTotalRun,0,mTotalRun,1000,-0.2,0.2);
-  hPvEvsRunIndex= new TH2F("hPvEvsRunIndex","hPvEvsRunIndex;Run Index; PvE;",mTotalRun,0,mTotalRun,500,0,10);
-  hadc0vsRunIndex= new TH2F("hadc0vsRunIndex","hadc0vsRunIndex;Run Index; adc0;",mTotalRun,0,mTotalRun,1000,0,1000);
-  hbetavsRunIndex= new TH2F("hbetavsRunIndex","hbetavsRunIndex;Run Index; 1/beta;",mTotalRun,0,mTotalRun,2000,0,4);
-  hgRefMultZDCvsRunIndex = new TH2F("hgRefMultZDCvsRunIndex","(gRefMult-Fit) vs RunIndex; Run Index; gRefMult-Fit;",mTotalRun,0,mTotalRun,3000,-15,15);
-
-  // Other QA Hists
-  hgRefMultvsZDCx = new TH2F("hgRefMultvsZDCx","gRefMult vs ZDCx; <ZDCx>; <gRefMult>;",400,0,40000,300,0,30);
-}
-
 
 //----------------------------------------------------------------------------- 
 void StMyAnaTreeMaker::Clear(Option_t *opt) {
@@ -518,10 +270,10 @@ Int_t StMyAnaTreeMaker::Make() {
   int eventPass = 0;
   if(mTrigSelect<0) eventPass = 1;
   else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
-  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 180
-  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 240
+  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 
+  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 180
   else if(mTrigSelect==3&& isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT2 300
-  else if(mTrigSelect==4&& isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 400
+  else if(mTrigSelect==4&& isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 
   else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
   else if(mTrigSelect==6&&mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
   else if(mTrigSelect==7&&mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
@@ -693,6 +445,8 @@ bool StMyAnaTreeMaker::passHTEIDCuts(StElectronTrack *eTrk) {
   electronEtaPhi[9]->Fill(eta,phi);
   if(phiDist<mEPhiDistCut[0]||phiDist>mEPhiDistCut[1]) return false;
   electronEtaPhi[10]->Fill(eta,phi);
+  if(isHTTrigE(eTrk)) 
+    electronEtaPhi[11]->Fill(eta,phi);
 
   return true;
 }
@@ -2245,3 +1999,252 @@ void StMyAnaTreeMaker::copyCurrentToBuffer(int magBufferPointer,int cenBufferPoi
     nEventsInBuffer[magBufferPointer][cenBufferPointer][vzBufferPointer][eveBufferPointer] += 1;
   }
 }
+//-----------------------------------------------------------------------------
+void StMyAnaTreeMaker::declareHistograms() {
+
+  fout->cd();
+  hnEvents = new TH1F("hnEvents","hnEvents",10,0,10);
+  hnTracks = new TH1F("hnTracks","hnTracks",10,0,10);
+  hTrigType = new TH1F("hTrigType","Trigger Type",20,0,20);
+  hVzVpdVz = new TH2F("hVzVpdVz","hVzVpdVz;Vz (cm); Vz_{VPD} (cm);",1600,-400,400,1600,-400,400);
+  hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",1600,-400,400,1600,-400,400);
+  hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
+  hVertexZCut = new TH1F("hVertexZCut","vertexZ after cut;Vz (cm);Couts",400,-100,100);
+
+  hNe = new TH2F("hNe","#e+ vs. #e-;#e^{+} candidate;#e^{-} candidate;Counts",100,0,100,100,0,100);
+  hNemu = new TH2F("hNemu","#e vs. #mu;#e candidate;#mu candidate;Counts",100,0,100,100,0,100);
+  hNmu = new TH2F("hNmu","#mu+ vs. #mu-;#mu^{+} candidate;#mu^{-} candidate;Counts",100,0,100,100,0,100);
+
+  hEEtavsPhi = new TH2F("hEEtavsPhi","hEEtavsPhi; #phi; #eta;",300,-3.2,3.2,200,-1,1);
+  hEPhivsPt = new TH2F("hEPhivsPt","hEPhivsPt; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
+  hEEtavsPt = new TH2F("hEEtavsPt","hEEtavsPt; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
+  hEDcavsPt = new TH2F("hEDcavsPt","hEDcavsPt; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+
+  hEEtavsPhiwHft = new TH2F("hEEtavsPhiwHft","hEEtavsPhiwHft; #phi; #eta;",300,-3.2,3.2,200,-1,1);
+  hEPhivsPtwHft = new TH2F("hEPhivsPtwHft","hEPhivsPtwHft; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
+  hEEtavsPtwHft = new TH2F("hEEtavsPtwHft","hEEtavsPtwHft; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
+  hEDcavsPtwHft = new TH2F("hEDcavsPtwHft","hEDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hEDcaXYvsPtwHft = new TH2F("hEDcaXYvsPtwHft","hEDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hEDcaZvsPtwHft = new TH2F("hEDcaZvsPtwHft","hEDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+
+  hPEUSOyOx = new TH2F("hPEUSOyOx","hPEUSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
+  hPEUSOxOz = new TH2F("hPEUSOxOz","hPEUSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
+  hPEUSOrOz = new TH2F("hPEUSOrOz","hPEUSOrOz; Oz (cm); Or (cm)",600,-30,30,300,  0,30);
+  hPELSOyOx = new TH2F("hPELSOyOx","hPELSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
+  hPELSOxOz = new TH2F("hPELSOxOz","hPELSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
+  hPELSOrOz = new TH2F("hPELSOrOz","hPELSOrOz; Oz (cm); Or (cm)",600,-30,30,300,  0,30);
+
+  hPEUSOyOxwHft = new TH2F("hPEUSOyOxwHft","hPEUSOyOxwHft; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
+  hPEUSOxOzwHft = new TH2F("hPEUSOxOzwHft","hPEUSOxOzwHft; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
+  hPEUSOrOzwHft = new TH2F("hPEUSOrOzwHft","hPEUSOrOzwHft; Oz (cm); Or (cm)",600,-30,30,300,-30,30);
+  hPELSOyOxwHft = new TH2F("hPELSOyOxwHft","hPELSOyOxwHft; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
+  hPELSOxOzwHft = new TH2F("hPELSOxOzwHft","hPELSOxOzwHft; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);
+  hPELSOrOzwHft = new TH2F("hPELSOrOzwHft","hPELSOrOzwHft; Oz (cm); Or (cm)",600,-30,30,300,-30,30);
+
+  hPEUSDcavsPtwHft = new TH2F("hPEUSDcavsPtwHft","hPEUSDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hPEUSDcaXYvsPtwHft = new TH2F("hPEUSDcaXYvsPtwHft","hPEUSDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hPEUSDcaZvsPtwHft = new TH2F("hPEUSDcaZvsPtwHft","hPEUSDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hPELSDcavsPtwHft = new TH2F("hPELSDcavsPtwHft","hPELSDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hPELSDcaXYvsPtwHft = new TH2F("hPELSDcaXYvsPtwHft","hPELSDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hPELSDcaZvsPtwHft = new TH2F("hPELSDcaZvsPtwHft","hPELSDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+
+  hPEEvPvsPt = new TH2F("hPEEvPvsPt","hPEEvPvsPt; p_{T} (GeV/c); E/p;",nPtBins,0,ptMax,500,0,5);
+  hPEPvEvsPt = new TH2F("hPEPvEvsPt","hPEPvEvsPt; p_{T} (GeV/c); p/E;",nPtBins,0,ptMax,500,0,5);
+
+  hMuEtavsPhi = new TH2F("hMuEtavsPhi","hMuEtavsPhi; #phi; #eta;",300,-3.2,3.2,200,-1,1);
+  hMuPhivsPt = new TH2F("hMuPhivsPt","hMuPhivsPt; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
+  hMuEtavsPt = new TH2F("hMuEtavsPt","hMuEtavsPt; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
+  hMuDcavsPt = new TH2F("hMuDcavsPt","hMuDcavsPt; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+
+  hMuEtavsPhiwHft = new TH2F("hMuEtavsPhiwHft","hMuEtavsPhiwHft; #phi; #eta;",300,-3.2,3.2,200,-1,1);
+  hMuPhivsPtwHft = new TH2F("hMuPhivsPtwHft","hMuPhivsPtwHft; q*p_{T} (GeV/c); #phi;",2.*nPtBins,-ptMax,ptMax,300,-3.2,3.2);
+  hMuEtavsPtwHft = new TH2F("hMuEtavsPtwHft","hMuEtavsPtwHft; q*p_{T} (GeV/c); #eta;",2.*nPtBins,-ptMax,ptMax,200,-1,1);
+  hMuDcavsPtwHft = new TH2F("hMuDcavsPtwHft","hMuDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hMuDcaXYvsPtwHft = new TH2F("hMuDcaXYvsPtwHft","hMuDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  hMuDcaZvsPtwHft = new TH2F("hMuDcaZvsPtwHft","hMuDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+
+  hEEUSEtavsPhi = new TH2F("hEEUSEtavsPhi","Electron Pair Eta vs Phi US; #phi; #eta",300,-3.2,3.2,200,-1,1);
+  hEELSPosEtavsPhi = new TH2F("hEELSPosEtavsPhi","Electron Pair Eta vs Phi LS Pos; #phi; #eta",300,-3.2,3.2,200,-1,1);
+  hEELSNegEtavsPhi = new TH2F("hEELSNegEtavsPhi","Electron Pair Eta vs Phi LS Neg; #phi; #eta",300,-3.2,3.2,200,-1,1);
+
+  hEEUSPairDcavsPt = new TH2F("hEEUSPairDcavsPt","EE Pair DCA vs Pt US; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
+  hEELSPosPairDcavsPt = new TH2F("hEELSPosPairDcavsPt","EE Pair DCA vs Pt LS Pos; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
+  hEELSNegPairDcavsPt = new TH2F("hEELSNegPairDcavsPt","EE Pair DCA vs Pt LS Neg; p_{T} (GeV/c); dca (cm);",nPtBins,0,ptMax,1000,0,3);
+
+  hEENumInvMassvsPtMB = new TH2F("hEENumInvMassvsPtMB","same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikePosMB = new TH2F("hEEDenInvMassvsPtLikePosMB","like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikeNegMB = new TH2F("hEEDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+  hEMuNumInvMassvsPtMB = new TH2F("hEMuNumInvMassvsPtMB","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikePosMB = new TH2F("hEMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikeNegMB = new TH2F("hEMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+  hMuMuNumInvMassvsPtMB = new TH2F("hMuMuNumInvMassvsPtMB","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikePosMB = new TH2F("hMuMuDenInvMassvsPtLikePosMB","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikeNegMB = new TH2F("hMuMuDenInvMassvsPtLikeNegMB","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+  hEENumInvMassvsPtMBwHft = new TH2F("hEENumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikePosMBwHft = new TH2F("hEEDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikeNegMBwHft = new TH2F("hEEDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+  hEMuNumInvMassvsPtMBwHft = new TH2F("hEMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikePosMBwHft = new TH2F("hEMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hEMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+  hMuMuNumInvMassvsPtMBwHft = new TH2F("hMuMuNumInvMassvsPtMBwHft","same event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikePosMBwHft = new TH2F("hMuMuDenInvMassvsPtLikePosMBwHft","like-sign pos mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hMuMuDenInvMassvsPtLikeNegMBwHft = new TH2F("hMuMuDenInvMassvsPtLikeNegMBwHft","like-sign neg mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+
+  hEENumInvMassvsPtMBnophiv = new TH2F("hEENumInvMassvsPtMBnophiv","same event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikePosMBnophiv = new TH2F("hEEDenInvMassvsPtLikePosMBnophiv","like-sign pos mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+  hEEDenInvMassvsPtLikeNegMBnophiv = new TH2F("hEEDenInvMassvsPtLikeNegMBnophiv","like-sign neg mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax);
+
+
+  hUSphivM = new TH2F("hUSphivM","unlike-sign phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
+  hLSPosphivM = new TH2F("hLSPosphivM","like-sign-pos phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
+  hLSNegphivM = new TH2F("hLSNegphivM","like-sign-neg phiv vs m_{ee} ;M_{ee} (GeV/c^{2});#phi_{V} ",3200,0,3.2,1000,0,3.2);
+
+
+  char name[200],title[200];
+  sprintf(name,"hEENumInvMassvsPt");
+  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEENumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hEEDenInvMassvsPtLikePos");
+  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEEDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hEEDenInvMassvsPtLikeNeg");
+  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEEDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hEMuNumInvMassvsPt");
+  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hEMuDenInvMassvsPtLikePos");
+  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hEMuDenInvMassvsPtLikeNeg");
+  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hEMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+
+  sprintf(name,"hMuMuNumInvMassvsPt");
+  sprintf(title,"same event mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hMuMuNumInvMassvsPt = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hMuMuDenInvMassvsPtLikePos");
+  sprintf(title,"like-sign pos mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hMuMuDenInvMassvsPtLikePos = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  sprintf(name,"hMuMuDenInvMassvsPtLikeNeg");
+  sprintf(title,"like-sign neg mass spectrum;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality");
+  hMuMuDenInvMassvsPtLikeNeg = new TH3F(name, title,nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  hEENumInvMassvsPtwHft = new TH3F("hEENumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2});Centrality",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEEDenInvMassvsPtLikePoswHft = new TH3F("hEEDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEEDenInvMassvsPtLikeNegwHft = new TH3F("hEEDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  hEMuNumInvMassvsPtwHft = new TH3F("hEMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEMuDenInvMassvsPtLikePoswHft = new TH3F("hEMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hEMuDenInvMassvsPtLikeNegwHft = new TH3F("hEMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  hMuMuNumInvMassvsPtwHft = new TH3F("hMuMuNumInvMassvsPtwHft","same event mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hMuMuDenInvMassvsPtLikePoswHft = new TH3F("hMuMuDenInvMassvsPtLikePoswHft","like-sign pos mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  hMuMuDenInvMassvsPtLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtLikeNegwHft","like-sign neg mass spectrum in wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+  if(makeMixedEvent){
+    hEEDenInvMassvsPtMix = new TH3F("hEEDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikePos = new TH3F("hEEDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikeNeg = new TH3F("hEEDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hEMuDenInvMassvsPtMix = new TH3F("hEMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikePos = new TH3F("hEMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikeNeg = new TH3F("hEMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hMuMuDenInvMassvsPtMix = new TH3F("hMuMuDenInvMassvsPtMix","mixed unlike-sign event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikePos = new TH3F("hMuMuDenInvMassvsPtMixLikePos","mixed like-sign ++ event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikeNeg = new TH3F("hMuMuDenInvMassvsPtMixLikeNeg","mixed like-sign -- event mass spectrum ;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    //wHFT
+    hEEDenInvMassvsPtMixwHft = new TH3F("hEEDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikePoswHft = new TH3F("hEEDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEEDenInvMassvsPtMixLikeNegwHft = new TH3F("hEEDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hEMuDenInvMassvsPtMixwHft = new TH3F("hEMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikePoswHft = new TH3F("hEMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hEMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hEMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+
+    hMuMuDenInvMassvsPtMixwHft = new TH3F("hMuMuDenInvMassvsPtMixwHft","mixed unlike-sign event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikePoswHft = new TH3F("hMuMuDenInvMassvsPtMixLikePoswHft","mixed like-sign ++ event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+    hMuMuDenInvMassvsPtMixLikeNegwHft = new TH3F("hMuMuDenInvMassvsPtMixLikeNegwHft","mixed like-sign -- event mass spectrum wHft;p_{T} (GeV/c);M_{inv} (GeV/c^{2})",nPtBins,ptMin,ptMax,nMassBins,massMin,massMax,nCentrals,0,nCentrals);
+  }
+
+  cout << "Declare Had Hists" << endl;
+  hHadPt  = new TH1F("hHadPt","Hadron Branch Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
+  hEPt  = new TH1F("hEPt","Electron Branch Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
+  hEEPt_US  = new TH1F("hEEPt_US","Electron Pair US Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
+  hEEPt_LS  = new TH1F("hEEPt_LS","Electron Pair LS Pt Spectrum; p_{T} (GeV/c); Counts",nPtBins,ptMin,ptMax);
+  hHadDca = new TH1F("hHadDca","Hadron Branch DCA; DCA (cm); Counts",1000,0,3); 
+  hHadPhi = new TH1F("hHadPhi","Hadron Branch Phi; Phi; Counts",300,-3.2,3.2); 
+
+  hHadEtaPhi = new TH2F("hHadEtaPhi","Hadron Branch Phi vs Pseudorapidity; Eta; Phi",200,-1,1,300,-3.2,3.2); 
+  hHadEDelPhiPt = new TH2F("hHadEDelPhiPt","Hadron-Electron DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
+  hHadEEDelPhiPt_LS = new TH2F("hHadEEDelPhiPt_LS","Hadron-EE LS DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
+  hHadEEDelPhiPt_US = new TH2F("hHadEEDelPhiPt_US","Hadron-EE US DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
+  hHadMuDelPhiPt = new TH2F("hHadMuDelPhiPt","Hadron-Muon DeltaPhi vs Pt; p_{T} (GeV/c); #Delta#phi (rads)",nPtBins,ptMin,ptMax,300,-2.0,4.5);
+  hHadDcaPt = new TH2F("hHadDcaPt","Hadron Branch DCA vs pT; q*p_{T} (GeV/c); DCA (cm)",2*nPtBins,-ptMax,ptMax,1000,0,3); 
+  hHadPtEPt = new TH2F("hHadPtEPt","Hadron pT vs Electron pT; Electron p_{T} (GeV/c); Hadron p_{T} (GeV/c)",nPtBins,ptMin,ptMax,nPtBins,ptMin,ptMax); 
+  for(int q=0;q<3;q++)
+  {
+    hHadEDelPhiDelEta[q] = new TH2F(Form("hHadEDelPhiDelEta_%i",q),"Hadron-Electron DeltaPhi vs DeltaEta; #Delta#eta; #Delta#phi (rads)",400,-2,2,300,-2.0,5);
+  }
+  char cutNames[12][20] = {"NoCut","pTCut","etaCut","nHitFitCut","nHistdEdxCut","nSigECut","pveCut","nEtaCut","nPhiCut","zDistCut","phiDistCut","DsmadcCut"};
+  for(int q=0;q<12;q++)
+  {
+    electronEtaPhi[q] = new TH2F(Form("electronEtaPhi_%i",q),Form("Electron Eta v Phi after %s; #eta; #phi (rad)",cutNames[q]), 400,-1,1,300,-6,6);
+  }
+
+  cout << "Declare Electron Efficiency Hists" << endl;
+  char nameeff[3][100] = {"No Cuts","EID Cuts","HT EID Cuts"};
+  for(int i=0; i<4; i++)
+  {
+    hEPt_eff[i] = new TH1F(Form("hEPt_eff_%i",i),Form("Electron Branch Pt Spectrum %s; p_{T} (GeV/c); Counts",nameeff[i]),nPtBins,ptMin,ptMax);
+  }
+
+  char namePartE[2][20] = {"Unlike Sign", "Like Sign"};
+  float offs = 1e-6;
+  for(int i=0; i<2; i++)
+  {
+    hNSigEPartElec[i] = new TH2F(Form("hNSigEPartElec_%i",i),Form("nSigmaE PartE %s;P_{T} (GeV/c^{2});n#sigma_{E}",namePartE[i]),nPtBins,ptMin,ptMax,120,-6.-offs,6.+offs);
+    hPvePartElec[i] = new TH2F(Form("hPvePartElec_%i",i),Form("p/E PartE %s;P_{T} (GeV/c^{2});p/E",namePartE[i]),nPtBins,ptMin,ptMax,200,0.,10.);
+    hnEtaPartElec[i] = new TH2F(Form("hnEtaPartElec_%i",i),Form("nEta PartE %s;P_{T} (GeV/c^{2});nEta",namePartE[i]),nPtBins,ptMin,ptMax,20,0.,20.);
+    hnPhiPartElec[i] = new TH2F(Form("hnPhiPartElec_%i",i),Form("nPhi PartE %s;P_{T} (GeV/c^{2});nPhi",namePartE[i]),nPtBins,ptMin,ptMax,20,0.,20.);
+    hphiDistPartElec[i] = new TH2F(Form("hphiDistPartElec_%i",i),Form("phiDist PartE %s;P_{T} (GeV/c^{2});phiDist",namePartE[i]),nPtBins,ptMin,ptMax,1000,0.,0.2);
+    hzDistPartElec[i] = new TH2F(Form("hzDistPartElec_%i",i),Form("zDist PartE %s;P_{T} (GeV/c^{2});zDist",namePartE[i]),nPtBins,ptMin,ptMax,1000,0.,10.);
+
+    hTPCTracks[i] = new TH1F(Form("hTPCTracks_%i",i),Form("TPC Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hEMCMatchedTracks[i] = new TH1F(Form("hEMCMatchedTracks_%i",i),Form("EMC Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hEMCIdTracks[i] = new TH1F(Form("hEMCIdTracks_%i",i),Form("EMC eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hSMDMatchedTracks[i] = new TH1F(Form("hSMDMatchedTracks_%i",i),Form("SMD Matched Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+    hSMDIdTracks[i] = new TH1F(Form("hSMDIdTracks_%i",i),Form("SMD eID Tracks PartE %s;P_{T} (GeV/c^{2};Counts)",namePartE[i]),nPtBins,ptMin,ptMax);
+  }
+
+  // RunIndex Hists
+  hnEtavsRunIndex= new TH2F("hnEtavsRunIndex","hnEtavsRunIndex;Run Index; nEta;",mTotalRun,0,mTotalRun,10,0,10);
+  hnPhivsRunIndex= new TH2F("hnPhivsRunIndex","hnPhivsRunIndex;Run Index; nPhi;",mTotalRun,0,mTotalRun,10,0,10);
+  hzDistvsRunIndex= new TH2F("hzDistvsRunIndex","hzDistvsRunIndex;Run Index; zDist;",mTotalRun,0,mTotalRun,1000,-10,10);
+  hphiDistvsRunIndex= new TH2F("hphiDistvsRunIndex","hphiDistvsRunIndex;Run Index; phiDist;",mTotalRun,0,mTotalRun,1000,-0.2,0.2);
+  hPvEvsRunIndex= new TH2F("hPvEvsRunIndex","hPvEvsRunIndex;Run Index; PvE;",mTotalRun,0,mTotalRun,500,0,10);
+  hadc0vsRunIndex= new TH2F("hadc0vsRunIndex","hadc0vsRunIndex;Run Index; adc0;",mTotalRun,0,mTotalRun,1000,0,1000);
+  hbetavsRunIndex= new TH2F("hbetavsRunIndex","hbetavsRunIndex;Run Index; 1/beta;",mTotalRun,0,mTotalRun,2000,0,4);
+  hgRefMultZDCvsRunIndex = new TH2F("hgRefMultZDCvsRunIndex","(gRefMult-Fit) vs RunIndex; Run Index; gRefMult-Fit;",mTotalRun,0,mTotalRun,3000,-15,15);
+
+  // Other QA Hists
+  hgRefMultvsZDCx = new TH2F("hgRefMultvsZDCx","gRefMult vs ZDCx; <ZDCx>; <gRefMult>;",400,0,40000,300,0,30);
+}
+
+
