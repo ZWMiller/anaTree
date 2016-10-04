@@ -91,7 +91,7 @@ Int_t StAnaTreeQAMaker::Init() {
     }  
 
     refMvsZDCFit = new TF1("refMvsZDCFit","pol2",0,40000);
-    double par[3] = {5.89761, 0.00041257, -6.60525e-09};
+    double par[3] = {12.13, 0.0002893, -5.567e-09};
     refMvsZDCFit->SetParameters(par);
 
     //for(map<Int_t,Int_t>::iterator iter=mTotalRunId.begin();iter!=mTotalRunId.end();iter++)
@@ -112,11 +112,10 @@ Int_t StAnaTreeQAMaker::Finish() {
     float grefMultAv = avgRefMult[rI]/avgRefMultCount[rI];
     float grefDivZdc = (grefMultAv/zdcAv)*1e3;
     hgRefMultvsZDCx->Fill(zdcAv,grefMultAv);
-    hgRefMultvsZDCx->Fit(refMvsZDCFit);
     double fval = refMvsZDCFit->Eval(zdcAv);
     hgRefMultZDCvsRunIndex->Fill(rI,grefMultAv-fval);
   }
-
+  
   fout->cd();
   fout->Write();
   fout->Close();

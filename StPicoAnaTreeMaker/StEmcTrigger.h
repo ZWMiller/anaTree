@@ -20,6 +20,7 @@ class StEmcTrigger : public TObject {
   Int_t   adc0() const            { return (Int_t)mAdc0; }
   
   void    setEId(int eid)        { mEId = eid; }
+  void    setAdc0(int adc0)        { mAdc0 = adc0; }
 
  protected:
 

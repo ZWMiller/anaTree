@@ -46,14 +46,6 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    //anaMaker->addTrigger(500206,1);
    anaMaker->addTrigger(500205,2);
    anaMaker->addTrigger(500215,2);
-   if(trigSelect==0){
-     anaMaker->setVzCut(-6,6);
-     anaMaker->setVzDiffCut(-3,3);
-   }	
-   if(trigSelect==2||trigSelect==3){
-     //	anaMaker->setVzCut(-30,30);
-     //	anaMaker->setVzDiffCut(-3,3);
-   }	
 
    if(trigSelect==-1||trigSelect==4||trigSelect==5||trigSelect==6){
      anaMaker->setVzCut(-100,100);
@@ -61,7 +53,7 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    }
 
    TString qaOutName = outputFile;
-   qaOutName.ReplaceAll("anaTree","qa");
+   qaOutName.ReplaceAll(".hists.root",".qa.hists.root");
    StAnaTreeQAMaker* qaMaker = new StAnaTreeQAMaker("qa",treeMaker,qaOutName.Data());
    qaMaker->setRunList(runList);
    qaMaker->setNumberOfRuns(number_of_runs);

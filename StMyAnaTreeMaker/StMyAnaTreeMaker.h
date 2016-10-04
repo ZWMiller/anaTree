@@ -44,6 +44,7 @@ class StMyAnaTreeMaker : public StMaker {
 
       void  addTrigger(int tr, int id) { triggers[id].push_back(tr); };
 		void  declareHistograms();
+		void  declareFunctions();
 		bool	passHTEIDCuts(StElectronTrack *);
 		bool	passEIDCuts(StElectronTrack *);
 		bool	passETrackQualityCuts(StElectronTrack *);
@@ -292,6 +293,8 @@ class StMyAnaTreeMaker : public StMaker {
       TH2F *hHadEEDelPhiPt_LS;
       TH2F *hHadEEDelPhiPt_US;
       TH2F *hHadPtEPt;
+      TH2F *hHadEDelPhiDelEta[3];
+      TH2F *electronEtaPhi[12];
 
       //Partner Electron Hists for Pure Electron Sample
       TH2F *hNSigEPartElec[2];
@@ -316,6 +319,8 @@ class StMyAnaTreeMaker : public StMaker {
       TH2F* hbetavsRunIndex;
 
       TH1F *hTrigType;
+
+      TF1* refMvsZDCFit;
 
 		//TH2F *hDenInvMassvsPtMixLikePosMB;
 		//TH2F *hDenInvMassvsPtMixLikeNegMB;
