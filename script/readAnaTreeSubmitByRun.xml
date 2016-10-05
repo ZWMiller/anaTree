@@ -3,8 +3,8 @@
 
 <command>
 <!-- Set tags file directory -->
-setenv EMLOGS /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/readAnaTree_HT1_4
-setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/out/readAnaTree_HT1_4
+setenv EMLOGS /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/readAnaTree_HT1_1
+setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/out/readAnaTree_HT1_1
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
@@ -25,7 +25,7 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
     <File>file:./.sl64_gcc482</File>
     <File>file:./.sl64_gcc477</File>
     <File>file:./StRoot</File>
-    <File>file:./runNumberList_run15pp_transverse</File>
+    <File>file:./runNumberList_completed_run15pAu</File>
 	</Package>
 </SandBox>
 
@@ -34,14 +34,14 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
 
 <!-- Define locations of log/elog files -->
-<stdout URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/$JOBID.log"/>
-<stderr URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/$JOBID.elog"/>
+<stdout URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.log"/>
+<stderr URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.elog"/>
 
 <!-- Input daq files -->
-<input URL="file:/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/haddSubmit/rootfile_temp/anaTree_080916HT/*.root"/>
+<input URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/haddSubmit/rootfile_temp/anaTree_090616/*.root"/>
 <!-- csh/list files -->
 <Generator>
-  <Location>/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/log/list</Location>
+  <Location>/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/list</Location>
 </Generator>
 
 </job>

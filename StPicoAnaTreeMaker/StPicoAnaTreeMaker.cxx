@@ -89,7 +89,7 @@ ClassImp(StPicoAnaTreeMaker)
   mRunList = "./runNumberList_run15pp_transverse";
   //	mRecenterFile = "./recenter_correction.root";
 
-  mVzCut[0] = -6; mVzCut[1] = 6;
+  mVzCut[0] = -100; mVzCut[1] = 100;
   mVzDiffCut[0] = -3; mVzDiffCut[1] = 3;
   mPtCut[0] = 0.2; mPtCut[1] = 100;
   mEtaCut[0] = -1.; mEtaCut[1] = 1.;
@@ -268,7 +268,7 @@ Int_t StPicoAnaTreeMaker::Init() {
     }
     cout<<"[ok]"<<endl;
   }else{
-    cout << "failed to load the runnumber list !!!"<<endl;
+    cout << "failed to load the runnumber list " << mRunList.Data() <<"!!!"<<endl;
     return kStErr;
   }
 
@@ -921,52 +921,37 @@ void StPicoAnaTreeMaker::fillEmcTrigger() {
     int adc = emc->adc(); //dsm adc
     int adc0 = 0;
     int eId = -1;
-    Float_t pMat = 0.;
-    Float_t eMat = 0.;
-    Float_t f_dPhi = -999.;
-    Float_t f_dEta = -999.;
 
+    int counter = mAnaTreeArrays[anaTreeEmcTrigger]->GetEntries();
+    new((*(mAnaTreeArrays[anaTreeEmcTrigger]))[counter]) StEmcTrigger(flag,trgId,adc,eId,adc0);
+  }
+
+  for(UInt_t i = 0;i<mAnaTreeArrays[anaTreeEmcTrigger]->GetEntries();i++){
+    StEmcTrigger *emcTrg = (StEmcTrigger*) mAnaTree->emcTrigger(i);
+    int trgId = emcTrg->id();
     int nElec = mAnaTree->numberOfETracks();
     for(int j=0;j<nElec;j++){
       StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(j);
       StThreeVectorF gMom = eTrk->gMom();
       float pt = gMom.perp();
       if(pt<1) continue;
-      pMat = eTrk->pMom().mag();
-      eMat = eTrk->e();
+      float pMat = eTrk->gMom().mag();
+      float eMat = eTrk->e();
       int trkEmcId = eTrk->towerId();
       if(trkEmcId<1||trkEmcId>4800) continue;
-      Float_t triggerTowerPhi, triggerTowerEta;
-      Float_t trackProjectionPhi, trackProjectionEta;
-      mEmcGeom->getEtaPhi(trgId, triggerTowerEta, triggerTowerPhi);
-      mEmcGeom->getEtaPhi(trkEmcId, trackProjectionEta, trackProjectionPhi);
-
-      Float_t dPhi = triggerTowerPhi - trackProjectionPhi;
-      while (dPhi > TMath::Pi()) dPhi -= 2 * TMath::Pi();
-      while (dPhi < -TMath::Pi()) dPhi += 2 * TMath::Pi();
-      Float_t dEta = triggerTowerEta - trackProjectionEta;
-
-      if (fabs(dPhi) < 0.06 && fabs(dEta) < 0.06 && fabs(dPhi) < fabs(f_dPhi) && fabs(dEta) < fabs(f_dEta))
-      {
-        f_dPhi = dPhi;
-        f_dEta = dEta;
-        eId = j;
-        adc0 = eTrk->adc0();
+      if(trkEmcId==trgId){
+        int adc0 = eTrk->adc0();
+        eTrk->setEmcTriggerId(i);
+        int adc  = emcTrg->adc();
+        emcTrg->setEId(j);
+        emcTrg->setAdc0(adc0);
+        mhAdc0vsP->Fill(pMat,adc0);
+        mhAdc0vsE->Fill(eMat,adc0);
+        mhDsmAdcvsAdc0->Fill(adc0,adc);
+        mhDsmAdcvsP->Fill(pMat,adc);
+        mhDsmAdcvsE->Fill(eMat,adc);
       }
     }
-    int counter = mAnaTreeArrays[anaTreeEmcTrigger]->GetEntries();
-    new((*(mAnaTreeArrays[anaTreeEmcTrigger]))[counter]) StEmcTrigger(flag,trgId,adc,eId,adc0);
-
-    if(eId>=0&&eId<60000) {
-      StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(eId);
-      eTrk->setEmcTriggerId(counter);
-      mhAdc0vsP->Fill(pMat,adc0);
-      mhAdc0vsE->Fill(eMat,adc0);
-      mAnaTree->emcTrigger(counter)->setEId(eId);
-    }
-    mhDsmAdcvsAdc0->Fill(adc0,adc);
-    mhDsmAdcvsP->Fill(pMat,adc);
-    mhDsmAdcvsE->Fill(eMat,adc);
   }
 }
 

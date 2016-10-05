@@ -1,21 +1,32 @@
-#ifndef StPicoQAMaker_h
-#define StPicoQAMaker_h
-
+#ifndef StAnaTreeQAMaker_h
+#define StAnaTreeQAMaker_h
 #include "StMaker.h"
-class StPicoDst;
-class StPicoEvent;
-class StPicoDstMaker;
-class StPicoMtdHit;
-class StPicoTrack;
+#include "TLorentzVector.h"
+
+class StAnaTree;
+class StEventHeader;
+class StElectronTrack;
+class StPartElectronTrack;
+class StMuonTrack;
+class StEEPair;
+class StPhoEEPair;
+class StEMuPair;
+class StMuMuPair;
+class StEmcTrigger;
+class StPicoAnaTreeMaker;
+class StHadronTrack;
+
 class TString;
 class TH1F;
 class TH2F;
 class TH3F;
 class TFile;
+class TF1;
+class TLorentzVector;
 
-class StPicoQAMaker : public StMaker {
+class StAnaTreeQAMaker : public StMaker {
    public:
-      StPicoQAMaker(const char *name, StPicoDstMaker *picoMaker, const char *outName);
+      StAnaTreeQAMaker(const char *name, StPicoAnaTreeMaker *treeMaker, const char *outName);
       Int_t Init();
       Int_t Make();
       void  Clear(Option_t *opt="");
@@ -23,17 +34,13 @@ class StPicoQAMaker : public StMaker {
       void  setRunList(TString name) {mRunFileName = name;};
       void  setNumberOfRuns(int rns) {mTotalRun = rns;};
    private:
-      Bool_t Isgoodtrack(StPicoTrack* ); 
-      Bool_t Ismuontrack(StPicoTrack* );
-      Bool_t Ispasseventcuts(StPicoEvent*);
-      Bool_t isBHT1(StPicoEvent*);
-      Bool_t isBHT2(StPicoEvent*);
-      Bool_t isBHT3(StPicoEvent*);
+      Bool_t Isgoodtrack(StHadronTrack* ); 
+      Bool_t Ispasseventcuts(double Vz);
       Double_t RotatePhi(Double_t phi) const;   
       void    DeclareHistograms();
 
-      StPicoDstMaker *mPicoDstMaker;
-      StPicoDst      *mPicoDst;
+		StPicoAnaTreeMaker *mPicoAnaTreeMaker;
+		StAnaTree          *mAnaTree;
       TString    mOutName;
       Int_t   mNBadRuns;       
       TString mRunFileName;
@@ -76,17 +83,11 @@ class StPicoQAMaker : public StMaker {
       TH1F*      mtrkphi;
       TH1F*      mtrketa;
       TH1F*      mtrkdca;
-      TH1F*      mtrkdcawHFT;
       TH1F*      mtrkdcaXY;
-      TH1F*      mtrkdcaXYwHFT;
       TH1F*      mtrkdcaZ;
-      TH1F*      mtrkdcaZwHFT;
       TH1F*      mnhitsdedx;
       TH1F*      mnhitsfit;
       TH1F*      mnhitsfitRatio;
-      TH1F*      mnhitsdedxwHFT;
-      TH1F*      mnhitsfitwHFT;
-      TH1F*      mnhitsfitRatiowHFT;
 
       TH1F*      mnsigmaPI;
       TH1F*      mnsigmaK;
@@ -101,13 +102,9 @@ class StPicoQAMaker : public StMaker {
       TH2F*      mtrkdca_pt;
       TH2F*      mtrkdcaXY_pt;
       TH2F*      mtrkdcaZ_pt;
-      TH2F*      mtrkdcawHFT_pt;
-      TH2F*      mtrkdcaXYwHFT_pt;
-      TH2F*      mtrkdcaZwHFT_pt;
       TH2F*      mnhitsfit_pt;
       TH2F*      mnhitsdedx_pt;
       TH2F*      mnhitsRatio_pt;
-      TH2F*      mnhitsRatio_ptwHFT;
       TH2F*      mdedx_P;
 
       TH2F*      mnsigmaPI_P;
@@ -194,17 +191,8 @@ class StPicoQAMaker : public StMaker {
       TH2F *hNSigmaPvsRunIndex;
 
       TH2F *hDcavsRunIndex;
-      TH2F *hDcawHFTvsRunIndex;
       TH2F *hDcaXYvsRunIndex;
-      TH2F *hDcaXYwHFTvsRunIndex;
       TH2F *hDcaZvsRunIndex;
-      TH2F *hDcaZwHFTvsRunIndex;
-
-      //TH2F *hHTth0vsRunIndex;   
-      //TH2F *hHTth1vsRunIndex;   
-      //TH2F *hHTth2vsRunIndex;
-      //TH2F *hHTth3vsRunIndex;   
-
 
       TH2F *hntofmatchvsRunIndex;
       TH2F *hnbemchitsvsRunIndex;
@@ -244,13 +232,6 @@ class StPicoQAMaker : public StMaker {
       TH2F *htofElectrondcavsPT;
       TH2F *hbemcElectrondcavsPT;
       TH2F *hMuondcavsPT;
-      //after pid -----wHFT------
-      TH2F *htofPiondcawHFTvsPT;
-      TH2F *htofKaondcawHFTvsPT;
-      TH2F *htofProtondcawHFTvsPT;
-      TH2F *htofElectrondcawHFTvsPT;
-      TH2F *hbemcElectrondcawHFTvsPT;
-      TH2F *hMuondcawHFTvsPT;
 
       //-----only cuts on tpc |nsigma(pi/k/p)|--------------
       TH2F *htpcPiondcavsPT;
@@ -261,16 +242,23 @@ class StPicoQAMaker : public StMaker {
       TH2F *htpctofKaondcavsPT;
       TH2F *htpctofProtondcavsPT;
 
-      //-----only cuts on tpc |nsigma(pi/k/p)|-----wHFT---------
-      TH2F *htpcPiondcawHFTvsPT;
-      TH2F *htpcKaondcawHFTvsPT;
-      TH2F *htpcProtondcawHFTvsPT;
-      //-----tpc cuts + tof cuts---wHFT-------
-      TH2F *htpctofPiondcawHFTvsPT;
-      TH2F *htpctofKaondcawHFTvsPT;
-      TH2F *htpctofProtondcawHFTvsPT;
+      TH2F* hPvEvsRunIndex;
+      TH2F* hnEtavsRunIndex;
+      TH2F* hnPhivsRunIndex;
+      TH2F* hzDistvsRunIndex;
+      TH2F* hphiDistvsRunIndex;
+      TH2F* hadc0vsRunIndex;
+      TH2F* hbetavsRunIndex;
+
+		TH2F *hgRefMultvsZDCx;
+		TH2F *hgRefMultZDCvsRunIndex; 
+      vector<float> avgZDC;
+      vector<float> avgZDCCount;
+      vector<float> avgRefMult;
+      vector<float> avgRefMultCount;
+      TF1* refMvsZDCFit;
       
-      ClassDef(StPicoQAMaker,1)
+      ClassDef(StAnaTreeQAMaker,1)
 };
 
 #endif

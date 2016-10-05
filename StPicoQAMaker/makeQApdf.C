@@ -29,6 +29,7 @@ void makeQApdf(const char* FileName="test.picoHFMyAnaMaker.root", Int_t saveGif=
   {
     TString folderName = FileName;
     folderName.ReplaceAll(".qa.root","_qa");
+    folderName.ReplaceAll(".qa.hists.root","_qa");
     gSystem->Exec(Form("mkdir -p %s",folderName.Data()));
   }
     gROOT->Reset();

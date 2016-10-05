@@ -20,12 +20,16 @@ class StPicoElecPurityMaker : public StMaker {
      Bool_t passGoodTrack(StPicoEvent*, StPicoTrack*, int ); // ZWM
      Bool_t passGoodTrack_NoEta(StPicoEvent*, StPicoTrack*, int ); // ZWM
      Bool_t passBEMCCuts(StPicoEvent*, StPicoTrack*, int );   // ZWM
+     Bool_t passBEMCCuts_noTrigger(StPicoEvent*, StPicoTrack*, int );   // ZWM
      Bool_t passTOFCuts(StPicoEvent*, StPicoTrack*, int );   // ZWM
      Int_t passSMDCuts(StPicoEvent*, StPicoTrack*, int );   // ZWM, return INT becuase could fit multiple cases
      Bool_t Ismuontrack(StPicoEvent*, StPicoTrack* );
      Bool_t IspassTOFcuts(StPicoTrack*);
      Bool_t IspassBEMCcuts(StPicoTrack*);
+  
      Bool_t passEventCuts(StPicoEvent*,int);  // ZWM
+     Bool_t pass_HFT_EventCuts(StPicoEvent*,int);  // ZWM
+
      Bool_t passEventCuts_NodVz(StPicoEvent*,int);  // ZWM
      Bool_t checkHotTower(int, int); //ZWM
      Bool_t checkTriggers(StPicoEvent*, int);
@@ -72,7 +76,12 @@ class StPicoElecPurityMaker : public StMaker {
      void   setProtonEnhCut(float pel, float peh) { protonEnhCutLow = pel; protonEnhCutHigh = peh; };
      void   setDsmAdcCut(int trg, int val) { dsmAdcCut[trg] = val; };
      int    getDsmAdcCut(int trg)            { return dsmAdcCut[trg]; };
+
+     void   setadc0Cut(int trg, int val) { adc0Cut[trg] = val; };
+     int    getadc0Cut(int trg)            { return adc0Cut[trg]; };
+
      void   setSMDCuts(int ne, int np, float zd, float pd) 
+
      {nEtaCut = ne; nPhiCut = np; zDistCut = zd; phiDistCut = pd; };
      void   setSMDCuts2(int ne, int np, float zd, float pd) 
      {nEtaCut2 = ne; nPhiCut2 = np; zDistCut2 = zd; phiDistCut2 = pd; };
@@ -92,6 +101,8 @@ class StPicoElecPurityMaker : public StMaker {
    vector<int> triggers[5]; //0-HT0, 1-HT1 ... 4-MB
    // dsm adc
    int dsmAdcCut[4];
+   int adc0Cut[4];
+
    // Trigger Tracking
    int numTrigs;
    int trig;
@@ -165,10 +176,17 @@ class StPicoElecPurityMaker : public StMaker {
     TH1F*      mtrkpt[4];
     TH1F*      mtrkphi[4];
     TH1F*      mtrketa[4];
-    TH1F*      mnsigmaK[4];
-    TH1F*      mnsigmaE[4];
-    TH1F*      mnsigmaP[4];
-    TH1F*      mnsigmaPI[4];
+
+    TH2F*      mnsigmaE_pT_all[4][2];
+    
+    TH2F*      mnsigmaK[4][2];
+    TH2F*      mnsigmaE[4][2];
+    TH2F*      mnsigmaP[4][2];
+    TH2F*      mnsigmaPI[4][2];
+
+    TH2F*      mnsigmaK_diff[4][2];
+    TH2F*      mnsigmaP_diff[4][2];
+    TH2F*      mnsigmaPI_diff[4][2];
 
     TH2F*      mtrketaphi[4];
     TH2F*      mtrketa_pt[4];
@@ -237,6 +255,10 @@ class StPicoElecPurityMaker : public StMaker {
     THnSparse*      mnSigmaE_SMD2[4][2];
     THnSparse*      mnSigmaE_BEMC[4][2];
 
+    TH2F *nsigmaE_Vs_pT_Tof[4];
+    TH2F *nsigmaE_Vs_pT_BEMC[4];
+    
+    
     // For Centrality Study
     TH1F* gRefMult[4];
     TH1F* gRefMultCor[4];

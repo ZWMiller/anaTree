@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<job maxFilesPerProcess="1" filesPerHour="1" simulateSubmission="false">
+
+ <SandBox installer="ZIP">
+	<Package name="LocalPackage">
+		<File>file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/StRoot</File>
+      <File>file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/.sl64_gcc447</File>
+      <File>file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/.sl64_gcc477</File>
+		<File>file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/.sl64_gcc482</File>
+      <File>file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/runNumberList_run15pAu</File>
+   </Package>
+</SandBox>
+
+<command>
+starver SL16d
+<!-- setup ROOT 5.34.09 -->
+ls -l --color=none
+echo $INPUTFILE0
+set filename=`basename $INPUTFILE0`
+echo $FILEBASENAME
+<!--set RUN=`perl $STAR/StRoot/macros/embedding/getYearDayFromFile.pl -r ${FILEBASENAME}`-->
+ls -l --color=none
+<!--ln -s	/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/runNumberList_run15pAu .-->
+<!-- root4star -q -b -l StRoot/macros/makeAnaTree.C\(${RUN},\"$INPUTFILE0\"\,false,&mode;\,1\,&ptype;\) &gt;&amp; ${JOBID}_$filename.log-->
+root4star -q -b -l StRoot/macros/makeAnaTree.C\(&run;,\"$INPUTFILE0\"\,false,&mode;\,1\,0\) &gt;&amp; ${JOBID}_$filename.log
+ls -l --color=none
+</command>
+
+
+    <stderr URL="file:&path;/log/log_&ver;/&run;/$JOBID.err" />
+    <stdout URL="file:&path;/log/log_&ver;/&run;/$JOBID.out" />
+    <!--<input URL="catalog:star.bnl.gov?production=P16id,runnumber=&run;,trgsetupname=production_pAu200_2015,filename~st_physics,filetype=daq_reco_Mudst,storage!=hpss" nFiles="all"/> -->
+    <input URL="filelist:&listOfFiles;" />
+    <output fromScratch="*.log" toURL="&path;/log/log_&ver;/&run;/"/>
+    <output fromScratch="*anaTree.root" toURL="&path;/out/out_&ver;/&run;/" />
+    <output fromScratch="*qa.root" toURL="&path;/out/out_&ver;/&run;/" />
+    <output fromScratch="*purity.root" toURL="&path;/out/out_&ver;/&run;/" />
+    <!--<output fromScratch="*picoDst.root" toURL="&path;/out/out_&ver;/&run;/" />-->
+    <!--<output fromScratch="*qa.root" toURL="&path;/out/out_&ver;/&run;/" />-->
+    <!--<output fromScratch="*hist.root" toURL="&path;/out/out_&ver;/&run;/" />-->
+</job>

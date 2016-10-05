@@ -103,10 +103,10 @@ void StPicoQAMaker::DeclareHistograms() {
   fout->cd();
   hNEvents   = new TH1F("hNEvents","number of events: 0 for total and 2 for MBs events", 10, 0, 10 );
   //htriggerindex =new TH1F("htriggerindex","triggerindex", 64,0,64);
-  //mVz_vpd     = new TH1F("vz_vpd", "VZ_VPD distribution (cm)",400,-200,200);
-  //mVz_tpc     = new TH1F("vz_tpc","the Vz_TPC distribution (cm) ",400,-200,200);
+  mVz_vpd     = new TH1F("vz_vpd", "VZ_VPD distribution (cm)",400,-200,200);
+  mVz_tpc     = new TH1F("vz_tpc","the Vz_TPC distribution (cm) ",400,-200,200);
   mVz_vpdtpc  = new TH2F("Vz_vpdtpc","VertexZ: VPD VS TPC;TPC;VPD;", 400,-200,200,400,-200,200);
-  //mdVz        = new TH1F("dVz", "VertexZ 'TPC-VPD' (cm)", 400,-200,200);
+  mdVz        = new TH1F("dVz", "VertexZ 'TPC-VPD' (cm)", 400,-200,200);
   mdVz_tpcVz  = new TH2F("dVz_tpcVz","VertexZ 'TPC-VPD vs TPC' (cm);VZtpc; VZ(tpc-vpd)",400,-200,200,200,-100,100);
   mVxy        = new TH2F("vxy","Vertex: Vy Vs Vx distribution (cm);vx;vy; ",200,-10,10,200,-10,10);
   mVRvsVZ    = new TH2F("VRvsVZ","Vertex: VR vs VZ  (cm);VZ;VR; ", 400, -200, 200,200,0,20);
@@ -314,7 +314,7 @@ void StPicoQAMaker::DeclareHistograms() {
   hDcaZwHFTvsRunIndex = new TH2F("hDcaZwHFTvsRunIndex","hDcaZwHFTvsRunIndex;runIndex;dcaZ (cm)",mTotalRun,0,mTotalRun,300,-10,10);
   
 
-    /*
+    
     //after pid QA pi,k,p,e,mu
     htofPiondcavsPT = new TH2F("htofPiondcavsPT","tofPiondca vs PT;pt(GeV/c); Piondca(cm);",200,0,20,250,0,10);
     htofKaondcavsPT = new TH2F("htofKaondcavsPT","tofKaondca vs PT;pt(GeV/c); Kaondca(cm);",200,0,20,250,0,10);
@@ -354,7 +354,7 @@ void StPicoQAMaker::DeclareHistograms() {
     htpctofPiondcawHFTvsPT = new TH2F("htpctofPiondcawHFTvsPT","PiondcawHFTvsPT (|n#sigma_{#pi}|<2&tofm2);pt(GeV/c); Piondca(cm);",200,0,20,250,0,3);
     htpctofKaondcawHFTvsPT = new TH2F("htpctofKaondcawHFTvsPT","KdcawHFTvsPT (|n#sigma_{k}|<2&tofm2);pt(GeV/c); Kaondca(cm);",200,0,20,250,0,3);
     htpctofProtondcawHFTvsPT = new TH2F("htpctofProtondcawHFTvsPT","PdcawHFTvsPT (|n#sigma_{p}|<2&tofm2);pt(GeV/c); Protondca(cm);",200,0,20,250,0,3);
-    */
+    
 
 }// er chen
 
@@ -443,9 +443,9 @@ Int_t StPicoQAMaker::Make() {
   if(fabs(vztpc)<1.0e-5)return kStOK;
 
   if(fillhistflag){
-    //mVz_tpc->Fill(vztpc);
-    //mVz_vpd->Fill(vzvpd);
-    //mdVz->Fill(dvz);  
+    mVz_tpc->Fill(vztpc);
+    mVz_vpd->Fill(vzvpd);
+    mdVz->Fill(dvz);  
     mVz_vpdtpc->Fill(vztpc,vzvpd);
     mdVz_tpcVz->Fill(vztpc,dvz);
     mVxy->Fill( mPicoDst->event()->primaryVertex().x(), mPicoDst->event()->primaryVertex().y() );
@@ -656,7 +656,7 @@ Int_t StPicoQAMaker::Make() {
 
         //------tof information start----------
         Float_t tofbeta=btofpidtrait->btofBeta();
-        /*
+        
            if(fillhistflag){		   
            minvsBeta_P->Fill(mmomentum,1/tofbeta);
            if(tofbeta>0){
@@ -664,7 +664,7 @@ Int_t StPicoQAMaker::Make() {
            mtofM2_P->Fill(mmomentum,tofm2);
            }
            }//
-           */
+           
 
 
         Int_t tofcellid=   btofpidtrait->btofCellId();
@@ -673,10 +673,10 @@ Int_t StPicoQAMaker::Make() {
 
         Float_t toflocaly = btofpidtrait->btofYLocal();
         Float_t toflocalz = btofpidtrait->btofZLocal();
-        // Float_t tofhitPosx = btofpidtrait->btofHitPos().x();
-        // Float_t tofhitPosy = btofpidtrait->btofHitPos().y();
-        // Float_t tofhitPosz = btofpidtrait->btofHitPos().z();
-        /*
+        Float_t tofhitPosx = btofpidtrait->btofHitPos().x();
+        Float_t tofhitPosy = btofpidtrait->btofHitPos().y();
+        Float_t tofhitPosz = btofpidtrait->btofHitPos().z();
+        
            if(fillhistflag){
            mtoftray_localY->Fill(toftray,toflocaly);
            mtoftray_localZ->Fill(toftray,toflocalz);
@@ -684,10 +684,10 @@ Int_t StPicoQAMaker::Make() {
            mtoftray_module->Fill(toftray,tofmodule);
 
            }//
-           */
+        
 
         double mnsigE=track->nSigmaElectron();
-        /*
+        
            if(fillhistflag){ 
         //mpt>0.2&&mpt<2
         if( mpt>0.2){
@@ -760,7 +760,7 @@ Int_t StPicoQAMaker::Make() {
         }
 
       }//if fill hist
-      */
+      
 
 
       }//-------tof information end 
@@ -781,7 +781,7 @@ Int_t StPicoQAMaker::Make() {
         Float_t mtdbeta = mtdpidtraits->beta();
         Int_t mtdbgcell=mtdbackleg*12+mtdcell;
         Int_t mtdchannel=(mtdbackleg-1)*60+(mtdmodule-1)*12+mtdcell;// (backleg-1) * 60 + (module-1) * 12 + cell
-        /*
+        
            if(fillhistflag){
            mmtdbgcell_module->Fill(mtdmodule,mtdbgcell);
            mmtddeltaT_pt->Fill(mpt,mtddT);
@@ -801,10 +801,10 @@ Int_t StPicoQAMaker::Make() {
 
            mmtdBeta_channel->Fill(mtdchannel,mtdbeta);
            }//
-           */
+          
       }
 
-      /*
+      
          if(Ismuontrack(track)) {
          nmuons++; 
 
@@ -817,13 +817,13 @@ Int_t StPicoQAMaker::Make() {
 
          }//		
          }   
-         */
+         
 
       //----------mtd information end------------
 
       //----------BEMC----------------
       Int_t emcpidtraitsid=track->emcPidTraitsIndex();
-      /*
+      
          if(emcpidtraitsid>=0){
          nbemcmatchcount++;
          StPicoEmcPidTraits* emcpidtraits=(StPicoEmcPidTraits*) mPicoDst->emcPidTraits(emcpidtraitsid);
@@ -860,7 +860,7 @@ Int_t StPicoQAMaker::Make() {
          }
          }
          }//end of bemc 
-         */
+         
 
   }//loop of all tracks
 
