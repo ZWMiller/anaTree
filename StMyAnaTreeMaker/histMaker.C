@@ -152,6 +152,7 @@ TH1F* convertTGraphErrorsToTH1(TGraphErrors* tg, int bins, float xlow, float xhi
   }
   return h;
 }
+
 void calculateCrossSection()
 {
   TH1F* ptSpectra[3];
@@ -160,7 +161,6 @@ void calculateCrossSection()
   float NSD = 30e-3; // NonSingleDiffractive 30mb +/- 2.4  (xiaozhi Run12 slides)
   int numEvents = vertexZ->Integral();  
 
-  cout << "0" << endl;
   for(int i=0; i<3; i++)
   {
     ptSpectra[i] = rebinVariableBins(ePt[i], numPtBinsEFF2, lowptEFF2,histName[i]);
@@ -179,20 +179,17 @@ void calculateCrossSection()
   ////  NPE = Inclusive*purity - (US-LS)/PhoRecoEff             ////
   ////  XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*NSD_XS  ////
   //////////////////////////////////////////////////////////////////
-  cout << "1" << endl;
   ptSpectra[0]->Multiply(purity[trigSelect-1]);
   ptSpectra[1]->Add(ptSpectra[2],-1.);
   ptSpectra[1]->Divide(effPHEReco);
   ptSpectra[0]->Add(ptSpectra[1],-1.);
 
-  cout << "2" << endl;
   TLegend* leg = new TLegend(0.5,0.68,0.87,0.89);
   TString histLab[2] = {"Non-Photonic Electrons","Photonic Electrons"};
   npeYield->cd(1);
   gPad->SetLogy(1);
   axes->GetYaxis()->SetRangeUser(100,1e7);
   axes->DrawClone("pe");
-  cout << "3" << endl;
   for(int i=0;i<2;i++){
     axes->SetTitle("NPE Yield;p_{T} (GeV/c); dN/dpT");
     pretty1DHist(ptSpectra[i],colors[i],20+i);
@@ -201,7 +198,6 @@ void calculateCrossSection()
   }
   leg->Draw("same");
   npeYield->cd(2);
-  cout << "4" << endl;
   TH1F* npeDivPE = (TH1F*)ptSpectra[0]->Clone();
   npeDivPE->Divide(ptSpectra[1]);
   axes->SetTitle("NPE/PHE;p_{T} (GeV/c);Ratio NPE/PHE");
@@ -209,7 +205,6 @@ void calculateCrossSection()
   axes->DrawClone("pe");
   npeDivPE->Draw("same pe");
 
-  cout << "5" << endl;
   NPEYield = (TH1F*)ptSpectra[0]->Clone();
   NPECrossSection = (TH1F*)ptSpectra[0]->Clone();
 
@@ -219,7 +214,6 @@ void calculateCrossSection()
   NPECrossSection->Divide(ptMul);     // divide by pT (why? This is what Xiaozhi does and Run 08 analysis)
   axes->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
 
-  cout << "6" << endl;
   pretty1DHist(NPECrossSection,colors[1],24);
   crossSection->cd();
   gPad->SetLogy(1);
@@ -304,12 +298,8 @@ void drawPartECutEffic()
       for(int ii=0;ii<numPtBinsEFF;ii++) xbins[ii] = lowptEFF[ii];
       TH1F* numerator = (TH1F*)histList[2]->Clone();
       TH1F* denominator = (TH1F*)TPCTracks[2]->Clone();
-//      TH1F* numRebin = numerator->Rebin(segs,"numRebin",xbins);
       TH1F* numRebin = rebinVariableBins(numerator,numPtBinsEFF,lowptEFF,"numRebin");
       TH1F* denRebin = rebinVariableBins(denominator,numPtBinsEFF,lowptEFF,"numRebin");
-//      TH1F* denRebin = denominator->Rebin(segs,"denRebin",xbins);
-      //numerator->Rebin(20);
-      //denominator->Rebin(20);
       numRebin->SetTitle("Cut Efficiency;P_{T} (GeV/c);Efficiency");
       pretty1DHist(numRebin,kRed,20);
       numRebin->GetYaxis()->SetRangeUser(0.,1.3);
@@ -637,13 +627,9 @@ void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, 
   leg->AddEntry(sg,"Sigma","lpe");
   sg->SetTitle("n#sigma_{e} Fit Values;P_{T} (GeV/c);");
   nSigMeanSig->cd();
-  //sg->Fit("pol1","R","",1.3,6.);
   sg->Draw("APE");
-  //mn->Fit("pol1","R","",1.3,6.);
   mn->Draw("SAME PE");
   leg->Draw("SAME");
-  //mn->Write();
-  //sg->Write();
 }
 
 void getnSigEeff()
@@ -664,7 +650,6 @@ void getnSigEeff()
     twogaus[ptbin]->SetParameter(3,meant);
     twogaus[ptbin]->SetParameter(4,sigmat);
 
-    //TF1 *Gaus=new TF1("Gaus","exp(-0.5*pow((x-[0])/[1],2))/sqrt(2.*TMath::Pi())/[1]",-4,4);
     TF1 *Gaus=new TF1("Gaus","gausn(0)",-4,4);
     for(int j=0;j<1000;j++){
       if(j%5000==0) cout << "begin " << j << "th entry...." << endl;
@@ -704,8 +689,6 @@ void getnSigEeff()
   grnSigCut->SetTitle("n#sigma_{E} Cut Efficiency;P_{T} (GeV/c);Efficiency");
   grnSigCut->Draw("APE");
   grnSigCut->Fit("pol1","R","",1.3,6.);
-  //grnSigCut->Write();
-
 }
 
 void declareHistograms(){
@@ -768,14 +751,6 @@ void doProjections()
       }
     }
   }
-
-  /* for(int ptbin = 0; ptbin < numPtBins; ptbin++){
-     eHadNorm[ptbin] = 0;
-     for(int etype=0; etype<3; etype++)
-     {
-     eHadNorm[ptbin] += trigCount[etype][ptbin];
-     }
-     }*/
 
   hadEta = (TH1D*)hadEtaPhi->ProjectionX();
   setTitleAndAxisLabels(hadEta,"Hadron Eta","#eta","Counts");
@@ -928,7 +903,6 @@ void drawDeltaPhi(TH1D* h, TCanvas* c, float norm, int activeBin, TPaveText* tpt
   h->SetLineColor(kBlack);
   h->Draw();
   tpt->Draw("same");
-
 }
 
 void getHistograms(TFile* f)
@@ -1029,11 +1003,10 @@ void getdNdpT(TFile* f12)
   for(int ii=0;ii<numPtBinsEFF2;ii++) xbins[ii] = lowptEFF2[ii];
   for(int i=0; i<3; i++)
   {
-    TH1F* ptSpect = ePt[i];//->Rebin(segs,histName[i],xbins);
+    TH1F* ptSpect = ePt[i];
     ptSpect->SetStats(0);
     pretty1DHist(ptSpect,colors[i],20+i);
     leg->AddEntry(ptSpect,legName[i],"lpe");
-    //ptSpectra->Rebin(4);
     TH1F* ptSpectra = rebinVariableBins(ptSpect, numPtBinsEFF2, lowptEFF2);
     ptSpectra->Scale(1./ptSpectra->GetXaxis()->GetBinWidth(5));
     ptSpectra->Scale(1.,"width");
@@ -1053,12 +1026,6 @@ void getdNdpT(TFile* f12)
       run12Hists[ii]->Draw("pe same");
       leg->AddEntry(run12Hists[ii],legName12[ii],"lpe");
     }
-    /*run12Hists[0]->Draw("pe same");
-    run12Hists[1]->Draw("pe same");
-    run12Hists[2]->Draw("pe same");
-    leg->AddEntry(run12Hists[0],legName12[0],"lpe");
-    leg->AddEntry(run12Hists[1],legName12[1],"lpe");
-    leg->AddEntry(run12Hists[2],legName12[2],"lpe");*/
   }
   leg->Draw("same");
 
@@ -1294,7 +1261,6 @@ TH1F* rebinVariableBins(TH1F* h, int nbins, const float* bins, TString name)
   int segs = nbins-1;
   for(int ii=0;ii<nbins;ii++) xbins[ii] = bins[ii];
   TH1F* newH = (TH1F*)h->Rebin(segs,name,xbins);
-  cout << nbins << " got newH" << endl;
   return newH;
 }
 
@@ -1306,6 +1272,5 @@ TH1D* rebinVariableBins(TH1D* h, int nbins, const float* bins, TString name)
   int segs = nbins-1;
   for(int ii=0;ii<nbins;ii++) xbins[ii] = bins[ii];
   TH1D* newH = (TH1D*)h->Rebin(segs,name,xbins);
-  cout << nbins << " got newH" << endl;
   return newH;
 }
