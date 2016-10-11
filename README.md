@@ -13,11 +13,7 @@ valuable for our particular analysis. A few notes before details:
   provided by
     them, but is contained here because all of our classes reference it.
 
-    * The initial design of this code was done by Bingchu Huang with input
-    from
-      Zach Miller. The current version has been refactored many times by both
-      of
-        us and is maintained by both of us for different applications.
+* The initial design of this code was done by Bingchu Huang with input from Zach Miller (and the UIC Group). The current version has been refactored many times by both of us and is maintained by both of us for different applications.
 
 ## Purpose
 
