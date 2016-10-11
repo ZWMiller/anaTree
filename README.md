@@ -1,6 +1,49 @@
-# How to Run (Z. Miller - July 2016)
+# Electron Analysis Tree Maker
 
-## Reading Analysis Tree
+### Written by Bingchu Huang and Zach Miller
+
+This code was designed to work within the STAR Collaboration Framework of
+provided libraries, and is run within the ROOT Analysis program provided by
+CERN. The goal of this code is to trim the data recorded by the STAR detector
+into a manageable amount of data without losing any of the data that is
+valuable for our particular analysis. A few notes before details:
+
+* This builds on top of the work by the STAR collaborators at Lawerence
+  Berkeley National Laboratory (LBNL). The StPicoDstMaker Class is written and
+  provided by
+    them, but is contained here because all of our classes reference it.
+
+    * The initial design of this code was done by Bingchu Huang with input
+    from
+      Zach Miller. The current version has been refactored many times by both
+      of
+        us and is maintained by both of us for different applications.
+
+## Purpose
+
+The amount of data that comes out of the STAR detector is HUGE. Even once it's
+been encoded into Tuples, there are 100s of terrabytes to deal with. In this
+form, the files are known as "MicroDSTs (muDSTs)." The muDSTs contain all of
+the information from each event in the STAR detector... even the information
+that is not relvant to our analysis. The LBNL group trimmed down this file
+format even more to a smaller distribution known as a "PicoDST (pDST)."
+This was done by removing data that is not necessary to any analyses, but that
+was available in the muDST. The PicoDSTs are useful for analysis but still
+contain much information that is not necessary for our analyses, and at a
+precision that is prohibitive due to disk space (each pDST is 3+ GB). Thus,
+the analysis tree maker sorts through the picoDST and only keeps events and
+tracks that are useful, and only keeps variable for each of these classes
+(event, track, etc) that are directly needed for analyses. The anaTreeMaker
+also reduces the precision of the variables to only the needed values. For
+example if we only need to be able to read 5 digits of a float value that runs
+between 0-5... we multiply by 10000 and store it as a short integer, which
+takes less memory than a pure float. The encoding and decoding of these values
+is built into to the constructor and the "getVariable()" functions for each
+class.
+
+## How to Run (Z. Miller - July 2016)
+
+### Reading Analysis Tree
 If you are only going to read the analysis tree, an example analysis program
 can be found in StMyAnaTreeMaker. This is invoked by macro/readAnaTree.C. In
 general, the user will want to make many edits to the StMyAnaTreeMaker in
@@ -39,7 +82,7 @@ root -l -b -q 'histMaker.C("path/to/anaTree/Output.root")'
 and will create a file called "path/to/anaTree/Output.root.pdf".
 
 
-## Making Analysis Tree
+### Making Analysis Tree
 The main portion if this lies in StPicoAnaTreeMaker/. The various classes
 control what is saved for each branch (StEventHeader, StElectronTrack,
 etc...), which is (usually) all done in the class constructor. The class
