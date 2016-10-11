@@ -116,6 +116,7 @@ TF2 *twogaus[numPtBins];
 TH1F* effTrigger[2];
 TH1F* effTracking;
 TH1F* effPHEReco;
+TH1F* purityRun12;
 TH1F* purity[2];
 TH1F* effBarrelElecID;
 TH1F* effTPCElecID; 
@@ -179,6 +180,8 @@ void computeEfficiencyAndDraw(int, TH1F*, TH1F*);
 void makePDF(const char*);
 void writeHistsToOutFile(const char*);
 void drawnSigMeanSig( const double*, const double*, const double*, const double*, const double*, const double*);
+TH1F* rebinVariableBins(TH1F*, int, const float*, TString name="bob");
+TH1D* rebinVariableBins(TH1D*, int, const float*, TString name="bob");
 
 void setTitleAndAxisLabels(TH1*,TString,TString,TString);
 void setTitleAndAxisLabels(TH2*,TString,TString,TString);
