@@ -3,8 +3,8 @@
 
 <command>
 <!-- Set tags file directory -->
-setenv EMLOGS /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/readAnaTree_HT1_1
-setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/out/readAnaTree_HT1_1
+setenv EMLOGS /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/readAnaTree_HT1_1
+setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/out/readAnaTree_HT1_1
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
@@ -17,6 +17,7 @@ ls -la .
 
 <!-- Move LOG files and csh to star disk, remove list files -->
 mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
+mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.elog $EMLOGS/${FILEBASENAME}.elog
 
 </command>
 
@@ -25,7 +26,7 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
     <File>file:./.sl64_gcc482</File>
     <File>file:./.sl64_gcc477</File>
     <File>file:./StRoot</File>
-    <File>file:./runNumberList_completed_run15pAu</File>
+    <File>file:./runNumberList_run15pAu</File>
 	</Package>
 </SandBox>
 
@@ -34,14 +35,16 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
 
 <!-- Define locations of log/elog files -->
-<stdout URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.log"/>
-<stderr URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.elog"/>
+<stdout URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/$JOBID.log"/>
+<stderr URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/$JOBID.elog"/>
+<!--<stdout URL="file:$EMLOGS/$JOBID.log"/>-->
+<!--<stderr URL="file:$EMLOGS/$JOBID.elog"/>-->
 
 <!-- Input daq files -->
-<input URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/haddSubmit/rootfile_temp/anaTree_090616/*.root"/>
+<input URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/haddSubmit/rootfile_temp/anaTree_101116/*.root"/>
 <!-- csh/list files -->
 <Generator>
-  <Location>/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/list</Location>
+  <Location>/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/list</Location>
 </Generator>
 
 </job>

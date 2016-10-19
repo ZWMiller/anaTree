@@ -1,4 +1,4 @@
-void sumTrigTypeHist(const Char_t *inputFile="processedRuns2.list", TString outputFile="trigTypeHists.root", TString title="Run 15 pp 200 GeV")
+void sumTrigTypeHist(const Char_t *inputFile="processedRuns.list", TString outputFile="trigTypeHists.root", TString title="Run 15 pA 200 GeV")
 {
   TH1::AddDirectory(kFALSE); // option needed to allow opening many files
 

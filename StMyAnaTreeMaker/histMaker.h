@@ -1,7 +1,7 @@
 #ifndef _histMaker
 #define _histMaker
 
-const int numPtBins = 17;
+/*const int numPtBins = 17;
 const int numCanvas = numPtBins/9 + 1;
 
 const float lowpt[numPtBins]  = 
@@ -10,17 +10,26 @@ const float lowpt[numPtBins]  =
 const float highpt[numPtBins] = 
 {1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 5.0,
   6.0, 8.0, 10., 20.0 };
-const int colors[5] = {kBlack,kRed,kAzure+1,kMagenta,kYellow};
+*/
+const int numPtBins = 12;
+const int numCanvas = numPtBins/9 + 1;
+
+const float lowpt[numPtBins]  = 
+{ 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0, 10.0, 13.0};
+const float highpt[numPtBins] = 
+{ 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0, 10.0, 13.0, 20.0};
+
+const int colors[6] = {kBlack,kRed,kAzure+1,kMagenta,kOrange+9,kViolet+8};
 
 
-const int numPtBinsEFF = 27;
+const int numPtBinsEFF = 29;
 
 const float lowptEFF[numPtBinsEFF]  = 
 {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 
-  1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 6.0, 8.0, 10.0, 13.0};
+  1.9, 2.0, 2.25, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0, 10.0, 13.0};
 
-const int numPtBinsEFF2 = 11;
-const float lowptEFF2[numPtBinsEFF2+1]  = {2.5,3,3.5,4,4.5,5,5.5,6,7,8,10,13};
+const int numPtBinsEFF2 = 12;
+const float lowptEFF2[numPtBinsEFF2]  = {2.5,3,3.5,4,4.5,5,5.5,6,7,8,10,13};
 
 TCanvas* dPhiPt[3][numCanvas];
 TCanvas* invMassPt[numCanvas];
@@ -47,6 +56,9 @@ TCanvas* nSigCutPlot;
 TCanvas* nSigMeanSig;
 TCanvas* dndpt;
 TCanvas* zdcQA;
+TCanvas* efficiencies;
+TCanvas* crossSection;
+TCanvas* npeYield;
 
 TPaveText* lbl[numPtBins];
 TPaveText* sampleLabel;
@@ -104,10 +116,17 @@ TF2 *twogaus[numPtBins];
 TH1F* effTrigger[2];
 TH1F* effTracking;
 TH1F* effPHEReco;
+TH1F* purityRun12;
 TH1F* purity[2];
 TH1F* effBarrelElecID;
 TH1F* effTPCElecID; 
 TH1F* effnSigE;
+TH1F* eff12nSigE;
+TH1F* efnSigE;
+TH1F* totalEff;
+TH1F* NPEYield;
+TH1F* InvYield;
+TH1F* NPECrossSection;
 
 TH1F* refMult;
 TH1F* vertexZ;
@@ -132,13 +151,14 @@ TString getTriggerLabel();
 void declareHistograms();
 bool checkIfFileOpen(TFile*);
 void getCorections();
-void calculateCrossSection();
+void calculateCrossSection(TFile*);
 void getHistograms(TFile*);
 void pretty1DHist(TH1*, int, int);
 void pretty2DHist(TH2*, int, int);
 void pretty1DHistFill(TH1*, int, int);
 void prettyTGraph(TGraphErrors*, int, int, float, float);
 void prettyTGraph(TGraph*, int, int, float, float);
+TH1F* convertTGraphErrorsToTH1(TGraphErrors*,int,float,float,TString,TString);
 void makeUnlikeMinusLikePartnerElectrons();
 
 void drawQAHists();
@@ -158,7 +178,10 @@ void drawDeltaPhi(TH1D*, TCanvas*, float, int, TPaveText*);
 void drawCutEfficiencyHists();
 void computeEfficiencyAndDraw(int, TH1F*, TH1F*);
 void makePDF(const char*);
+void writeHistsToOutFile(const char*);
 void drawnSigMeanSig( const double*, const double*, const double*, const double*, const double*, const double*);
+TH1F* rebinVariableBins(TH1F*, int, const float*, TString name="bob");
+TH1D* rebinVariableBins(TH1D*, int, const float*, TString name="bob");
 
 void setTitleAndAxisLabels(TH1*,TString,TString,TString);
 void setTitleAndAxisLabels(TH2*,TString,TString,TString);

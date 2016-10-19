@@ -22,7 +22,7 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
 
    chain = new StChain();
 
-   TString runList = "./runNumberList_completed_run15pAu";
+   TString runList = "./runNumberList_run15pAu";
    int number_of_runs = 0;
    std::string line;
    std::ifstream myfile(runList);
@@ -32,20 +32,23 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    StPicoAnaTreeMaker *treeMaker = new StPicoAnaTreeMaker(0,inputFile,0);
    treeMaker->setInputRunList(runList);
    StMyAnaTreeMaker *anaMaker = new StMyAnaTreeMaker("ana",treeMaker,outputFile,mixedEvent);
-   //-1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
+   //trigselect -1 - all, 0 - MB, 1 - HT0, 2 - HT1, 3 - HT2, 4 - HT3, 5 - EMu, 6 - dimuon..
    cout<<"Trigger chosen: "<<trigSelect<<endl;
    anaMaker->setTrigSelect(trigSelect);
    anaMaker->setRunList(runList);
    anaMaker->setNumberOfRuns(number_of_runs);
-   anaMaker->addTrigger(500203,0); //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
-   anaMaker->addTrigger(500213,0);
-   anaMaker->addTrigger(500201,0);
-   anaMaker->addTrigger(500204,1);
-   anaMaker->addTrigger(500214,1);
-   anaMaker->addTrigger(500202,1);
-   //anaMaker->addTrigger(500206,1);
-   anaMaker->addTrigger(500205,2);
-   anaMaker->addTrigger(500215,2);
+   //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
+   anaMaker->addTrigger(500203,0); // BHT0*BBCMB
+   anaMaker->addTrigger(500213,0); // "    "
+   anaMaker->addTrigger(500201,0); // BHT0*VPDMB-5
+   anaMaker->addTrigger(500204,1); // BHT1*BBCMB
+   anaMaker->addTrigger(500214,1); // BHT1*BBCMB
+   anaMaker->addTrigger(500202,1); // BHT1*VPDMB-30
+   anaMaker->addTrigger(500206,1); // BHT1*VPDMB-30-nobsmd
+   anaMaker->addTrigger(500205,2); // BHT2*BBCMB
+   anaMaker->addTrigger(500215,2); // "    "
+   anaMaker->addTrigger(500008,4); // BBCMB
+   anaMaker->addTrigger(500018,4); // "
 
    if(trigSelect==-1||trigSelect==4||trigSelect==5||trigSelect==6){
      anaMaker->setVzCut(-100,100);
