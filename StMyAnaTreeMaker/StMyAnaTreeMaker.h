@@ -81,7 +81,7 @@ class StMyAnaTreeMaker : public StMaker {
       void fillFinishHists();
       double delPhiCorrect(double);
       Bool_t checkTriggers(int);
-      vector<int> getActiveTriggers();
+      vector<int> getActiveTriggers(int);
       int getTriggerName(int);
       Bool_t isMinBias();
       Bool_t isBHT0();
@@ -132,6 +132,7 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hVzdVz;
 		TH1F *hRefMultCut;
 		TH1F *hVertexZCut;
+		TH1F *hVertexZCut_ps;
 		TH2F *hgRefMultvsZDCx;
 		TH2F *hgRefMultZDCvsRunIndex; 
       vector<float> avgZDC;

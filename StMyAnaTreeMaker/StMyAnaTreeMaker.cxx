@@ -269,7 +269,6 @@ Int_t StMyAnaTreeMaker::Make() {
     if(runId==mBadRuns[i]) return kStOK;
   }
   hnEvents->Fill(1);
-  determineTriggers(); // This function finds which triggers fired in event.
   int eventPass = 0;
   if(mTrigSelect<0) eventPass = 1;
   else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
@@ -285,12 +284,11 @@ Int_t StMyAnaTreeMaker::Make() {
   fillTrigTypeHist();
   hnEvents->Fill(2);
   
-  vector<int> activeTrigs = getActiveTriggers();
-  for(auto trg = activeTrigs.begin(); trg < activeTrigs.end(); ++trg)
-  {
-    Double_t ps = mPrescales->GetPrescale(runId,getTriggerName(*trg)); 
-    cout << "Run: " << runId << " Trig: " << *trg << " PS: " << ps << endl;
-  }
+  vector<int> activeTrigs = getActiveTriggers(mTrigSelect-1);
+  if(activeTrigs.size() > 1)
+    cout << "more than 1 trigger!" << endl;
+  Double_t ps = mPrescales->GetPrescale(runId,getTriggerName(activeTrigs[0])); 
+  //cout << "Run: " << runId << " Trig: " << activeTrigs[0] << " PS: " << ps << endl;
 
   Double_t vzVpd=mAnaTree->event()->vzVpd();
   StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
@@ -308,6 +306,7 @@ Int_t StMyAnaTreeMaker::Make() {
 
   hRefMultCut->Fill(mAnaTree->event()->grefMult());
   hVertexZCut->Fill(mPrimaryVertex.z());
+  hVertexZCut_ps->Fill(mPrimaryVertex.z(),ps);
 
   centrality = getCentrality();
   current_centrality = getCentrality();
@@ -1418,18 +1417,15 @@ Bool_t StMyAnaTreeMaker::checkTriggers(int trigType)
   return false;
 }
 
-vector<int> StMyAnaTreeMaker::getActiveTriggers()
+vector<int> StMyAnaTreeMaker::getActiveTriggers(int trigType)
 {
   vector<int> active;
-  for(int trigType = 0; trigType < 5; trigType++)
-  {
     for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
     {
       if(mAnaTree->event()->isTrigger(*trg)){
         active.push_back(*trg);
       }
     }
-  }
   return active;
 }
 
@@ -1457,6 +1453,9 @@ int StMyAnaTreeMaker::getTriggerName(int trg)
     return BBCMB;
   if (trg == 500018)
     return BBCMB2;
+  
+  return -1;
+  
 }
 
 Bool_t StMyAnaTreeMaker::isBHT0()
@@ -2060,6 +2059,7 @@ void StMyAnaTreeMaker::declareHistograms() {
   hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",1600,-400,400,1600,-400,400);
   hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
   hVertexZCut = new TH1F("hVertexZCut","vertexZ after cut;Vz (cm);Couts",400,-100,100);
+  hVertexZCut_ps = new TH1F("hVertexZCut_ps","vertexZ after cut with prescale;Vz (cm);Couts",400,-100,100);
 
   hNe = new TH2F("hNe","#e+ vs. #e-;#e^{+} candidate;#e^{-} candidate;Counts",100,0,100,100,0,100);
   hNemu = new TH2F("hNemu","#e vs. #mu;#e candidate;#mu candidate;Counts",100,0,100,100,0,100);

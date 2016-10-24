@@ -38,13 +38,13 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    anaMaker->setRunList(runList);
    anaMaker->setNumberOfRuns(number_of_runs);
    //0 -BHT0, 1-BHT1, 2-BHT2, 3-BHT3, 4-MB
-   anaMaker->addTrigger(500203,0); // BHT0*BBCMB
-   anaMaker->addTrigger(500213,0); // "    "
+   //anaMaker->addTrigger(500203,0); // BHT0*BBCMB
+   //anaMaker->addTrigger(500213,0); // "    "
    anaMaker->addTrigger(500201,0); // BHT0*VPDMB-5
-   anaMaker->addTrigger(500204,1); // BHT1*BBCMB
-   anaMaker->addTrigger(500214,1); // BHT1*BBCMB
+   //anaMaker->addTrigger(500204,1); // BHT1*BBCMB
+   //anaMaker->addTrigger(500214,1); // BHT1*BBCMB
    anaMaker->addTrigger(500202,1); // BHT1*VPDMB-30
-   anaMaker->addTrigger(500206,1); // BHT1*VPDMB-30-nobsmd
+   //anaMaker->addTrigger(500206,1); // BHT1*VPDMB-30-nobsmd
    anaMaker->addTrigger(500205,2); // BHT2*BBCMB
    anaMaker->addTrigger(500215,2); // "    "
    anaMaker->addTrigger(500008,4); // BBCMB
