@@ -100,9 +100,9 @@ void getCorrections(){
   effPHEReco=(TH1F *) infile_PHE_re->Get("PHE_re_efficiency");
   purityRun12=(TH1F *) infile_purity_ht->Get("purity_HT");
 
-  // From Run 15
-  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_SMD2_processed.root","read");
-  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_SMD2_processed.root","read");
+  // From Run 15pp
+  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_BEMC_processed.root","read");
+  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_BEMC_processed.root","read");
 
   TGraphErrors* purityTG0 = (TGraphErrors*)infile_purity1->Get("drawPurityFit_0_0");
   TGraphErrors* purityTG1 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
@@ -110,8 +110,22 @@ void getCorrections(){
   TH1F* purityT0 = convertTGraphErrorsToTH1(purityTG0, 100, 0, 20, "PurityT0", "Purity HT1");
   TH1F* purityT1 = convertTGraphErrorsToTH1(purityTG1, 100, 0, 20, "PurityT1", "Purity HT2");
 
-  purity[0] = rebinVariableBins(purityT0,numPtBinsEFF2,lowptEFF2,"purity_HT1");
-  purity[1] = rebinVariableBins(purityT1,numPtBinsEFF2,lowptEFF2,"purity_HT2");
+  puritypp[0] = rebinVariableBins(purityT0,numPtBinsEFF2,lowptEFF2,"puritypp_HT1");
+  puritypp[1] = rebinVariableBins(purityT1,numPtBinsEFF2,lowptEFF2,"puritypp_HT2");
+  
+  // From Run 15 pA
+  TFile* infile_purity2 = new TFile("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/run15Corrections/anaTree15_pA.purity_Eta_BHT1_BEMC_processed.root","read");
+  TFile* infile_purity3 = new TFile("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/run15Corrections/anaTree15_pA.purity_Eta_BHT2_BEMC_processed.root","read");
+
+  TGraphErrors* purityTG2 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
+  TGraphErrors* purityTG3 = (TGraphErrors*)infile_purity3->Get("drawPurityFit_0_0");
+
+  TH1F* purityT2 = convertTGraphErrorsToTH1(purityTG2, 100, 0, 20, "PurityT2", "Purity HT2");
+  TH1F* purityT3 = convertTGraphErrorsToTH1(purityTG3, 100, 0, 20, "PurityT3", "Purity HT3");
+
+  purity[0] = rebinVariableBins(purityT2,numPtBinsEFF2,lowptEFF2,"purity_HT1");
+  purity[1] = rebinVariableBins(purityT3,numPtBinsEFF2,lowptEFF2,"purity_HT2");
+
   effnSigE = rebinVariableBins(efnSigE,numPtBinsEFF2,lowptEFF2,"effnSigE");
 
   TH1F* temp0[6] = {effTrigger[trigSelect-1], effTracking, effnSigE, partECutEfficiency[3], purity[trigSelect-1], effPHEReco};
@@ -1107,7 +1121,10 @@ void getdNdpT(TFile* fC)
     ptDist[1]->Add(ptDist[2],-1.);
     ptDist[1]->Divide(effPHEReco);
     ptDist[0]->Add(ptDist[1],-1.);
-    run12hist[0]->Multiply(purityRun12);
+    if( compareRun15p )
+      run12hist[0]->Multiply(puritypp[trigSelect-1]);
+    else
+      run12hist[0]->Multiply(purityRun12);
     run12hist[1]->Add(run12hist[2],-1.);
     run12hist[1]->Divide(effPHEReco);
     run12hist[0]->Add(run12hist[1],-1.);
@@ -1132,7 +1149,7 @@ void getdNdpT(TFile* fC)
     pretty1DHist(ptDist[0], kRed, 24);
     Run12Ratio->cd(4);
     if( compareRun15p )
-      ptDist[0]->GetYaxis()->SetRangeUser(0,4);
+      ptDist[0]->GetYaxis()->SetRangeUser(0,30);
     else
       ptDist[0]->GetYaxis()->SetRangeUser(0,50);
     ptDist[0]->Draw("pe");

@@ -21,6 +21,8 @@
 #include "TLorentzVector.h"
 #include "mBadRunList.h"
 #include "StMyAnaTreeMaker.h"
+#include "prescales.h"
+#include "StTRIGGERS.h"
 
 #define nCentrals 10 
 #define eMass 0.000510999
@@ -204,6 +206,8 @@ Int_t StMyAnaTreeMaker::Init() {
   }
   inData.close();
 
+  mPrescales=prescales::Instance();
+
   declareHistograms();
   declareFunctions();
 
@@ -280,6 +284,13 @@ Int_t StMyAnaTreeMaker::Make() {
   if(eventPass==0) return kStOK;
   fillTrigTypeHist();
   hnEvents->Fill(2);
+  
+  vector<int> activeTrigs = getActiveTriggers();
+  for(auto trg = activeTrigs.begin(); trg < activeTrigs.end(); ++trg)
+  {
+    Double_t ps = mPrescales->GetPrescale(runId,getTriggerName(*trg)); 
+    cout << "Run: " << runId << " Trig: " << *trg << " PS: " << ps << endl;
+  }
 
   Double_t vzVpd=mAnaTree->event()->vzVpd();
   StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
@@ -436,14 +447,14 @@ bool StMyAnaTreeMaker::passHTEIDCuts(StElectronTrack *eTrk) {
   electronEtaPhi[5]->Fill(eta,phi);
   if(pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1]) return false;
   electronEtaPhi[6]->Fill(eta,phi);
-  if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
+ /* if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
   electronEtaPhi[7]->Fill(eta,phi);
   if(nPhi<mEnPhiCut[0]||nPhi>mEnPhiCut[1]) return false;
   electronEtaPhi[8]->Fill(eta,phi);
   if(zDist<mEZDistCut[0]||zDist>mEZDistCut[1]) return false;
   electronEtaPhi[9]->Fill(eta,phi);
   if(phiDist<mEPhiDistCut[0]||phiDist>mEPhiDistCut[1]) return false;
-  electronEtaPhi[10]->Fill(eta,phi);
+  electronEtaPhi[10]->Fill(eta,phi);*/
   if(isHTTrigE(eTrk)) 
     electronEtaPhi[11]->Fill(eta,phi);
 
@@ -1407,6 +1418,46 @@ Bool_t StMyAnaTreeMaker::checkTriggers(int trigType)
   return false;
 }
 
+vector<int> StMyAnaTreeMaker::getActiveTriggers()
+{
+  vector<int> active;
+  for(int trigType = 0; trigType < 5; trigType++)
+  {
+    for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
+    {
+      if(mAnaTree->event()->isTrigger(*trg)){
+        active.push_back(*trg);
+      }
+    }
+  }
+  return active;
+}
+
+int StMyAnaTreeMaker::getTriggerName(int trg)
+{
+  if (trg == 500203) 
+    return BHT0BBCMB;
+  if (trg == 500213)
+    return BHT0BBCMB2;
+  if (trg == 500201)
+    return BHT0VPDMB5;
+  if (trg == 500204)
+    return BHT1BBCMB;
+  if (trg == 500214)
+    return BHT1BBCMB2;
+  if (trg == 500202)
+    return BHT1VPDMB30;
+  if (trg == 500206)
+    return BHT1VPDMB30nobsmd;
+  if (trg == 500205)
+    return BHT2BBCMB;
+  if (trg == 500215)
+    return BHT2BBCMB2;
+  if (trg == 500008)
+    return BBCMB;
+  if (trg == 500018)
+    return BBCMB2;
+}
 
 Bool_t StMyAnaTreeMaker::isBHT0()
 { 
@@ -1496,14 +1547,14 @@ bool StMyAnaTreeMaker::tagEEMCCuts(StElectronTrack *eTrk) {
 
   if(pve<mEmcEPveCut[0] || pve>mEmcEPveCut[1]) return false;
   hnTracks->Fill(16);
-  if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
-    hnTracks->Fill(17);
-    if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
-    hnTracks->Fill(18);
-    if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
-    hnTracks->Fill(19);
-    if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
-    hnTracks->Fill(20);   
+  /*if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
+  hnTracks->Fill(17);
+  if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
+  hnTracks->Fill(18);
+  if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
+  hnTracks->Fill(19);
+  if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
+  hnTracks->Fill(20);   */
   return true;
 }
 

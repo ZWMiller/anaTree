@@ -235,7 +235,9 @@ TH1F* findBadRuns(TH1F* h, float lowLim, float highLim, int* runList, TPaveText*
   {
     if(i>=runCounter) continue;
     float binval = h->GetBinContent(i);
-    if(binval <= lowLim || binval >= highLim && i <= runCounter - 1)
+    if( binval == 0 || binval == 1e7)
+      newH->SetBinContent(i,1e7);
+    else if(binval <= lowLim || binval >= highLim && i <= runCounter - 1 )
     {
       newH->SetBinContent(i,binval+1e-6);
       //h->SetBinContent(i,1e7);
@@ -274,7 +276,7 @@ void addToBadRunList(int run, TString badRunList)
 bool getRunList(int* runList, int &runCounter)
 {
   ifstream indata;
-  indata.open("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/runNumberList_completed_run15pAu");
+  indata.open("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/runNumberList_run15pAu");
   if(indata.is_open()){
     cout<<"read in total run number list and recode run number ...";
     Int_t runnum;

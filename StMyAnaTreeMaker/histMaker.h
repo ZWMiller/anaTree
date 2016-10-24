@@ -118,6 +118,7 @@ TH1F* effTracking;
 TH1F* effPHEReco;
 TH1F* purityRun12;
 TH1F* purity[2];
+TH1F* puritypp[2];
 TH1F* effBarrelElecID;
 TH1F* effTPCElecID; 
 TH1F* effnSigE;
