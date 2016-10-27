@@ -269,16 +269,22 @@ Int_t StMyAnaTreeMaker::Make() {
     if(runId==mBadRuns[i]) return kStOK;
   }
   hnEvents->Fill(1);
+
+  if(isMinBias())
+  {
+    calculate_equivalent_minBias(mTrigSelect, runId);
+  }
+
   int eventPass = 0;
   if(mTrigSelect<0) eventPass = 1;
-  else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
-  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 
-  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 180
-  else if(mTrigSelect==3&& isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT2 300
-  else if(mTrigSelect==4&& isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 
-  else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
-  else if(mTrigSelect==6&&mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
-  else if(mTrigSelect==7&&mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
+  else if(mTrigSelect==0 && isMinBias()) eventPass = 1;
+  else if(mTrigSelect==1 && isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 
+  else if(mTrigSelect==2 && isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 180
+  else if(mTrigSelect==3 && isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT2 300
+  else if(mTrigSelect==4 && isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 
+  else if(mTrigSelect==5 && mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
+  else if(mTrigSelect==6 && mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
+  else if(mTrigSelect==7 && mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
 
   if(eventPass==0) return kStOK;
   fillTrigTypeHist();
@@ -306,7 +312,6 @@ Int_t StMyAnaTreeMaker::Make() {
 
   hRefMultCut->Fill(mAnaTree->event()->grefMult());
   hVertexZCut->Fill(mPrimaryVertex.z());
-  hVertexZCut_ps->Fill(mPrimaryVertex.z(),ps);
 
   centrality = getCentrality();
   current_centrality = getCentrality();
@@ -1458,6 +1463,35 @@ int StMyAnaTreeMaker::getTriggerName(int trg)
   
 }
 
+int StMyAnaTreeMaker::whichTriggerForPS(int mTrigSelect, int runId)
+{
+  int trg = 0;
+
+  if(mTrigSelect == 0)
+  { 
+    if(runId >= 16125024 && runId <= 16127033)
+      trg = 500008;
+    else if (runId >= 16127047 && runId <= 16159024)
+      trg = 500018;
+  }
+
+  if(mTrigSelect == 2)
+  {
+    trg = 500202; 
+  }
+
+  if(mTrigSelect == 3)
+  {
+    if(runId >= 16125024 && runId <= 16127033)
+      trg = 500205;
+    else if (runId >= 16127047 && runId <= 16159024)
+      trg = 500215;
+  }
+
+  return trg;
+
+}
+
 Bool_t StMyAnaTreeMaker::isBHT0()
 { 
   return checkTriggers(0);
@@ -1595,6 +1629,35 @@ int StMyAnaTreeMaker::getCentrality(){
   else Centrality = 9;
   return Centrality;
 }
+
+
+void StMyAnaTreeMaker::calculate_equivalent_minBias(int mTrigSelect, int runId)
+{
+  Double_t psMB, psHT;
+  if (mTrigSelect == 2)
+  {
+    psMB = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(0, runId))); // 0 gets MB for selected triggerID 
+    psHT = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(mTrigSelect,runId))); 
+  }
+  Double_t psScale = psMB/psHT;
+
+  Double_t vzVpd=mAnaTree->event()->vzVpd();
+  StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
+  hVzVpdVz->Fill(mPrimaryVertex.z(),vzVpd);
+  hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
+  if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return;
+  if(fabs(vzVpd) > 300)
+  {
+    if(DEBUG) cout << "No VPD Vz, skip dVz cut" << endl;
+  }
+  else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
+    return;
+  
+  hVertexZCut_MB->Fill(mPrimaryVertex.z());
+  hVertexZCut_eqMB->Fill(mPrimaryVertex.z(),psScale);
+  
+}
+
 void StMyAnaTreeMaker::printCuts(){
 
   LOG_INFO<<"analysis cuts:"<<endm;
@@ -2059,7 +2122,8 @@ void StMyAnaTreeMaker::declareHistograms() {
   hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",1600,-400,400,1600,-400,400);
   hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
   hVertexZCut = new TH1F("hVertexZCut","vertexZ after cut;Vz (cm);Couts",400,-100,100);
-  hVertexZCut_ps = new TH1F("hVertexZCut_ps","vertexZ after cut with prescale;Vz (cm);Couts",400,-100,100);
+  hVertexZCut_eqMB = new TH1F("hVertexZCut_eqMB","vertexZ after cut with prescale;Vz (cm);Couts",400,-100,100);
+  hVertexZCut_MB = new TH1F("hVertexZCut_MB","vertexZ after cut with prescale;Vz (cm);Couts",400,-100,100);
 
   hNe = new TH2F("hNe","#e+ vs. #e-;#e^{+} candidate;#e^{-} candidate;Counts",100,0,100,100,0,100);
   hNemu = new TH2F("hNemu","#e vs. #mu;#e candidate;#mu candidate;Counts",100,0,100,100,0,100);
