@@ -179,8 +179,9 @@ void calculateCrossSection(TFile* fC)
   TH1F* runCompPt[3];
   TString histName[3] = {"inclusivePt","USPt","LSPt"}; 
   float dEta = 1.4; // 0.7 - (-0.7)
-  float NSD = 30e-3; // NonSingleDiffractive 30mb +/- 2.4  (xiaozhi Run12 slides)
+  float NSD = 30; // NonSingleDiffractive 30mb +/- 2.4  (xiaozhi Run12 slides)
   int numEvents = vertexZ->Integral();  
+  float equivMBEvents = vertexZeqMB->Integral();
   TH1D* runCompHists[3];  
   if(compareRun15p)
     getRun15pHists(fC,runCompHists);
@@ -251,7 +252,7 @@ void calculateCrossSection(TFile* fC)
   NPEYield = (TH1F*)ptSpectra[0]->Clone();
   NPECrossSection = (TH1F*)ptSpectra[0]->Clone();
 
-  NPECrossSection->Scale(NSD/(2*TMath::Pi()*dEta*numEvents));
+  NPECrossSection->Scale(NSD/(2*TMath::Pi()*dEta*equivMBEvents));
   NPECrossSection->Scale(1.,"width"); // divide each bin by its width
   NPECrossSection->Divide(totalEff);  // divide by efficiency for finding electron
   NPECrossSection->Divide(ptMul);     
@@ -949,6 +950,8 @@ void getHistograms(TFile* f)
   //Events
   refMult = (TH1F*)f->Get("hRefMultCut");
   vertexZ = (TH1F*)f->Get("hVertexZCut");
+  vertexZMB = (TH1F*)f->Get("hVertexZCut_MB");
+  vertexZeqMB = (TH1F*)f->Get("hVertexZCut_eqMB");
 
   // electrons
   eHadDelPhiPt[0] = (TH2F*)f->Get("hHadEDelPhiPt");

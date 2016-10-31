@@ -1463,29 +1463,46 @@ int StMyAnaTreeMaker::getTriggerName(int trg)
   
 }
 
-int StMyAnaTreeMaker::whichTriggerForPS(int mTrigSelect, int runId)
+int StMyAnaTreeMaker::whichTriggerForPS(int mTrigSelect, int runId, int MBorHT)
 {
   int trg = 0;
 
-  if(mTrigSelect == 0)
-  { 
-    if(runId >= 16125024 && runId <= 16127033)
-      trg = 500008;
-    else if (runId >= 16127047 && runId <= 16159024)
-      trg = 500018;
+  if(MBorHT == 0)
+  {
+    if(mTrigSelect == 2) //VPDMB-30 for HT1*VPDMB30
+    {
+      /////////////////////
+      ///// CURRENTLY USING BBCMB BECAUSE NO VPDMB30 SAVED
+      /////////////////////
+      if(runId >= 16125024 && runId <= 16127033)
+        trg = 500008;
+      else if (runId >= 16127047 && runId <= 16159024)
+        trg = 500018;
+    }
+
+    if(mTrigSelect == 3) //BBCMB for HT2*BBCMB
+    { 
+      if(runId >= 16125024 && runId <= 16127033)
+        trg = 500008;
+      else if (runId >= 16127047 && runId <= 16159024)
+        trg = 500018;
+    }
   }
 
-  if(mTrigSelect == 2)
+  if(MBorHT == 1)
   {
-    trg = 500202; 
-  }
+    if(mTrigSelect == 2)
+    {
+      trg = 500202; 
+    }
 
-  if(mTrigSelect == 3)
-  {
-    if(runId >= 16125024 && runId <= 16127033)
-      trg = 500205;
-    else if (runId >= 16127047 && runId <= 16159024)
-      trg = 500215;
+    if(mTrigSelect == 3)
+    {
+      if(runId >= 16125024 && runId <= 16127033)
+        trg = 500205;
+      else if (runId >= 16127047 && runId <= 16159024)
+        trg = 500215;
+    }
   }
 
   return trg;
@@ -1634,11 +1651,8 @@ int StMyAnaTreeMaker::getCentrality(){
 void StMyAnaTreeMaker::calculate_equivalent_minBias(int mTrigSelect, int runId)
 {
   Double_t psMB, psHT;
-  if (mTrigSelect == 2)
-  {
-    psMB = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(0, runId))); // 0 gets MB for selected triggerID 
-    psHT = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(mTrigSelect,runId))); 
-  }
+  psMB = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(mTrigSelect, runId, 0))); // 0 gets MB for selected triggerID 
+  psHT = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(mTrigSelect, runId, 1))); // 1 gets HT Trigger
   Double_t psScale = psMB/psHT;
 
   Double_t vzVpd=mAnaTree->event()->vzVpd();

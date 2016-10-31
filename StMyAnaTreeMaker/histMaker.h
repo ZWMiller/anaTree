@@ -131,6 +131,8 @@ TH1F* NPECrossSection;
 
 TH1F* refMult;
 TH1F* vertexZ;
+TH1F* vertexZMB;
+TH1F* vertexZeqMB;
 TH2F* refMultZDCvsRunIndex;
 TH2F* refMultvsZDCx;
 

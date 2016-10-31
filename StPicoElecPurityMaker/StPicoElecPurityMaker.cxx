@@ -562,7 +562,7 @@ Int_t StPicoElecPurityMaker::FillHistograms(Int_t trig, StPicoEvent* event)
 
     // mdedx_Pt[trig]->Fill(mpt*mcharge,track->dEdx());
 
-    double sparseFill[10] = {mpt, nsige, nsigpi,nsigp,nsigk,meta,cent9_grefmult,event->primaryVertex().z(),dcaXY,dcaZ};
+    double sparseFill[10] = {mpt, nsige, nsigpi, nsigp, nsigk, meta, cent9_grefmult,event->primaryVertex().z(),dcaXY,dcaZ};
 
 
     if((trig<4)&&passBEMCCuts(event, track, trig))

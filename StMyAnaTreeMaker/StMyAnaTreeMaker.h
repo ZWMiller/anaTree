@@ -83,7 +83,7 @@ class StMyAnaTreeMaker : public StMaker {
       Bool_t checkTriggers(int);
       vector<int> getActiveTriggers(int);
       int getTriggerName(int);
-      int whichTriggerForPS(int, int);
+      int whichTriggerForPS(int, int, int);
       void calculate_equivalent_minBias(int, int);
       Bool_t isMinBias();
       Bool_t isBHT0();
