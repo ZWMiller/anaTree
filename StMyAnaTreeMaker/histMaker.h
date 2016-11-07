@@ -19,7 +19,7 @@ const float lowpt[numPtBins]  =
 const float highpt[numPtBins] = 
 { 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0, 10.0, 13.0, 20.0};
 
-const int colors[6] = {kBlack,kRed,kAzure+1,kMagenta,kOrange+9,kGray};
+const int colors[6] = {kBlack,kRed,kAzure+1,kMagenta,kOrange+9,kViolet+8};
 
 
 const int numPtBinsEFF = 29;
@@ -116,7 +116,9 @@ TF2 *twogaus[numPtBins];
 TH1F* effTrigger[2];
 TH1F* effTracking;
 TH1F* effPHEReco;
+TH1F* purityRun12;
 TH1F* purity[2];
+TH1F* puritypp[2];
 TH1F* effBarrelElecID;
 TH1F* effTPCElecID; 
 TH1F* effnSigE;
@@ -126,9 +128,13 @@ TH1F* totalEff;
 TH1F* NPEYield;
 TH1F* InvYield;
 TH1F* NPECrossSection;
+TH1F* xsRun12;
+TH1F* xsRun12sys;
 
 TH1F* refMult;
 TH1F* vertexZ;
+TH1F* vertexZMB;
+TH1F* vertexZeqMB;
 TH2F* refMultZDCvsRunIndex;
 TH2F* refMultvsZDCx;
 
@@ -150,7 +156,7 @@ TString getTriggerLabel();
 void declareHistograms();
 bool checkIfFileOpen(TFile*);
 void getCorections();
-void calculateCrossSection();
+void calculateCrossSection(TFile*);
 void getHistograms(TFile*);
 void pretty1DHist(TH1*, int, int);
 void pretty2DHist(TH2*, int, int);
@@ -179,6 +185,8 @@ void computeEfficiencyAndDraw(int, TH1F*, TH1F*);
 void makePDF(const char*);
 void writeHistsToOutFile(const char*);
 void drawnSigMeanSig( const double*, const double*, const double*, const double*, const double*, const double*);
+TH1F* rebinVariableBins(TH1F*, int, const float*, TString name="bob");
+TH1D* rebinVariableBins(TH1D*, int, const float*, TString name="bob");
 
 void setTitleAndAxisLabels(TH1*,TString,TString,TString);
 void setTitleAndAxisLabels(TH2*,TString,TString,TString);

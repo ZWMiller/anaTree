@@ -24,6 +24,7 @@ class StMuMuPair;
 class StEmcTrigger;
 class StPicoAnaTreeMaker;
 class StHadronTrack;
+class prescales;
 
 class TString;
 class TH1F;
@@ -72,6 +73,7 @@ class StMyAnaTreeMaker : public StMaker {
 		void 	makeMuMuMixedPairs(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer);
 		void 	copyCurrentToBuffer(int magBufferPointer,int cenBufferPointer, int vzBufferPointer, int eveBufferPointer);
 
+      prescales *mPrescales;
       void determineTriggers();
       void fillTrigTypeHist();
       void clearTriggers();
@@ -79,6 +81,10 @@ class StMyAnaTreeMaker : public StMaker {
       void fillFinishHists();
       double delPhiCorrect(double);
       Bool_t checkTriggers(int);
+      vector<int> getActiveTriggers(int);
+      int getTriggerName(int);
+      int whichTriggerForPS(int, int, int);
+      void calculate_equivalent_minBias(int, int);
       Bool_t isMinBias();
       Bool_t isBHT0();
       Bool_t isBHT1();
@@ -128,6 +134,8 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hVzdVz;
 		TH1F *hRefMultCut;
 		TH1F *hVertexZCut;
+		TH1F *hVertexZCut_eqMB;
+		TH1F *hVertexZCut_MB;
 		TH2F *hgRefMultvsZDCx;
 		TH2F *hgRefMultZDCvsRunIndex; 
       vector<float> avgZDC;

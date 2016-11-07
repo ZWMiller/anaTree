@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<job maxFilesPerProcess="1" fileListSyntax="paths" simulateSubmission="false" filesPerHour="0.3" >
+<job maxFilesPerProcess="50" fileListSyntax="paths" simulateSubmission="false" >
 
 <command>
   starver SL16d
 <!-- Set tags file directory -->
-setenv EMLOGS /gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log 
-setenv EMOUTPUT /gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/out
+setenv EMLOGS /gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/log/readAnaTree_HT1
+setenv EMOUTPUT /gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/out/readAnaTree_HT1
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
 echo EMOUTPUT : $EMOUTPUT
 
 <!--root4star -l -b -q 'StRoot/macros/readAnaTree.C'-->
-root4star -l -b -q 'StRoot/macros/readAnaTree.C(500000000,"processedRuns.list","anaTree15.hists.root",2,false)'
+root4star -l -b -q 'StRoot/macros/readAnaTree.C(500000000,"${FILELIST}","${FILEBASENAME}.hists.root",2,false)'
 ls -la .
 
 <!-- Move LOG files and csh to star disk, remove list files -->
@@ -22,11 +22,10 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 
 <SandBox installer="ZIP">
   <Package name="MyAnaTreeMaker">
-    <File>file:./processedRuns.list</File>
     <File>file:./.sl64_gcc482</File>
     <File>file:./.sl64_gcc477</File>
     <File>file:./StRoot</File>
-    <File>file:./runNumberList_run15pAu</File>
+    <File>file:./runNumberList_run15pp</File>
 	</Package>
 </SandBox>
 
@@ -35,14 +34,16 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
 
 <!-- Define locations of log/elog files -->
-<stdout URL="file:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.log"/>
-<stderr URL="file:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/$JOBID.elog"/>
+<stdout URL="file:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/log/readAnaTree_HT1/$JOBID.log"/>
+<stderr URL="file:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/log/readAnaTree_HT1/$JOBID.elog"/>
+
+<input URL="filelist:/gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v3_100516/processedRuns.list"/>
 
 <!-- Input daq files -->
 <!--<input URL="file:/star/data01/pwg/zamiller/misAlignSim/05-27-2016-simmis/out8/rcf16001_*_fieldoff_misalign_sdt20141216_500evts.event.root"/>-->
 <!-- csh/list files -->
 <Generator>
-  <Location>/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v1_082216/readTreeOut/log/list</Location>
+  <Location>/gpfs/mnt/gpfs01/star/pwg/zamiller/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/log/list</Location>
 </Generator>
 
 </job>

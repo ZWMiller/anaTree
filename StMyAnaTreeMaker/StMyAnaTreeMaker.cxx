@@ -21,6 +21,8 @@
 #include "TLorentzVector.h"
 #include "mBadRunList.h"
 #include "StMyAnaTreeMaker.h"
+#include "prescales.h"
+#include "StTRIGGERS.h"
 
 #define nCentrals 10 
 #define eMass 0.000510999
@@ -58,7 +60,7 @@ ClassImp(StMyAnaTreeMaker)
   mEPPtCut[0] = 0.2; mEPPtCut[1] = 30;
   mEEtaCut[0] = -0.7; mEEtaCut[1] = 0.7;
   mEDcaCut[0] = 0.; mEDcaCut[1] = 1.5;
-  mEInvBetaCut[0] = 0.975; mEInvBetaCut[1] = 1.025;
+  mEInvBetaCut[0] = 0.97; mEInvBetaCut[1] = 1.03;
   mELocalYCut[0] = -1.8; mELocalYCut[1] = 1.8;
   mELocalZCut[0] = -3.05; mELocalZCut[1] = 3.05;
   mEnSigECut[0] = -1.0; mEnSigECut[1] = 3.0;
@@ -205,6 +207,8 @@ Int_t StMyAnaTreeMaker::Init() {
   }
   inData.close();
 
+  mPrescales=prescales::Instance();
+
   declareHistograms();
   declareFunctions();
 
@@ -266,21 +270,32 @@ Int_t StMyAnaTreeMaker::Make() {
     if(runId==mBadRuns[i]) return kStOK;
   }
   hnEvents->Fill(1);
-  determineTriggers(); // This function finds which triggers fired in event.
+
+  if(isMinBias())
+  {
+    calculate_equivalent_minBias(mTrigSelect, runId);
+  }
+
   int eventPass = 0;
   if(mTrigSelect<0) eventPass = 1;
-  else if(mTrigSelect==0&&mAnaTree->event()->isMinBias()) eventPass = 1;
-  else if(mTrigSelect==1&& isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 
-  else if(mTrigSelect==2&& isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 180
-  else if(mTrigSelect==3&& isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT2 300
-  else if(mTrigSelect==4&& isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 
-  else if(mTrigSelect==5&&mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
-  else if(mTrigSelect==6&&mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
-  else if(mTrigSelect==7&&mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
+  else if(mTrigSelect==0 && isMinBias()) eventPass = 1;
+  else if(mTrigSelect==1 && isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 
+  else if(mTrigSelect==2 && isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 180
+  else if(mTrigSelect==3 && isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT2 300
+  else if(mTrigSelect==4 && isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 
+  else if(mTrigSelect==5 && mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
+  else if(mTrigSelect==6 && mAnaTree->event()->isDiMuon()) eventPass = 1; //di-muon
+  else if(mTrigSelect==7 && mAnaTree->event()->isSingleMuon()) eventPass = 1; //single-muon
 
   if(eventPass==0) return kStOK;
   fillTrigTypeHist();
   hnEvents->Fill(2);
+  
+  vector<int> activeTrigs = getActiveTriggers(mTrigSelect-1);
+  if(activeTrigs.size() > 1)
+    cout << "more than 1 trigger!" << endl;
+  Double_t ps = mPrescales->GetPrescale(runId,getTriggerName(activeTrigs[0])); 
+  //cout << "Run: " << runId << " Trig: " << activeTrigs[0] << " PS: " << ps << endl;
 
   Double_t vzVpd=mAnaTree->event()->vzVpd();
   StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
@@ -437,14 +452,14 @@ bool StMyAnaTreeMaker::passHTEIDCuts(StElectronTrack *eTrk) {
   electronEtaPhi[5]->Fill(eta,phi);
   if(pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1]) return false;
   electronEtaPhi[6]->Fill(eta,phi);
-  if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
+ /* if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
   electronEtaPhi[7]->Fill(eta,phi);
   if(nPhi<mEnPhiCut[0]||nPhi>mEnPhiCut[1]) return false;
   electronEtaPhi[8]->Fill(eta,phi);
   if(zDist<mEZDistCut[0]||zDist>mEZDistCut[1]) return false;
   electronEtaPhi[9]->Fill(eta,phi);
   if(phiDist<mEPhiDistCut[0]||phiDist>mEPhiDistCut[1]) return false;
-  electronEtaPhi[10]->Fill(eta,phi);
+  electronEtaPhi[10]->Fill(eta,phi);*/
   if(isHTTrigE(eTrk)) 
     electronEtaPhi[11]->Fill(eta,phi);
 
@@ -1408,6 +1423,130 @@ Bool_t StMyAnaTreeMaker::checkTriggers(int trigType)
   return false;
 }
 
+vector<int> StMyAnaTreeMaker::getActiveTriggers(int trigType)
+{
+  vector<int> active;
+    for(auto trg = triggers[trigType].begin(); trg < triggers[trigType].end(); ++trg)
+    {
+      if(mAnaTree->event()->isTrigger(*trg)){
+        active.push_back(*trg);
+      }
+    }
+  return active;
+}
+
+int StMyAnaTreeMaker::getTriggerName(int trg)
+{
+  if (trg == 480201) 
+    return BHT0VPDMB5;
+  if (trg == 470211)
+    return BHT0VPDMB53;
+  if (trg == 490201)
+    return BHT0VPDMB53;
+  if (trg == 480203)
+    return BHT0BBCMB;
+  if (trg == 490203)
+    return BHT0BBCMB2;
+  if (trg == 470213)
+    return BHT0BBCMB3;
+  if (trg == 480202)
+    return BHT1VPDMB30;
+  if (trg == 470202)
+    return BHT1VPDMB302;
+  if (trg == 490202)
+    return BHT1VPDMB303;
+  if (trg == 480204)
+    return BHT1BBCMB;
+  if (trg == 470214)
+    return BHT1BBCMB2;
+  if (trg == 490204)
+    return BHT1BBCMB3;
+  if (trg == 470206)
+    return BHT1VPDMB30nobsmd;
+  if (trg == 480206)
+    return BHT1VPDMB30nobsmd2;
+  if (trg == 490206)
+    return BHT1VPDMB30nobsmd3;
+  if (trg == 480205)
+    return BHT2BBCMB;
+  if (trg == 470205)
+    return BHT2BBCMB2;
+  if (trg == 490205)
+    return BHT2BBCMB3;
+  if (trg == 470003)
+    return BBCMB;
+  if (trg == 480003)
+    return BBCMB2;
+  if (trg == 490003)
+    return BBCMB3;
+  if (trg == 470904)
+    return VPDMB30;
+  if (trg == 470914)
+    return VPDMB302;
+  if (trg == 480904)
+    return VPDMB303;
+  if (trg == 490904)
+    return VPDMB304;
+  
+  return -1;
+  
+}
+
+int StMyAnaTreeMaker::whichTriggerForPS(int mTrigSelect, int runId, int MBorHT)
+{
+  int trg = 0;
+
+  if(MBorHT == 0) //MB Equiv
+  {
+    if(mTrigSelect == 2) //VPDMB-30 for HT1*VPDMB30
+    {
+      if(runId >= 16048109 && runId <= 16059026)
+        trg = 470904;
+      else if (runId >= 16059027 && runId <= 16066025)
+        trg = 470914;
+      else if (runId >= 16064077 && runId <= 16093018)
+        trg = 480904;
+      else if (runId >= 16091058 && runId <= 16117019)
+        trg = 490904;
+    }
+
+    if(mTrigSelect == 3) //BBCMB for HT2*BBCMB
+    { 
+      if (runId >= 16044110 && runId <= 16066025)
+        trg = 470003;
+      else if (runId >= 16064077 && runId <= 16093018)
+        trg = 480003;
+      else if (runId >= 16091058 && runId <= 16117019)
+        trg = 490003;
+    }
+  }
+
+  if(MBorHT == 1) // HT
+  {
+    if(mTrigSelect == 2)
+    {
+      if (runId >= 16045082 && runId <= 16066025)
+        trg = 470202;
+      else if (runId >= 16064077 && runId <= 16093018)
+        trg = 480202;
+      else if (runId >= 16091058 && runId <= 16117019)
+        trg = 490202;
+    }
+
+    if(mTrigSelect == 3)
+    {
+      if (runId >= 16044110 && runId <= 16066025)
+        trg = 470205;
+      else if (runId >= 16064077 && runId <= 16093018)
+        trg = 480205;
+      else if (runId >= 16091058 && runId <= 16117019)
+        trg = 490205;
+    }
+  }
+
+  return trg;
+
+}
 
 Bool_t StMyAnaTreeMaker::isBHT0()
 { 
@@ -1497,14 +1636,14 @@ bool StMyAnaTreeMaker::tagEEMCCuts(StElectronTrack *eTrk) {
 
   if(pve<mEmcEPveCut[0] || pve>mEmcEPveCut[1]) return false;
   hnTracks->Fill(16);
-  if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
-    hnTracks->Fill(17);
-    if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
-    hnTracks->Fill(18);
-    if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
-    hnTracks->Fill(19);
-    if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
-    hnTracks->Fill(20);   
+  /*if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
+  hnTracks->Fill(17);
+  if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
+  hnTracks->Fill(18);
+  if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
+  hnTracks->Fill(19);
+  if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
+  hnTracks->Fill(20);  */
   return true;
 }
 
@@ -1546,6 +1685,32 @@ int StMyAnaTreeMaker::getCentrality(){
   else Centrality = 9;
   return Centrality;
 }
+
+
+void StMyAnaTreeMaker::calculate_equivalent_minBias(int mTrigSelect, int runId)
+{
+  Double_t psMB, psHT;
+  psMB = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(mTrigSelect, runId, 0))); // 0 gets MB for selected triggerID 
+  psHT = mPrescales->GetPrescale(runId,getTriggerName(whichTriggerForPS(mTrigSelect, runId, 1))); // 1 gets HT Trigger
+  Double_t psScale = psMB/psHT;
+
+  Double_t vzVpd=mAnaTree->event()->vzVpd();
+  StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
+  hVzVpdVz->Fill(mPrimaryVertex.z(),vzVpd);
+  hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
+  if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return;
+  if(fabs(vzVpd) > 300)
+  {
+    if(DEBUG) cout << "No VPD Vz, skip dVz cut" << endl;
+  }
+  else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
+    return;
+  
+  hVertexZCut_MB->Fill(mPrimaryVertex.z());
+  hVertexZCut_eqMB->Fill(mPrimaryVertex.z(),psScale);
+  
+}
+
 void StMyAnaTreeMaker::printCuts(){
 
   LOG_INFO<<"analysis cuts:"<<endm;
@@ -2010,6 +2175,8 @@ void StMyAnaTreeMaker::declareHistograms() {
   hVzdVz = new TH2F("hVzdVz","hVzdVz;Vz (cm); Vz_{VPD}-Vz_{TPC} (cm);",1600,-400,400,1600,-400,400);
   hRefMultCut = new TH1F("hRefMultCut","Reference Multiplicity after cut;uncorrected dN_{ch}/d#eta;Counts",1000,0,1000);
   hVertexZCut = new TH1F("hVertexZCut","vertexZ after cut;Vz (cm);Couts",400,-100,100);
+  hVertexZCut_eqMB = new TH1F("hVertexZCut_eqMB","vertexZ after cut with prescale;Vz (cm);Couts",400,-100,100);
+  hVertexZCut_MB = new TH1F("hVertexZCut_MB","vertexZ after cut with prescale;Vz (cm);Couts",400,-100,100);
 
   hNe = new TH2F("hNe","#e+ vs. #e-;#e^{+} candidate;#e^{-} candidate;Counts",100,0,100,100,0,100);
   hNemu = new TH2F("hNemu","#e vs. #mu;#e candidate;#mu candidate;Counts",100,0,100,100,0,100);
