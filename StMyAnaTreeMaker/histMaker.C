@@ -1,6 +1,6 @@
 #include "histMaker.h"
 
-bool DEBUG = !kTRUE;
+bool DEBUG = kTRUE;
 bool compareRun12 = kTRUE;
 bool compareRun15p = !kTRUE; // If this is true, it will take precedence over Run12 compare
 
@@ -83,6 +83,8 @@ void writeHistsToOutFile(const char* fileName)
   for(int i=0; i<3; i++){
     ePt[i]->Write();
   }
+  NPECrossSection->Write();
+  npeDivPE->Write();
   oF->Close();
   return;
 }  
@@ -104,8 +106,8 @@ void getCorrections(){
   xsRun12sys=(TH1F *) infile_crossSec->Get("run12_HT_NPE_sys");
 
   // From Run 15pp
-  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_SMD2_processed.root","read");
-  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_SMD2_processed.root","read");
+  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_BEMC_processed.root","read");
+  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_BEMC_processed.root","read");
 
   TGraphErrors* purityTG0 = (TGraphErrors*)infile_purity1->Get("drawPurityFit_0_0");
   TGraphErrors* purityTG1 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
@@ -117,8 +119,8 @@ void getCorrections(){
   puritypp[1] = rebinVariableBins(purityT1,numPtBinsEFF2,lowptEFF2,"puritypp_HT2");
   
   // From Run 15 pA
-  TFile* infile_purity2 = new TFile("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/run15Corrections/anaTree15_pA.purity_Eta_BHT1_BEMC_processed.root","read");
-  TFile* infile_purity3 = new TFile("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/run15Corrections/anaTree15_pA.purity_Eta_BHT2_BEMC_processed.root","read");
+  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_BEMC_processed.root","read");
+  TFile* infile_purity3 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_BEMC_processed.root","read");
 
   TGraphErrors* purityTG2 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
   TGraphErrors* purityTG3 = (TGraphErrors*)infile_purity3->Get("drawPurityFit_0_0");
@@ -131,7 +133,7 @@ void getCorrections(){
 
   effnSigE = rebinVariableBins(efnSigE,numPtBinsEFF2,lowptEFF2,"effnSigE");
 
-  TH1F* temp0[6] = {effTrigger[trigSelect-1], effTracking, effnSigE, partECutEfficiency[3], purity[trigSelect-1], effPHEReco};
+  TH1F* temp0[6] = {effTrigger[trigSelect-1], effTracking, effnSigE, partECutEfficiency[1], purity[trigSelect-1], effPHEReco};
   TH1F* temp[6];
 
   char legName[6][100] = {"Trigger Efficiency", "Tracking Efficiency", "nSigmaE Efficiency", "BEMC/SMD eID Efficiency","Electron Purity", "Photonic Rec. Efficiency"};
@@ -182,18 +184,39 @@ void calculateCrossSection(TFile* fC)
   TH1F* runCompPt[3];
   TString histName[3] = {"inclusivePt","USPt","LSPt"}; 
   float dEta = 1.4; // 0.7 - (-0.7)
-  float NSD = 40e-3; // NonSingleDiffractive 30mb +/- 2.4  (xiaozhi Run12 slides)
+  
+  float eqMBXS = 30.; // effective MB cross section NSD in p+p: 30mb +/- 2.4  (xiaozhi Run12 slides)
+  if(trigSelect == 1){
+    // use NSD/0.64 for trig bias correction since VPDMB for HT1
+    eqMBXS = 30.0/0.64; 
+  }
+  if(trigSelect == 2){
+    // use NSD since bbcmb for HT2
+    eqMBXS = 30.0; 
+  }
+
   int numEvents = vertexZ->Integral();  
-  float equivMBEvents = vertexZeqMB->Integral();
+  float equivMBEvents = vertexZeqMB->Integral(); // uses the same event cuts as main sample
+  cout << "Equiv MB Events: " << equivMBEvents << " Num Events: " << numEvents << endl;
+  TH1F* vertexZ_for_mb = (TH1F*)vertexZ->Clone();
+  pretty1DHist(vertexZ_for_mb,kBlack,20);
+  pretty1DHist(vertexZeqMB,kRed,20);
+  equivMB->cd();
+  gPad->SetLogy(1);
+  vertexZeqMB->GetYaxis()->SetRangeUser(1,1e14);
+  vertexZeqMB->Draw("pe");
+  vertexZ_for_mb->Draw("same pe");
+
   TH1D* runCompHists[3];  
   if(compareRun15p)
     getRun15pHists(fC,runCompHists);
   else
     getRun12Hists(fC,runCompHists);
+  cout << "After get comparison Hists" << endl;
 
   for(int i=0; i<3; i++)
   {
-    ptSpectra[i] = rebinVariableBins(ePt[i], numPtBinsEFF2, lowptEFF2,histName[i]);
+    ptSpectra[i] = rebinVariableBins(ePt[i], numPtBinsEFF2, lowptEFF2, histName[i]);
     ptSpectra[i]->SetStats(0);
     ptSpectra[i]->Scale(1.,"width");
     runCompPt[i] = (TH1F*)runCompHists[i]->Clone();
@@ -209,7 +232,7 @@ void calculateCrossSection(TFile* fC)
 
   //////////////////////////////////////////////////////////////////
   ////  NPE = Inclusive*purity - (US-LS)/PhoRecoEff             ////
-  ////  XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*NSD_XS  ////
+  ////  XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*eqMBXS  ////
   //////////////////////////////////////////////////////////////////
   ptSpectra[0]->Multiply(purity[trigSelect-1]);
   ptSpectra[1]->Add(ptSpectra[2],-1.);
@@ -220,6 +243,7 @@ void calculateCrossSection(TFile* fC)
   runCompPt[1]->Add(runCompPt[2],-1.);
   runCompPt[1]->Divide(effPHEReco);
   runCompPt[0]->Add(runCompPt[1],-1.);
+  cout << "After get comparison Hists first use" << endl;
 
   TLegend* leg = new TLegend(0.5,0.68,0.87,0.89);
   TString histLab[2] = {"Non-Photonic Electrons","Photonic Electrons"};
@@ -235,7 +259,8 @@ void calculateCrossSection(TFile* fC)
   }
   leg->Draw("same");
   npeYield->cd(2);
-  TH1F* npeDivPE = (TH1F*)ptSpectra[0]->Clone();
+  npeDivPE = (TH1F*)ptSpectra[0]->Clone("npeDivPE");
+  npeDivPE->SetTitle("NPE/PHE;p_{T} (GeV/c);Ratio NPE/PHE");
   TH1F* npeDivPE12 = (TH1F*)runCompPt[0]->Clone();
   npeDivPE->Divide(ptSpectra[1]);
   npeDivPE12->Divide(runCompPt[1]);
@@ -253,9 +278,10 @@ void calculateCrossSection(TFile* fC)
   leg2->Draw("same");
 
   NPEYield = (TH1F*)ptSpectra[0]->Clone();
-  NPECrossSection = (TH1F*)ptSpectra[0]->Clone();
-
-  NPECrossSection->Scale(NSD/(2*TMath::Pi()*dEta*equivMBEvents));
+  NPECrossSection = (TH1F*)ptSpectra[0]->Clone("NPECrossSection");
+  NPECrossSection->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
+  NPECrossSection->Scale(eqMBXS/(2*TMath::Pi()*dEta*equivMBEvents));
+  NPECrossSection->Scale(1./2.); // Divided by 2 for e- and e+ included
   NPECrossSection->Scale(1.,"width"); // divide each bin by its width
   NPECrossSection->Divide(totalEff);  // divide by efficiency for finding electron
   NPECrossSection->Divide(ptMul);     
@@ -264,7 +290,7 @@ void calculateCrossSection(TFile* fC)
   pretty1DHist(NPECrossSection,colors[1],24);
   pretty1DHist(xsRun12,colors[2],25);
   TLegend* leg3 = new TLegend(0.5,0.68,0.87,0.89);
-  leg3->AddEntry(NPECrossSection,"Run 15 p+Au","lpe");
+  leg3->AddEntry(NPECrossSection,"Run 15 p+p","lpe");
   leg3->AddEntry(xsRun12,"Run 12 p+p","lpe");
   crossSection->cd();
   gPad->SetLogy(1);
@@ -276,6 +302,8 @@ void calculateCrossSection(TFile* fC)
   NPECrossSection->Draw("same pe");
   xsRun12->Draw("same pe");
   leg3->Draw("same");
+
+  cout << "end of cross section function" << endl;
   return;
 }
 
@@ -534,7 +562,7 @@ void prepareLabels()
   int numEvents = vertexZ->Integral();  
   float nEvents = (float)numEvents/1e6;
   sampleLabel = new TPaveText(.11,.83,.5,.89,"NB NDC");
-  sprintf(textLabel,"Run 15, 200 GeV p+A Collisions");
+  sprintf(textLabel,"Run 15, 200 GeV p+p Collisions");
   sampleLabel->AddText(textLabel);
   sprintf(textLabel,"%.2fM %s Events",nEvents,trigLabel);
   sampleLabel->AddText(textLabel);
@@ -860,6 +888,7 @@ void prepareCanvas()
   invMassVsPt = new TCanvas("invMassVsPt","Invariant Mass Vs pT",50,50,1050,1050);
   invMassVsPt->Divide(2,2);
   ptCompare     = new TCanvas("ptCompare","pT Comparison",50,50,1050,1050);
+  equivMB     = new TCanvas("equivMB","Equivalent MB Events",50,50,1050,1050);
   cutEfficiency = new TCanvas("cutEfficiency","Cut Efficiency",50,50,1050,1050);
   cutEfficiency -> Divide(2,2);
   hadQA = new TCanvas("hadQA","Hadron Based QA",50,50,1050,1050);
@@ -1082,12 +1111,20 @@ void getdNdpT(TFile* fC)
     }
     leg->Draw("same");
 
+    float normLow  = 4.;
+    float normHigh = 6.;
+    if(trigSelect == 2)
+      {
+        normLow  = 6.;
+        normHigh = 12.;
+      }
+
     for(int i=0; i<3; i++)
     {
       TH1F* r15 = (TH1F*)ptDist[i]->Clone();
       TH1F* r12 = (TH1F*)runCompHists[i]->Clone();
-      double r15i = r15->Integral(r15->FindBin(4.),r15->FindBin(6.));
-      double r12i = r12->Integral(r12->FindBin(4.),r12->FindBin(6.));
+      double r15i = r15->Integral(r15->FindBin(normLow),r15->FindBin(normHigh));
+      double r12i = r12->Integral(r12->FindBin(normLow),r12->FindBin(normHigh));
       r12->Scale(r15i/r12i);
       r15->SetTitle("Run Comparison - Scaled to Match Run 15 Yield");
 
@@ -1250,6 +1287,7 @@ void makeUnlikeMinusLikePartnerElectrons()
 
 void makePDF(const char* fileName)
 {
+  if(DEBUG) cout << "In PDF Make" << endl;
   //Set front page
   TCanvas* fp = new TCanvas("fp","Front Page",50,50,1050,1050);
   fp->cd();
@@ -1268,7 +1306,7 @@ void makePDF(const char* fileName)
   if(found >= 0){
     titlename.Replace(0, found+1, "");
   } 
-  sprintf(tlName, "RUN 15 p+A 200 GeV NPE-Hadron");
+  sprintf(tlName, "RUN 15 p+p 200 GeV NPE");
   tl.SetTextSize(0.05);
   tl.SetTextColor(kWhite);
   tl.DrawLatex(0.05, 0.92,tlName);
@@ -1283,101 +1321,113 @@ void makePDF(const char* fileName)
   tl.SetTextSize(0.03);
   tl.DrawLatex(0.1, 0.14, titlename);
 
+  if(DEBUG) cout << "Placing Canvii" << endl;
   // Place canvases in order
-  TCanvas* temp = new TCanvas();
-  char name[100];
-  sprintf(name, "%s.pdf[", fileName);
-  temp->Print(name);
-  sprintf(name, "%s.pdf", fileName);
-  temp = fp; // print front page
-  temp->Print(name);
-  temp = eventHists;
-  temp->Print(name);
-  temp = dndpt;
-  temp->Print(name);
+  TCanvas* temp2 = new TCanvas();
+  char fname[100];
+  sprintf(fname, "%s.pdf[", fileName);
+  cout << fname << endl;
+  temp2->Print(fname);
+  sprintf(fname, "%s.pdf", fileName);
+  temp2 = fp; // print front page
+  temp2->Print(fname);
+  if(DEBUG) cout << "After fp" << endl;
+  temp2 = eventHists;
+  temp2->Print(fname);
+  if(DEBUG) cout << "After eventHists" << endl;
+  temp2 = dndpt;
+  temp2->Print(fname);
+  if(DEBUG) cout << "After dNdpt" << endl;
   if(compareRun12){
-    temp = Run12Compare;
-    temp->Print(name);
-    temp = Run12Ratio;
-    temp->Print(name);
+    temp2 = Run12Compare;
+    temp2->Print(fname);
+    temp2 = Run12Ratio;
+    temp2->Print(fname);
   }
-  temp = efficiencies;
-  temp->Print(name);
-  temp = npeYield;
-  temp->Print(name);
-  temp = crossSection;
-  temp->Print(name);
+  if(DEBUG) cout << "After Compare Run 12" << endl;
+  temp2 = efficiencies;
+  temp2->Print(fname);
+  temp2 = npeYield;
+  temp2->Print(fname);
+  temp2 = crossSection;
+  temp2->Print(fname);
+  temp2 = equivMB;
+  temp2->Print(fname);
   for(int etype=0;etype<3;etype++)
   {
     for(int q=0; q<numCanvas; q++)
     {
-      temp = dPhiPt[etype][q]; // print data canvases
-      temp->Print(name);
+      temp2 = dPhiPt[etype][q]; // print data canvases
+      temp2->Print(fname);
     }
   }
-  temp = delPhiDelEta;
-  temp->Print(name);
+  if(DEBUG) cout << "After dPhi" << endl;
+  temp2 = delPhiDelEta;
+  temp2->Print(fname);
   for(int q=0; q<numCanvas; q++)
   {
-    temp = invMassPt[q]; // print data canvases
-    temp->Print(name);
+    temp2 = invMassPt[q]; // print data canvases
+    temp2->Print(fname);
   }
 
-  temp = zdcQA;
-  temp->Print(name);
-  temp = invMass;
-  temp->Print(name);
-  temp = invMassVsPt;
-  temp->Print(name);
-  temp = cutEfficiency;
-  temp->Print(name);
-  temp = ptCompare;
-  temp->Print(name);
-  temp = hadQA;
-  temp->Print(name);
-  temp = elecQA;
-  temp->Print(name);
+  temp2 = zdcQA;
+  temp2->Print(fname);
+  temp2 = invMass;
+  temp2->Print(fname);
+  temp2 = invMassVsPt;
+  temp2->Print(fname);
+  temp2 = cutEfficiency;
+  temp2->Print(fname);
+  temp2 = ptCompare;
+  temp2->Print(fname);
+  temp2 = hadQA;
+  temp2->Print(fname);
+  temp2 = elecQA;
+  temp2->Print(fname);
   for(int i=0;i<2;i++)
   {
-    temp = eeQA[i];
-    temp->Print(name);
+    temp2 = eeQA[i];
+    temp2->Print(fname);
   }
+  if(DEBUG) cout << "After Generic QA" << endl;
   for(int i=0;i<4;i++)
   {
-    temp = eIDCutEffic[i];
-    temp->Print(name);
+    temp2 = eIDCutEffic[i];
+    temp2->Print(fname);
   }
-  temp = efficOverlay;
-  temp->Print(name);
+  temp2 = efficOverlay;
+  temp2->Print(fname);
   for(int i=0;i<6;i++)
   {
-    temp = pElecCuts[i];
-    temp->Print(name);
+    temp2 = pElecCuts[i];
+    temp2->Print(fname);
   }
   for(int q=0; q<numCanvas; q++)
   {
-    temp = nSigEPt[q]; // print data canvases
-    temp->Print(name);
+    temp2 = nSigEPt[q]; // print data canvases
+    temp2->Print(fname);
   }
-  temp = nSigMeanSig;
-  temp->Print(name);
+  temp2 = nSigMeanSig;
+  temp2->Print(fname);
+  if(DEBUG) cout << "After Effic Canvas" << endl;
   for(int q=0; q<numCanvas; q++)
   {
-    temp = twoGaus[q]; 
-    temp->Print(name);
+    temp2 = twoGaus[q]; 
+    temp2->Print(fname);
   }
   for(int q=0; q<numCanvas; q++)
   {
-    temp = nSigEff[q];
-    temp->Print(name);
+    temp2 = nSigEff[q];
+    temp2->Print(fname);
   }
-  temp = nSigCutPlot;
-  temp->Print(name);
-  temp = eeOriginQA;
-  temp->Print(name);
+  temp2 = nSigCutPlot;
+  temp2->Print(fname);
+  temp2 = eeOriginQA;
+  temp2->Print(fname);
 
-  sprintf(name, "%s.pdf]", fileName);
-  temp->Print(name);
+  sprintf(fname, "%s.pdf]", fileName);
+  temp2->Print(fname);
+  if(DEBUG) cout << "End PDF Make" << endl;
 }
 
 TH1F* rebinVariableBins(TH1F* h, int nbins, const float* bins, TString name)

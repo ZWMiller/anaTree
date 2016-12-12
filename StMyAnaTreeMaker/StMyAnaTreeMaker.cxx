@@ -115,7 +115,6 @@ ClassImp(StMyAnaTreeMaker)
   mHadPtCut[0]  = 0.3;  mHadPtCut[1] = 20.0;
   mHadEtaCut[0] = -1.0; mHadEtaCut[1]= 1.0;
   mHadDcaCut[0] = 0.; mHadDcaCut[1] = 1.0;
-  mHadDcaCut[0] = 0.; mHadDcaCut[1] = 0.005; // - ONLY FOR BAD PRODUCTION OF ANATREE
   mHadHitsFitCut[0] = 15.; mHadHitsFitCut[1] = 50.0;
   mHadHitsdEdxCut[0] = 10.; mHadHitsdEdxCut[1] = 50.0;
 
@@ -281,6 +280,7 @@ Int_t StMyAnaTreeMaker::Make() {
   else if(mTrigSelect==0 && isMinBias()) eventPass = 1;
   else if(mTrigSelect==1 && isBHT0()){ eventPass = 1; mHTth =  8; mHTAdc0th = 180; mEmcPtth = 1.5;}  //HT0 
   else if(mTrigSelect==2 && isBHT1()){ eventPass = 1; mHTth = 11; mHTAdc0th = 180; mEmcPtth = 2.0;}  //HT1 180
+  //else if(mTrigSelect==2 && isBHT1()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT1 CHANGE FOR TESTING NPE/PHE
   else if(mTrigSelect==3 && isBHT2()){ eventPass = 1; mHTth = 18; mHTAdc0th = 300; mEmcPtth = 2.0;}  //HT2 300
   else if(mTrigSelect==4 && isBHT3()){ eventPass = 1; mHTth = 25; mHTAdc0th = 400; mEmcPtth = 4.0;}  //HT3 
   else if(mTrigSelect==5 && mAnaTree->event()->isEMuon()){ eventPass = 1;mHTth = 13; mHTAdc0th = 210; mEmcPtth = 2.;} //EMu 210
@@ -309,6 +309,8 @@ Int_t StMyAnaTreeMaker::Make() {
   }
   else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
     return kStOK;
+  //if(fabs(vzVpd) > mVzCut[1] || (vzVpd-mPrimaryVertex.z())<mVzDiffCut[0] || (vzVpd-mPrimaryVertex.z())>mVzDiffCut[1]) // force VPD cuts even if VPD doesn't exist
+  //  return kStOK;
   hnEvents->Fill(4);
 
   hRefMultCut->Fill(mAnaTree->event()->grefMult());
@@ -452,14 +454,14 @@ bool StMyAnaTreeMaker::passHTEIDCuts(StElectronTrack *eTrk) {
   electronEtaPhi[5]->Fill(eta,phi);
   if(pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1]) return false;
   electronEtaPhi[6]->Fill(eta,phi);
- /* if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
+  if(nEta<mEnEtaCut[0]||nEta>mEnEtaCut[1]) return false;
   electronEtaPhi[7]->Fill(eta,phi);
   if(nPhi<mEnPhiCut[0]||nPhi>mEnPhiCut[1]) return false;
   electronEtaPhi[8]->Fill(eta,phi);
   if(zDist<mEZDistCut[0]||zDist>mEZDistCut[1]) return false;
   electronEtaPhi[9]->Fill(eta,phi);
   if(phiDist<mEPhiDistCut[0]||phiDist>mEPhiDistCut[1]) return false;
-  electronEtaPhi[10]->Fill(eta,phi);*/
+  electronEtaPhi[10]->Fill(eta,phi);
   if(isHTTrigE(eTrk)) 
     electronEtaPhi[11]->Fill(eta,phi);
 
@@ -609,7 +611,12 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
   if(qualFlag && eHTflag)  hEPt_eff[2]->Fill(pt);
   if(qualFlag && isTrgE)   hEPt_eff[3]->Fill(pt);
 
+  float adc0 = eTrk->adc0();
+  hEAdc0vsPt[0]->Fill(pt,adc0);
+
   if(!eHTflag || !eflag) return;
+
+  hEAdc0vsPt[1]->Fill(pt,adc0);
   if(DEBUG) cout << "Fill eTrk4" << endl;
   double eta = eTrk->gMom().pseudoRapidity();
   double phi = eTrk->gMom().phi();
@@ -837,6 +844,7 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   int    nPhiTag    = tagETrk->nPhi();
   double zDistTag   = tagETrk->zDist();
   double phiDistTag = tagETrk->phiDist();
+  double Adc0Tag    = tagETrk->adc0();       
   int    emcTowerIdTag   = tagETrk->towerId();
 
   double nSigEPart   = partETrk->nSigmaElectron();
@@ -872,9 +880,12 @@ void StMyAnaTreeMaker::fillPhoEEHists(StPhoEEPair* phoEE)
   Float_t TowerPhiPart, TowerEtaPart;
   Float_t dEta=999;
   Float_t dPhi=999;
+  hEEAdc0vsPt[0]->Fill(PtTag,Adc0Tag);
 
   if(!passPartEQuality(EtaPart, nHitsFitPart, nHitsDedxPart, dcaPart) || 
       !isHTTrigE(tagETrk) ) return;
+
+  hEEAdc0vsPt[1]->Fill(PtTag,Adc0Tag);
 
   if(charge1 != charge2)
   {
@@ -1636,14 +1647,14 @@ bool StMyAnaTreeMaker::tagEEMCCuts(StElectronTrack *eTrk) {
 
   if(pve<mEmcEPveCut[0] || pve>mEmcEPveCut[1]) return false;
   hnTracks->Fill(16);
-  /*if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
+  if(nEta<=mEnEtaCut[0] || nEta>=mEnEtaCut[1]) return false;
   hnTracks->Fill(17);
   if(nPhi<=mEnPhiCut[0] || nPhi>=mEnPhiCut[1]) return false;
   hnTracks->Fill(18);
   if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
   hnTracks->Fill(19);
   if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
-  hnTracks->Fill(20);  */
+  hnTracks->Fill(20);  
   return true;
 }
 
@@ -1705,6 +1716,9 @@ void StMyAnaTreeMaker::calculate_equivalent_minBias(int mTrigSelect, int runId)
   }
   else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
     return;
+  
+  //if(fabs(vzVpd) > 30. || (vzVpd-mPrimaryVertex.z())<mVzDiffCut[0] || (vzVpd-mPrimaryVertex.z())>mVzDiffCut[1]) // force VPD cuts even if VPD doesn't exist
+  //  return;
   
   hVertexZCut_MB->Fill(mPrimaryVertex.z());
   hVertexZCut_eqMB->Fill(mPrimaryVertex.z(),psScale);
@@ -2193,6 +2207,12 @@ void StMyAnaTreeMaker::declareHistograms() {
   hEDcavsPtwHft = new TH2F("hEDcavsPtwHft","hEDcavsPtwHft; q*p_{T} (GeV/c); dca (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
   hEDcaXYvsPtwHft = new TH2F("hEDcaXYvsPtwHft","hEDcaXYvsPtwHft; q*p_{T} (GeV/c); dcaXY (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
   hEDcaZvsPtwHft = new TH2F("hEDcaZvsPtwHft","hEDcaZvsPtwHft; q*p_{T} (GeV/c); dcaZ (cm);",2.*nPtBins,-ptMax,ptMax,1000,0,1);
+  
+  char namingConv[2][15] = {"All","Accepted"};
+  for(int ii=0; ii<2; ii++){
+    hEAdc0vsPt[ii] = new TH2F(Form("hEAdc0vsPt_%i",ii),Form("hEAdc0vsPt %s; p_{T}; ADC0", namingConv[ii]),nPtBins,ptMin,ptMax,1000,0,1000);
+    hEEAdc0vsPt[ii] = new TH2F(Form("hEEAdc0vsPt_%i",ii),Form("hEEAdc0vsPt %s; p_{T}; ADC0",namingConv[ii]),nPtBins,ptMin,ptMax,1000,0,1000);
+  }
 
   hPEUSOyOx = new TH2F("hPEUSOyOx","hPEUSOyOx; Ox (cm); Oy (cm)",600,-30,30,300,-30,30);
   hPEUSOxOz = new TH2F("hPEUSOxOz","hPEUSOxOz; Oz (cm); Ox (cm)",600,-30,30,300,-30,30);

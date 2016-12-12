@@ -59,6 +59,7 @@ TCanvas* zdcQA;
 TCanvas* efficiencies;
 TCanvas* crossSection;
 TCanvas* npeYield;
+TCanvas* equivMB;
 
 TPaveText* lbl[numPtBins];
 TPaveText* sampleLabel;
@@ -128,6 +129,7 @@ TH1F* totalEff;
 TH1F* NPEYield;
 TH1F* InvYield;
 TH1F* NPECrossSection;
+TH1F* npeDivPE;
 TH1F* xsRun12;
 TH1F* xsRun12sys;
 

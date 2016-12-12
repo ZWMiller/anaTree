@@ -159,6 +159,9 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hEDcavsPtwHft;
 		TH2F *hEDcaXYvsPtwHft;
 		TH2F *hEDcaZvsPtwHft;
+      
+      TH2F* hEAdc0vsPt[2];
+      TH2F* hEEAdc0vsPt[2];
 		
 		TH2F *hPEUSOyOx;
 		TH2F *hPEUSOxOz;
