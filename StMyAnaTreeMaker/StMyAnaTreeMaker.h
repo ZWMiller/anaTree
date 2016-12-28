@@ -105,6 +105,7 @@ class StMyAnaTreeMaker : public StMaker {
       void fillMuonHists(StMuonTrack*);
       void fillEEHists(StEEPair*);
       void fillPhoEEHists(StPhoEEPair*);
+      void fillZaochenEff(StPhoEEPair*);
       void fillEMuHists(StEMuPair*);
       void fillMuMuHists(StMuMuPair*);
       void fillRunIndexHists(StElectronTrack*);
@@ -159,6 +160,9 @@ class StMyAnaTreeMaker : public StMaker {
 		TH2F *hEDcavsPtwHft;
 		TH2F *hEDcaXYvsPtwHft;
 		TH2F *hEDcaZvsPtwHft;
+      
+      TH2F* hEAdc0vsPt[2];
+      TH2F* hEEAdc0vsPt[2];
 		
 		TH2F *hPEUSOyOx;
 		TH2F *hPEUSOxOz;
@@ -316,6 +320,18 @@ class StMyAnaTreeMaker : public StMaker {
       TH1F *hEMCIdTracks[2];
       TH1F *hSMDMatchedTracks[2];
       TH1F *hSMDIdTracks[2];
+
+      //Partner Electron Hists for Zaochen Eff
+      TH2F *hNSigEPartElecz[2];
+      TH2F *hEvpPartElecz[2];
+      TH2F *hzDistPartElecz[2];
+      TH2F *hphiDistPartElecz[2];
+      TH1F *hTPCTracksz[2];
+      TH1F *hEMCMatchedTracksz[2];
+      TH1F *hEMCIdTracksz[2];
+      TH1F *hBEMCIdTracksz[2];
+      TH1F *hTOFMatchedTracksz[2];
+      TH1F *hTOFIdTracksz[2];
 
       //RunIndex
       TH2F* hPvEvsRunIndex;

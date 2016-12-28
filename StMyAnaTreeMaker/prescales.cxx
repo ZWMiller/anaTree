@@ -24,7 +24,7 @@ ClassImp(prescales);
 
 prescales* prescales::mInstance = 0;
 
-int triggerArray[] = {500203,500213,500201,500204,500214,500202,500206,500205,500215,500008,500018};
+int triggerArray[] = {500203,500213,500201,500204,500214,500202,500206,500205,500215,500008,500018,500904};
 std::vector<int> triggers(triggerArray,triggerArray+sizeof(triggerArray)/sizeof(int));
 
 prescales::prescales()

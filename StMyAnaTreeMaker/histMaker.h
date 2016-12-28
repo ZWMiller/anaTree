@@ -59,9 +59,14 @@ TCanvas* zdcQA;
 TCanvas* efficiencies;
 TCanvas* crossSection;
 TCanvas* npeYield;
+TCanvas* equivMB;
+TCanvas* rpa;
+TCanvas* inclUSRatio;
 
 TPaveText* lbl[numPtBins];
 TPaveText* sampleLabel;
+TPaveText* rpaLabel;
+TPaveText* fitLabel;
 
 TH2F* eHadDelPhiPt[3];
 TH2F* eHadDelPhiDelEta[3];
@@ -128,6 +133,9 @@ TH1F* totalEff;
 TH1F* NPEYield;
 TH1F* InvYield;
 TH1F* NPECrossSection;
+TH1F* npeDivPE;
+TH1F* xsRun12;
+TH1F* xsRun12sys;
 
 TH1F* refMult;
 TH1F* vertexZ;
@@ -167,6 +175,8 @@ void makeUnlikeMinusLikePartnerElectrons();
 void drawQAHists();
 void getnSigEeff();
 void drawEventHists();
+void makeInclDivUnlike(const char*);
+void drawEHadHists();
 void drawHadQA();
 void drawElecQA();
 void drawEEQA();

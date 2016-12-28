@@ -18,7 +18,7 @@ void makeAnaTree(const Int_t runnumber=16125039,
     //    const Char_t *inputFile="/star/data79/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/145/15145024/st_physics_15145024_raw_1000048.MuDst.root",
     //    const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_low_2014/ReversedFullField/P15ic/2014/166/15166010/st_physics_15166010_raw_4500060.MuDst.root",
     //	const Char_t *inputFile="root://xrdstar.rcf.bnl.gov:1095//home/starlib/home/starreco/reco/AuAu_200_production_mid_2014/ReversedFullField/P15ic/2014/094/15094070/st_physics_15094070_raw_0000007.MuDst.root",
-    const Char_t *inputFile="testFiles/st_physics_16125039_raw_3000001.MuDst.root",
+    const Char_t *inputFile="../anaTree_v2_092816/testFiles/st_physics_16125039_raw_3000001.MuDst.root",
     const bool creatingPhiWgt = kFALSE, const int prodMod = 1, const int emcMode=1, const int prodType = 0
     ){
   Int_t nEvents = 100000000;
@@ -178,6 +178,7 @@ void makeAnaTree(const Int_t runnumber=16125039,
   ePurMaker->addTrigger(500215,2); // "    "
   ePurMaker->addTrigger(500008,4); // BBCMB
   ePurMaker->addTrigger(500018,4); // "
+  ePurMaker->addTrigger(500904,4); // VPDMB-30
   outputFile=mInputFileName;
   outputFile.ReplaceAll("MuDst.root","anaTree.root");
 
@@ -212,6 +213,7 @@ void makeAnaTree(const Int_t runnumber=16125039,
       treeMaker->addTrigger(500215,2); // "    "
       treeMaker->addTrigger(500008,4); // BBCMB
       treeMaker->addTrigger(500018,4); // "
+      treeMaker->addTrigger(500904,4); // VPDMB-30
       //    treeMaker->setInputRecenterFile("./recenter_correction.root");
       treeMaker->setMaxRunId(1700);
     }

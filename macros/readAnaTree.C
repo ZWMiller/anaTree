@@ -6,7 +6,7 @@ class StPicoDstMaker;
 
 
 StChain *chain;
-void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRunsShort.list", const Char_t *outputFile="anaTree.hists.root", int trigSelect = 3, bool mixedEvent=false)
+void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRunsShort.list", const Char_t *outputFile="anaTree.hists.root", int trigSelect = 2, bool mixedEvent=false)
 {
 
 	//nEvents = 1000;	
@@ -47,19 +47,25 @@ void readAnaTree(Int_t nEvents = 20000000, const Char_t *inputFile="processedRun
    //anaMaker->addTrigger(500206,1); // BHT1*VPDMB-30-nobsmd
    anaMaker->addTrigger(500205,2); // BHT2*BBCMB
    anaMaker->addTrigger(500215,2); // "    "
-   anaMaker->addTrigger(500008,4); // BBCMB
-   anaMaker->addTrigger(500018,4); // "
+   if(trigSelect == 2){
+     anaMaker->addTrigger(500904,4); // VPDMB-30
+   }
+   if(trigSelect == 3)
+   {
+     anaMaker->addTrigger(500008,4); // BBCMB
+     anaMaker->addTrigger(500018,4); // "
+   }
 
    if(trigSelect==-1||trigSelect==4||trigSelect==5||trigSelect==6){
      anaMaker->setVzCut(-100,100);
      anaMaker->setVzDiffCut(-3,3);
    }
 
-   TString qaOutName = outputFile;
-   qaOutName.ReplaceAll(".hists.root",".qa.hists.root");
-   StAnaTreeQAMaker* qaMaker = new StAnaTreeQAMaker("qa",treeMaker,qaOutName.Data());
-   qaMaker->setRunList(runList);
-   qaMaker->setNumberOfRuns(number_of_runs);
+   //TString qaOutName = outputFile;
+   //qaOutName.ReplaceAll(".hists.root",".qa.hists.root");
+   //StAnaTreeQAMaker* qaMaker = new StAnaTreeQAMaker("qa",treeMaker,qaOutName.Data());
+   //qaMaker->setRunList(runList);
+   //qaMaker->setNumberOfRuns(number_of_runs);
    
 	chain->Init();
 	cout<<"chain->Init();"<<endl;

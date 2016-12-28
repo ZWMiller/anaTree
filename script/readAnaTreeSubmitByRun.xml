@@ -3,8 +3,8 @@
 
 <command>
 <!-- Set tags file directory -->
-setenv EMLOGS /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/readAnaTree_HT1_1
-setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/out/readAnaTree_HT1_1
+setenv EMLOGS /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v3_112116/readTreeOut/log/readAnaTree_BHT1
+setenv EMOUTPUT /star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v3_112116/readTreeOut/out/readAnaTree_BHT1
 
 <!-- Print out EMYEAR and EMDAY and EMLOGS -->
 echo EMLOGS   : $EMLOGS
@@ -35,16 +35,16 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.elog $EMLOGS/${FILEBASENAME}.elog
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>
 
 <!-- Define locations of log/elog files -->
-<stdout URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/$JOBID.log"/>
-<stderr URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/$JOBID.elog"/>
+<stdout URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v3_112116/readTreeOut/log/$JOBID.log"/>
+<stderr URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v3_112116/readTreeOut/log/$JOBID.elog"/>
 <!--<stdout URL="file:$EMLOGS/$JOBID.log"/>-->
 <!--<stderr URL="file:$EMLOGS/$JOBID.elog"/>-->
 
 <!-- Input daq files -->
-<input URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/haddSubmit/rootfile_temp/anaTree_101116/*.root"/>
+<input URL="file:/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v3_112116/haddSubmit/rootfile_temp/anaTree_120816/*.root"/>
 <!-- csh/list files -->
 <Generator>
-  <Location>/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v2_092816/readTreeOut/log/list</Location>
+  <Location>/star/u/zamiller/PWGSpace/run15pAuAnaTree/prod/anaTree_v3_112116/readTreeOut/log/list</Location>
 </Generator>
 
 </job>
