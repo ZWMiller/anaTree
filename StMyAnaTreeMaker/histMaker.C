@@ -1,6 +1,6 @@
 #include "histMaker.h"
 
-bool DEBUG = kTRUE;
+bool DEBUG = !kTRUE;
 bool compareRun12 = kTRUE;
 bool compareRun15p = !kTRUE; // If this is true, it will take precedence over Run12 compare
 
@@ -16,8 +16,11 @@ void histMaker(const char* fileName="test", int trg=1)
   //Get TFile
   TFile* f = new TFile(fileName, "READ");
   TFile* fC;
-  if(compareRun15p)
-    fC = new TFile(Form("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/readTreeOut/out/histHadd/rootfile_temp/0921BHT%i/anaTree15_BHT%i.hists.root",trigSelect, trigSelect),"READ");
+  TFile* fC2;
+  if(compareRun15p){
+    fC = new TFile(Form("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/out/histHadd/rootfile_temp/1117BHT%i/anaTree15_BHT%i.hists.root",trigSelect, trigSelect),"READ");
+    fC2 = new TFile(Form("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/out/histHadd/rootfile_temp/1117BHT%i/anaTree15_BHT%i.hists_processed.root",trigSelect, trigSelect),"READ");
+  }
   else
     fC= new TFile("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/Run12RootFile/hist_5_2.root","READ");
   bool inFile = checkIfFileOpen(f);
@@ -29,7 +32,23 @@ void histMaker(const char* fileName="test", int trg=1)
   doProjections();
   prepareCanvas();
   prepareLabels();
-  char textLabel[100];
+  drawEHadHists();
+  drawEventHists();
+  drawInvMassHists();
+  drawQAHists();
+  drawCutEfficiencyHists();
+  getCorrections();
+  getdNdpT(fC);
+  makeInclDivUnlike(fileName);
+  calculateCrossSection(fC,fC2);
+  makePDF(fileName);
+  writeHistsToOutFile(fileName);
+  if(fC->IsOpen()) fC->Close();
+  f->Close();
+}
+
+void drawEHadHists()
+{
   for(int etype=0; etype<3; etype++) 
   {
     for(int ptbin=0; ptbin<numPtBins; ptbin++)
@@ -43,18 +62,6 @@ void histMaker(const char* fileName="test", int trg=1)
     gPad->SetLogz(1);
     eHadDelPhiDelEta[etype]->Draw("colz");
   }
-
-  drawEventHists();
-  drawInvMassHists();
-  drawQAHists();
-  drawCutEfficiencyHists();
-  getCorrections();
-  getdNdpT(fC);
-  calculateCrossSection(fC);
-  makePDF(fileName);
-  writeHistsToOutFile(fileName);
-  if(fC->IsOpen()) fC->Close();
-  f->Close();
 }
 
 bool checkIfFileOpen(TFile* f)
@@ -105,9 +112,20 @@ void getCorrections(){
   xsRun12=(TH1F *) infile_crossSec->Get("run12_HT_NPE_sts");
   xsRun12sys=(TH1F *) infile_crossSec->Get("run12_HT_NPE_sys");
 
+  //Jpsi contribution to e
+  TFile* infile_jpsi = new TFile("run15Corrections/Jpsi.root");
+  jpsiCorrection = rebinVariableBins((TH1F*)infile_jpsi->Get("JPsi"),numPtBinsEFF2,lowptEFF2,"jpsiCorrection");
+
   // From Run 15pp
-  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_BEMC_processed.root","read");
-  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_BEMC_processed.root","read");
+  TFile* infile_purity1 = new TFile("run15Corrections/purityHists_pp15_Eta_BHT1_BEMC_processed.root","read");
+  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp15_Eta_BHT2_BEMC_processed.root","read");
+  TFile *infile_Tracking15 =new TFile("run15Corrections/testSample/Tracking_efficiency_HT.root","read");
+  TFile *infile_PHE_re15 =new TFile("run15Corrections/testSample/Photonic_re_Efficiency.root","read");
+
+  effTracking15=(TH1F *) infile_Tracking15->Get("TrackingEff");
+  effTrigger15[0]=(TH1F *) infile_Tracking15->Get("TrackingEffRecoEidTrg11");
+  effTrigger15[1]=(TH1F *) infile_Tracking15->Get("TrackingEffRecoEidTrg18");
+  effPHEReco15=(TH1F *) infile_PHE_re15->Get("PHE_re_efficiency");
 
   TGraphErrors* purityTG0 = (TGraphErrors*)infile_purity1->Get("drawPurityFit_0_0");
   TGraphErrors* purityTG1 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
@@ -117,10 +135,10 @@ void getCorrections(){
 
   puritypp[0] = rebinVariableBins(purityT0,numPtBinsEFF2,lowptEFF2,"puritypp_HT1");
   puritypp[1] = rebinVariableBins(purityT1,numPtBinsEFF2,lowptEFF2,"puritypp_HT2");
-  
+
   // From Run 15 pA
-  TFile* infile_purity2 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT1_BEMC_processed.root","read");
-  TFile* infile_purity3 = new TFile("run15Corrections/purityHists_pp_July29_Eta_BHT2_BEMC_processed.root","read");
+  TFile* infile_purity2 = new TFile("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/run15Corrections/purityHists_pA15_Eta_BHT1_SMD_processed.root","read");
+  TFile* infile_purity3 = new TFile("/gpfs/mnt/gpfs01/star/pwg/zamiller/run15pAuAnaTree/prod/anaTree_v2_092816/run15Corrections/purityHists_pA15_Eta_BHT2_SMD_processed.root","read");
 
   TGraphErrors* purityTG2 = (TGraphErrors*)infile_purity2->Get("drawPurityFit_0_0");
   TGraphErrors* purityTG3 = (TGraphErrors*)infile_purity3->Get("drawPurityFit_0_0");
@@ -133,7 +151,7 @@ void getCorrections(){
 
   effnSigE = rebinVariableBins(efnSigE,numPtBinsEFF2,lowptEFF2,"effnSigE");
 
-  TH1F* temp0[6] = {effTrigger[trigSelect-1], effTracking, effnSigE, partECutEfficiency[1], purity[trigSelect-1], effPHEReco};
+  TH1F* temp0[6] = {effTrigger15[trigSelect-1], effTracking15, effnSigE, partECutEfficiency[1], puritypp[trigSelect-1], effPHEReco15};
   TH1F* temp[6];
 
   char legName[6][100] = {"Trigger Efficiency", "Tracking Efficiency", "nSigmaE Efficiency", "BEMC/SMD eID Efficiency","Electron Purity", "Photonic Rec. Efficiency"};
@@ -173,37 +191,39 @@ TH1F* convertTGraphErrorsToTH1(TGraphErrors* tg, int bins, float xlow, float xhi
   for(int i=0; i<numPoints; i++)
   {
     tg->GetPoint(i,ax[i],ay[i]);
+    float errorY = tg->GetErrorY(i);
     h->SetBinContent(h->GetXaxis()->FindBin(ax[i]),ay[i]);
+    h->SetBinError(h->GetXaxis()->FindBin(ax[i]),errorY);
   }
   return h;
 }
 
-void calculateCrossSection(TFile* fC)
+void calculateCrossSection(TFile* fC, TFile* fC2)
 {
   TH1F* ptSpectra[3];
   TH1F* runCompPt[3];
   TString histName[3] = {"inclusivePt","USPt","LSPt"}; 
   float dEta = 1.4; // 0.7 - (-0.7)
-  
-  float eqMBXS = 30.; // effective MB cross section NSD in p+p: 30mb +/- 2.4  (xiaozhi Run12 slides)
+
+  float eqMBXS = 42; // effective MB cross section NSD p+p: 30mb +/- 2.4  (xiaozhi Run12 slides)
   if(trigSelect == 1){
     // use NSD/0.64 for trig bias correction since VPDMB for HT1
-    eqMBXS = 30.0/0.64; 
+    eqMBXS = eqMBXS*0.67; 
   }
   if(trigSelect == 2){
     // use NSD since bbcmb for HT2
-    eqMBXS = 30.0; 
+    eqMBXS = eqMBXS; 
   }
 
   int numEvents = vertexZ->Integral();  
-  float equivMBEvents = vertexZeqMB->Integral(); // uses the same event cuts as main sample
+  float equivMBEvents = vertexZeqMB->Integral()*3.2; // uses the same event cuts as main sample
   cout << "Equiv MB Events: " << equivMBEvents << " Num Events: " << numEvents << endl;
   TH1F* vertexZ_for_mb = (TH1F*)vertexZ->Clone();
   pretty1DHist(vertexZ_for_mb,kBlack,20);
   pretty1DHist(vertexZeqMB,kRed,20);
   equivMB->cd();
   gPad->SetLogy(1);
-  vertexZeqMB->GetYaxis()->SetRangeUser(1,1e14);
+  vertexZeqMB->GetYaxis()->SetRangeUser(1,1e10);
   vertexZeqMB->Draw("pe");
   vertexZ_for_mb->Draw("same pe");
 
@@ -212,15 +232,26 @@ void calculateCrossSection(TFile* fC)
     getRun15pHists(fC,runCompHists);
   else
     getRun12Hists(fC,runCompHists);
-  cout << "After get comparison Hists" << endl;
 
   for(int i=0; i<3; i++)
   {
-    ptSpectra[i] = rebinVariableBins(ePt[i], numPtBinsEFF2, lowptEFF2, histName[i]);
+    ptSpectra[i] = rebinVariableBins(ePt[i], numPtBinsEFF2, lowptEFF2,histName[i]);
     ptSpectra[i]->SetStats(0);
     ptSpectra[i]->Scale(1.,"width");
     runCompPt[i] = (TH1F*)runCompHists[i]->Clone();
   }
+
+  TH1D* NPECrossSection15p;
+  if(compareRun15p) 
+    if(fC2->IsOpen())
+      NPECrossSection15p = (TH1D*)fC2->Get("NPECrossSection");
+    else
+    {
+      cout << "Failed to Open " << fC2->GetName() << endl 
+        << "Proceeding with junk histo!" << endl;
+      NPECrossSection15p = new TH1D("broken", "broken", 10, 0, 10);
+    }
+
   TH1F* ptMult = new TH1F("ptMult","ptMult",100,0,20);
   TH1F* axes = new TH1F("axes","axes",100,0,20);
   axes->SetStats(0);
@@ -234,22 +265,55 @@ void calculateCrossSection(TFile* fC)
   ////  NPE = Inclusive*purity - (US-LS)/PhoRecoEff             ////
   ////  XS = 1/(2*pi*dEta*dPt)*1/N_events*1/ElecEff*NPE*eqMBXS  ////
   //////////////////////////////////////////////////////////////////
-  ptSpectra[0]->Multiply(purity[trigSelect-1]);
+  ptSpectra[0]->Multiply(puritypp[trigSelect-1]);
+  TH1F* inclpur = (TH1F*)ptSpectra[0]->Clone();
   ptSpectra[1]->Add(ptSpectra[2],-1.);
-  ptSpectra[1]->Divide(effPHEReco);
+  ptSpectra[1]->Divide(effPHEReco15);
+  TH1F* phey = (TH1F*)ptSpectra[1]->Clone();
   ptSpectra[0]->Add(ptSpectra[1],-1.);
 
   runCompPt[0]->Multiply(purityRun12);
+  TH1F* inclpur12 = (TH1F*)runCompPt[0]->Clone();
   runCompPt[1]->Add(runCompPt[2],-1.);
   runCompPt[1]->Divide(effPHEReco);
+  TH1F* phey12 = (TH1F*)runCompPt[1]->Clone();
   runCompPt[0]->Add(runCompPt[1],-1.);
-  cout << "After get comparison Hists first use" << endl;
+
+  TLegend* legY = new TLegend(0.6,0.6,0.87,0.87);
+  yieldComponents->cd(1);
+  pretty1DHist(inclpur,kBlack,20);
+  pretty1DHist(phey,kRed,21);
+  pretty1DHist(inclpur12,kBlue,22);
+  pretty1DHist(phey12,kMagenta,23);
+  gPad->SetLogy(1);
+  inclpur->GetYaxis()->SetRangeUser(1,1e7);
+  inclpur->Draw("pe");
+  phey->Draw("pe same");
+  inclpur12->Draw("pe same");
+  phey12->Draw("same");
+  legY->AddEntry(inclpur,"Inclusive*Purity","lpe");
+  legY->AddEntry(phey,"(US-LS)/#epsilon_{PHE}","lpe");
+  legY->AddEntry(inclpur12,"Inclusive*Purity Run 12","lpe");
+  legY->AddEntry(phey12,"(US-LS)/#epsilon_{PHE} Run 12","lpe");
+  legY->Draw("same");
+  yieldComponents->cd(2);
+  TH1F* yieldRatio = (TH1F*)inclpur->Clone("yieldRatio");
+  TH1F* yieldRatio12 = (TH1F*)inclpur12->Clone("yieldRatio12");
+  yieldRatio->SetTitle("Ratio of Incl*pur/(PHE/#epsilon_{PHE});p_{T} (GeV/c);Ratio");
+  yieldRatio->Divide(phey);
+  yieldRatio12->Divide(phey12);
+  yieldRatio->GetYaxis()->SetRangeUser(0,4);
+  yieldRatio->Draw("pe");
+  yieldRatio12->Draw("same pe");
+
+  TH1F* correctNPEPHE = (TH1F*)yieldRatio->Clone();
+  correctNPEPHE->Divide(yieldRatio12);
 
   TLegend* leg = new TLegend(0.5,0.68,0.87,0.89);
   TString histLab[2] = {"Non-Photonic Electrons","Photonic Electrons"};
   npeYield->cd(1);
   gPad->SetLogy(1);
-  axes->GetYaxis()->SetRangeUser(100,1e7);
+  axes->GetYaxis()->SetRangeUser(1,1e7);
   axes->DrawClone("pe");
   for(int i=0;i<2;i++){
     axes->SetTitle("NPE Yield;p_{T} (GeV/c); dN/dpT");
@@ -261,7 +325,7 @@ void calculateCrossSection(TFile* fC)
   npeYield->cd(2);
   npeDivPE = (TH1F*)ptSpectra[0]->Clone("npeDivPE");
   npeDivPE->SetTitle("NPE/PHE;p_{T} (GeV/c);Ratio NPE/PHE");
-  TH1F* npeDivPE12 = (TH1F*)runCompPt[0]->Clone();
+  TH1F* npeDivPE12 = (TH1F*)runCompPt[0]->Clone("npeDivPE12");
   npeDivPE->Divide(ptSpectra[1]);
   npeDivPE12->Divide(runCompPt[1]);
   axes->SetTitle("NPE/PHE;p_{T} (GeV/c);Ratio NPE/PHE");
@@ -280,18 +344,43 @@ void calculateCrossSection(TFile* fC)
   NPEYield = (TH1F*)ptSpectra[0]->Clone();
   NPECrossSection = (TH1F*)ptSpectra[0]->Clone("NPECrossSection");
   NPECrossSection->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
-  NPECrossSection->Scale(eqMBXS/(2*TMath::Pi()*dEta*equivMBEvents));
-  NPECrossSection->Scale(1./2.); // Divided by 2 for e- and e+ included
-  NPECrossSection->Scale(1.,"width"); // divide each bin by its width
-  NPECrossSection->Divide(totalEff);  // divide by efficiency for finding electron
-  NPECrossSection->Divide(ptMul);     
   axes->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
 
-  pretty1DHist(NPECrossSection,colors[1],24);
-  pretty1DHist(xsRun12,colors[2],25);
+  NPECrossSection->Scale(eqMBXS/(2.*TMath::Pi()*dEta*equivMBEvents));
+  NPECrossSection->Scale(1./2.); // divided by 2 for e- and e+ included
+  // NPECrossSection->Scale(1.,"width"); // ALREADY DONE ABOVE, KEEP FOR REMINDER THAT IT NEEDS TO HAPPEN //divide each bin by its width
+  NPECrossSection->Divide(totalEff);  // divide by efficiency for finding electron
+  NPECrossSection->Divide(ptMul);
+  NPECrossSection->Add(jpsiCorrection,-1); // remove j/psi contrib to e spectra
+  axes->SetTitle("NPE Cross Section;p_{T} (GeV/c);E d^{3}#sigma/dp^{3} (mb GeV^{-2} c^{3})");
+
+  /*for(int ii=1;ii<NPECrossSection->GetNbinsX();ii++){
+   cout <<  NPECrossSection->GetBinError(ii)/NPECrossSection->GetBinContent(ii) << endl;
+  }*/
+
+  // get FONLL
+  TFile *File_fonll=new TFile("fonll200gev.root","READ");
+  TGraphErrors *gFONLLu=( TGraphErrors *) File_fonll->Get("gFONLLu");
+  TGraphErrors *gFONLLc=( TGraphErrors *) File_fonll->Get("gFONLLc");
+  TGraphErrors *gFONLLd=( TGraphErrors *) File_fonll->Get("gFONLLl");
+  setFONLLStyle(gFONLLc,1,kBlack);
+  setFONLLStyle(gFONLLu,2,kBlack);
+  setFONLLStyle(gFONLLd,2,kBlack);
+
   TLegend* leg3 = new TLegend(0.5,0.68,0.87,0.89);
+  pretty1DHistLargeMarker(NPECrossSection,colors[1],20);
   leg3->AddEntry(NPECrossSection,"Run 15 p+p","lpe");
-  leg3->AddEntry(xsRun12,"Run 12 p+p","lpe");
+  if(compareRun15p)
+  {
+    pretty1DHistLargeMarker(NPECrossSection15p,colors[2],21);
+    leg3->AddEntry(NPECrossSection15p,"Run 15 p+p","lpe");
+  }
+  else
+  {
+    pretty1DHistLargeMarker(xsRun12,colors[2],21);
+    leg3->AddEntry(xsRun12,"Run 12 p+p","lpe");
+  }
+  leg3->AddEntry(gFONLLu,"FONLL p+p 200 GeV","l");
   crossSection->cd();
   gPad->SetLogy(1);
   gPad->SetLeftMargin(0.15);
@@ -299,11 +388,32 @@ void calculateCrossSection(TFile* fC)
   axes->GetYaxis()->SetRangeUser(1e-13,1e-2);
   axes->GetXaxis()->SetRangeUser(0,14);
   axes->DrawClone("pe");
+  gFONLLc->Draw("l same");
+  gFONLLu->Draw("l same");
+  gFONLLd->Draw("l same");
   NPECrossSection->Draw("same pe");
-  xsRun12->Draw("same pe");
+  if(compareRun15p)
+    NPECrossSection15p->Draw("same pe");
+  else
+    xsRun12->Draw("same pe");
   leg3->Draw("same");
 
-  cout << "end of cross section function" << endl;
+  TH1F* Rpp = (TH1F*)NPECrossSection->Clone("Rpp");
+  pretty1DHist(Rpp,kBlack,26);
+  Rpp->SetTitle("NPE #sigma Ratio;p_{T} (GeV/c);R15/R12 XS");
+  float pAInt = Rpp->Integral(Rpp->FindBin(5.5),Rpp->FindBin(13.));
+  float ppInt;
+  if(compareRun15p)ppInt = NPECrossSection15p->Integral(NPECrossSection15p->FindBin(5.5),NPECrossSection15p->FindBin(13.));
+  else ppInt = xsRun12->Integral(xsRun12->FindBin(5.5),xsRun12->FindBin(13.));
+  //Rpp->Scale(ppInt/pAInt);
+  //RpA->DrawClone("same pe");
+  //leg3->AddEntry(RpA,"Run 15 p+p (Normalized High pT)","lpe");
+  
+  Rpp->Divide(xsRun12);
+  Rpp->GetYaxis()->SetRangeUser(0,5);
+  rpa->cd();
+  Rpp->Draw("pe");
+  //rpaLabel->Draw("same");
   return;
 }
 
@@ -377,14 +487,14 @@ void drawPartECutEffic()
 
       TH1F* numerator = (TH1F*)histList[2]->Clone();
       TH1F* denominator = (TH1F*)TPCTracks[2]->Clone();
-      TH1F* numRebin = rebinVariableBins(numerator,numPtBinsEFF,lowptEFF,"numRebin");
-      TH1F* denRebin = rebinVariableBins(denominator,numPtBinsEFF,lowptEFF,"numRebin");
-      numRebin->SetTitle("Cut Efficiency;P_{T} (GeV/c);Efficiency");
-      pretty1DHist(numRebin,kRed,20);
-      numRebin->GetYaxis()->SetRangeUser(0.,1.3);
-      numRebin->Divide(denRebin);
-      numRebin->Draw();
-      partECutEfficiency[i-1] = (TH1F*)numRebin->Clone();
+      TH1F* numRebin = rebinVariableBins(numerator,numPtBinsEFF2,lowptEFF2,"numRebin");
+      TH1F* denRebin = rebinVariableBins(denominator,numPtBinsEFF2,lowptEFF2,"denRebin");
+      TH1F* div = convertToHist(new TGraphAsymmErrors(numRebin,denRebin,"cl=0.683 b(1,1) mode"),"divh");
+      pretty1DHist(div,kRed,20);
+      div->GetYaxis()->SetRangeUser(0.,1.3);
+      //div->Divide(denRebin);
+      div->Draw();
+      partECutEfficiency[i-1] = (TH1F*)div->Clone();
       partECutEfficiency[i-1]->SetTitle(titlename[i-1]);
     }
   }
@@ -538,6 +648,15 @@ void pretty1DHist(TH1* h, int col, int style)
   h->SetTitleOffset(1.2,"y");
 }
 
+void pretty1DHistLargeMarker(TH1* h, int col, int style)
+{
+  h->SetMarkerColor(col);
+  h->SetLineColor(col);
+  h->SetMarkerStyle(style);
+  h->SetMarkerSize(1.6);
+  h->SetTitleOffset(1.2,"y");
+}
+
 void pretty2DHist(TH2* h, int col, int style)
 {
   //h->SetMarkerColor(col);
@@ -574,6 +693,15 @@ void prepareLabels()
     lbl[ptbin]->AddText(textLabel);
     lbl[ptbin]->SetFillColor(kWhite);
   }
+  rpaLabel = new TPaveText(.11,.76,.7,.89,"NB NDC");
+  sprintf(textLabel,Form("Run 15 #sqrt{s} = 200 GeV; %s Trigger", trigLabel));
+  rpaLabel->AddText(textLabel);
+  sprintf(textLabel,"p+p Collisions");
+  rpaLabel->AddText(textLabel);
+  rpaLabel->SetFillColorAlpha(kWhite,0.3);
+  
+  fitLabel = new TPaveText(.62,.75,.84,.87,"NB NDC");
+  fitLabel->SetFillColor(kWhite);
 }
 
 void getTriggerLabel()
@@ -646,6 +774,7 @@ void drawnSigE()
       gPad->SetLogy(0);
       pretty1DHist(nSigE[pairType][ptbin],colors[pairType],20+pairType);
       nSigE[pairType][ptbin]->GetXaxis()->SetRangeUser(-4.,4.);
+      nSigE[pairType][ptbin]->Rebin(3);
       nSigE[pairType][ptbin]->Draw((pairType==0) ? "pe" : "same pe");
       lbl[ptbin]->Draw("same");
       if(pairType==2 && ptbin == 0) leg->Draw("same");
@@ -657,6 +786,7 @@ void drawnSigE()
         gaus->SetParameter(1,par[1]);
         gaus->SetParameter(2,par[2]);
         nSigE[pairType][ptbin]->Fit("gausn","R","",-3.0,3.0);
+
         //Taken from Shenghui run14 analysis
         TVirtualFitter * fitter = TVirtualFitter::GetFitter();
         if(fitter == NULL)
@@ -683,9 +813,9 @@ void drawnSigE()
         pT[ptbin] = (highpt[ptbin]+lowpt[ptbin])/2.;
         pTErr[ptbin] = (highpt[ptbin]-lowpt[ptbin])/2.;
         mean[ptbin]=gaus->GetParameter(1);
-        meanErr[ptbin]=cov[4];
+        meanErr[ptbin]=gaus->GetParError(1);
         sigma[ptbin]=gaus->GetParameter(2);
-        sigmaErr[ptbin]=cov[8];
+        sigmaErr[ptbin]=gaus->GetParError(2);
       }
     }
   }
@@ -708,6 +838,20 @@ void drawnSigMeanSig(const double* pT, const double* pTErr, const double* mean, 
   nSigMeanSig->cd();
   sg->Draw("APE");
   mn->Draw("SAME PE");
+  TF1* fSg = new TF1("fSg","[0]",2.5,12);
+  fSg->SetLineColor(kRed);
+  fSg->SetParameter(0,0.95);
+  TF1* fMn = new TF1("fMn","[0]",2.5,12);
+  fMn->SetParameter(0,-0.2);
+  sg->Fit(fSg,"R");
+  mn->Fit(fMn,"R");
+  float sgAv = fSg->GetParameter(0); 
+  float mnAv = fMn->GetParameter(0); 
+  float sgSg = fSg->GetParError(0); 
+  float mnSg = fMn->GetParError(0); 
+  fitLabel->AddText(Form("Mean: %f #pm %f",mnAv,mnSg));
+  fitLabel->AddText(Form("Sigma: %f #pm %f",sgAv,sgSg));
+  fitLabel->Draw("SAME");
   leg->Draw("SAME");
 }
 
@@ -753,6 +897,7 @@ void getnSigEeff()
     cutEff[ptbin] = nSigEeff[ptbin]->GetMean(1);
     cutEffErr[ptbin] = nSigEeff[ptbin]->GetRMS(1);
     efnSigE->SetBinContent(efnSigE->FindBin(pT[ptbin]),cutEff[ptbin]);
+    efnSigE->SetBinError(efnSigE->FindBin(pT[ptbin]),cutEffErr[ptbin]);
 
     twoGaus[activeCanvas]->cd(activeBin+1);
     twogaus[ptbin]->SetTitle("2D Gaussian of #mu and #sigma for nSigE Cut");
@@ -767,7 +912,7 @@ void getnSigEeff()
   nSigCutPlot->cd();
   grnSigCut->SetTitle("n#sigma_{E} Cut Efficiency;P_{T} (GeV/c);Efficiency");
   grnSigCut->Draw("APE");
-  grnSigCut->Fit("pol1","R","",1.3,6.);
+  grnSigCut->Fit("pol0","R","",2,12.);
 }
 
 void declareHistograms(){
@@ -917,6 +1062,7 @@ void prepareCanvas()
   efficOverlay = new TCanvas("efficOverlay","Partner eID Based QA",50,50,1050,1050);
   efficiencies = new TCanvas("efficiencies","Efficiencies For Cross Section",50,50,1050,1050);
   crossSection = new TCanvas("crossSection","NPE Cross Section",50,50,1050,1050);
+  rpa = new TCanvas("rpa","NPE R_{pA}",50,50,1050,1050);
   npeYield = new TCanvas("npeYield","NPE Yield",50,50,1050,1050);
   npeYield->Divide(1,2);
   nSigCutPlot = new TCanvas("nSigCutPlot","nSigmaE Cut Efficiency",50,50,1050,1050);
@@ -926,11 +1072,14 @@ void prepareCanvas()
   Run12Compare->Divide(2,2);
   Run12Ratio = new TCanvas("Run12Ratio","Run12Ratio",50,50,1050,1050);
   Run12Ratio->Divide(2,2);
+  inclUSRatio = new TCanvas("inclUSRatio","inclUSRatio",50,50,1050,1050);
 
   eventHists = new TCanvas("eventHists","Event Level Hists",50,50,1050,1050);
   eventHists->Divide(1,2);
   zdcQA = new TCanvas("zdcQA","ZDC QA Hists",50,50,1050,1050);
   zdcQA->Divide(1,2);
+  yieldComponents = new TCanvas("yieldComponent","yieldComponents",50,50,1050,1050);
+  yieldComponents->Divide(1,2);
   if(DEBUG) cout << "Canvas made." << endl;
 }
 
@@ -1091,6 +1240,13 @@ void getdNdpT(TFile* fC)
     }
     ptSpectra->Draw((i==0)?"pe":"same pe");
     ptDist[i] = (TH1F*)ptSpectra->Clone();
+
+    // Used for determining the size needed for embedding. Used alongside relative efficiency uncertainty
+    // in Run 12 embedding and the embedding size in Run 12
+    /* cout << "Relative Uncertainty for " << legName[i] << endl;
+    for(int ii=1; ii<ptSpectra->GetNbinsX();ii++){
+      cout << ptSpectra->GetBinError(ii)/ptSpectra->GetBinContent(ii) << endl;
+    }*/
   }
   sampleLabel->Draw("SAME");
 
@@ -1100,23 +1256,24 @@ void getdNdpT(TFile* fC)
       getRun15pHists(fC,runCompHists);
     else
       getRun12Hists(fC,runCompHists);
-    
+
     for(int ii=0;ii<3;ii++)
     {
       runCompHists[ii]->Draw("pe same");
+
       if(compareRun15p)
         leg->AddEntry(runCompHists[ii],legName15[ii],"lpe");
       else
         leg->AddEntry(runCompHists[ii],legName12[ii],"lpe");
     }
     leg->Draw("same");
-
+    
     float normLow  = 4.;
     float normHigh = 6.;
     if(trigSelect == 2)
       {
         normLow  = 6.;
-        normHigh = 12.;
+        normHigh = 8.;
       }
 
     for(int i=0; i<3; i++)
@@ -1145,7 +1302,7 @@ void getdNdpT(TFile* fC)
       leg12->Draw("same");
       normLabel->Draw("same");
       TH1F* ratio = (TH1F*)r15->Clone();
-      if(i==0)ratio->Multiply(purity[trigSelect-1]);
+      if(i==0)ratio->Multiply(puritypp[trigSelect-1]);
       TH1F* r12Pur = (TH1F*)r12->Clone();
       if(i==0)r12Pur->Multiply(purityRun12);
       ratio->Divide(r12Pur);
@@ -1167,9 +1324,9 @@ void getdNdpT(TFile* fC)
 
     TH1F* run12hist[3];
     for(int ii=0;ii<3;ii++) run12hist[ii] = (TH1F*)runCompHists[ii]->Clone();
-    ptDist[0]->Multiply(purity[trigSelect-1]);
+    ptDist[0]->Multiply(puritypp[trigSelect-1]);
     ptDist[1]->Add(ptDist[2],-1.);
-    ptDist[1]->Divide(effPHEReco);
+    ptDist[1]->Divide(effPHEReco15);
     ptDist[0]->Add(ptDist[1],-1.);
     if( compareRun15p )
       run12hist[0]->Multiply(puritypp[trigSelect-1]);
@@ -1202,7 +1359,7 @@ void getdNdpT(TFile* fC)
     pretty1DHist(ptDist[0], kRed, 24);
     Run12Ratio->cd(4);
     if( compareRun15p )
-      ptDist[0]->GetYaxis()->SetRangeUser(0,30);
+      ptDist[0]->GetYaxis()->SetRangeUser(0,4);
     else
       ptDist[0]->GetYaxis()->SetRangeUser(0,50);
     ptDist[0]->Draw("pe");
@@ -1285,9 +1442,51 @@ void makeUnlikeMinusLikePartnerElectrons()
   SMDIdTracks[2]->SetTitle("Unlike - Like");
 }
 
+void makeInclDivUnlike(const char* fileName)
+{
+  TFile* f15pA = new TFile(fileName, "READ"); // pA name is carried over for naming compatibility, it just references current file.
+  TFile* f15pp = new TFile(Form("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v3_100516/readTreeOut/out/histHadd/rootfile_temp/1117BHT%i/anaTree15_BHT%i.hists.root",trigSelect, trigSelect),"READ");
+  TFile* f12pp = new TFile("/star/u/zamiller/PWGSpace/run15ppAnaTree/prod/anaTreeMaker_v2_080316/Run12RootFile/hist_5_2.root","READ");
+  checkIfFileOpen(f15pA);
+  checkIfFileOpen(f15pp);
+  checkIfFileOpen(f12pp);
+
+  TH1D* inclDivUS[3][2];
+  inclDivUS[0][0] = (TH1D*)f15pA->Get("hEPt");
+  inclDivUS[0][1] = (TH1D*)f15pA->Get("hEEPt_US");
+  inclDivUS[1][0] = (TH1D*)f15pp->Get("hEPt");
+  inclDivUS[1][1] = (TH1D*)f15pp->Get("hEEPt_US");
+  inclDivUS[2][0] = (TH1D*)f12pp->Get(Form("mh1electronPtTrg%i",trigSelect-1));
+  TH2F* tempH = (TH2F*)f12pp->Get(Form("mPhi_ptUnlikeTrg%i",trigSelect-1));
+  inclDivUS[2][1] = tempH->ProjectionX();
+
+  TString legName[3] = {"Run 15 p+p","Run 15 p+p","Run 12 p+p"};
+  TLegend* legR = new TLegend(.11,.7,.6,0.87);
+  inclUSRatio->cd();
+  inclDivUS[0][0]->SetTitle("Inclusive Elec. / Unlike Sign Electrons; p_{T} (GeV/c); Ratio");
+  inclDivUS[0][0]->GetYaxis()->SetRangeUser(0,50);
+  for(int col=0; col<3; col++)
+  {
+    if(col == 1)
+      continue;
+    TH1D* temp0 = (TH1D*)inclDivUS[col][0]->Clone();
+    TH1D* temp1 = (TH1D*)inclDivUS[col][1]->Clone();
+    inclDivUS[col][0]= rebinVariableBins(temp0, numPtBinsEFF2, lowptEFF2);
+    inclDivUS[col][1]= rebinVariableBins(temp1, numPtBinsEFF2, lowptEFF2);
+    inclDivUS[col][0]->Scale(1.,"width");
+    inclDivUS[col][1]->Scale(1.,"width");
+    inclDivUS[col][0]->Divide(inclDivUS[col][1]);
+    if(col==0)inclDivUS[col][0]->GetYaxis()->SetRangeUser(0,15);
+    //inclDivUS[col][0]->Rebin(4);
+    pretty1DHist(inclDivUS[col][0],colors[col],20+col);
+    legR->AddEntry(inclDivUS[col][0],legName[col],"lpe");
+    inclDivUS[col][0]->Draw((!col) ? "pe" : "same pe");
+  }
+  legR->Draw("same");
+}
+
 void makePDF(const char* fileName)
 {
-  if(DEBUG) cout << "In PDF Make" << endl;
   //Set front page
   TCanvas* fp = new TCanvas("fp","Front Page",50,50,1050,1050);
   fp->cd();
@@ -1306,7 +1505,7 @@ void makePDF(const char* fileName)
   if(found >= 0){
     titlename.Replace(0, found+1, "");
   } 
-  sprintf(tlName, "RUN 15 p+p 200 GeV NPE");
+  sprintf(tlName, "RUN 15 p+A 200 GeV NPE-Hadron");
   tl.SetTextSize(0.05);
   tl.SetTextColor(kWhite);
   tl.DrawLatex(0.05, 0.92,tlName);
@@ -1321,113 +1520,109 @@ void makePDF(const char* fileName)
   tl.SetTextSize(0.03);
   tl.DrawLatex(0.1, 0.14, titlename);
 
-  if(DEBUG) cout << "Placing Canvii" << endl;
   // Place canvases in order
-  TCanvas* temp2 = new TCanvas();
-  char fname[100];
-  sprintf(fname, "%s.pdf[", fileName);
-  cout << fname << endl;
-  temp2->Print(fname);
-  sprintf(fname, "%s.pdf", fileName);
-  temp2 = fp; // print front page
-  temp2->Print(fname);
-  if(DEBUG) cout << "After fp" << endl;
-  temp2 = eventHists;
-  temp2->Print(fname);
-  if(DEBUG) cout << "After eventHists" << endl;
-  temp2 = dndpt;
-  temp2->Print(fname);
-  if(DEBUG) cout << "After dNdpt" << endl;
+  TCanvas* temp = new TCanvas();
+  char name[100];
+  sprintf(name, "%s.pdf[", fileName);
+  temp->Print(name);
+  sprintf(name, "%s.pdf", fileName);
+  temp = fp; // print front page
+  temp->Print(name);
+  temp = eventHists;
+  temp->Print(name);
+  temp = dndpt;
+  temp->Print(name);
   if(compareRun12){
-    temp2 = Run12Compare;
-    temp2->Print(fname);
-    temp2 = Run12Ratio;
-    temp2->Print(fname);
+    temp = Run12Compare;
+    temp->Print(name);
+    temp = Run12Ratio;
+    temp->Print(name);
   }
-  if(DEBUG) cout << "After Compare Run 12" << endl;
-  temp2 = efficiencies;
-  temp2->Print(fname);
-  temp2 = npeYield;
-  temp2->Print(fname);
-  temp2 = crossSection;
-  temp2->Print(fname);
-  temp2 = equivMB;
-  temp2->Print(fname);
+  temp = inclUSRatio;
+  temp->Print(name);
+  temp = efficiencies;
+  temp->Print(name);
+  temp = npeYield;
+  temp->Print(name);
+  temp = crossSection;
+  temp->Print(name);
+  temp = rpa;
+  temp->Print(name);
+  temp = equivMB;
+  temp->Print(name);
+  temp = yieldComponents;
+  temp->Print(name);
   for(int etype=0;etype<3;etype++)
   {
     for(int q=0; q<numCanvas; q++)
     {
-      temp2 = dPhiPt[etype][q]; // print data canvases
-      temp2->Print(fname);
+      temp = dPhiPt[etype][q]; // print data canvases
+      temp->Print(name);
     }
   }
-  if(DEBUG) cout << "After dPhi" << endl;
-  temp2 = delPhiDelEta;
-  temp2->Print(fname);
+  temp = delPhiDelEta;
+  temp->Print(name);
   for(int q=0; q<numCanvas; q++)
   {
-    temp2 = invMassPt[q]; // print data canvases
-    temp2->Print(fname);
+    temp = invMassPt[q]; // print data canvases
+    temp->Print(name);
   }
 
-  temp2 = zdcQA;
-  temp2->Print(fname);
-  temp2 = invMass;
-  temp2->Print(fname);
-  temp2 = invMassVsPt;
-  temp2->Print(fname);
-  temp2 = cutEfficiency;
-  temp2->Print(fname);
-  temp2 = ptCompare;
-  temp2->Print(fname);
-  temp2 = hadQA;
-  temp2->Print(fname);
-  temp2 = elecQA;
-  temp2->Print(fname);
+  temp = zdcQA;
+  temp->Print(name);
+  temp = invMass;
+  temp->Print(name);
+  temp = invMassVsPt;
+  temp->Print(name);
+  temp = cutEfficiency;
+  temp->Print(name);
+  temp = ptCompare;
+  temp->Print(name);
+  temp = hadQA;
+  temp->Print(name);
+  temp = elecQA;
+  temp->Print(name);
   for(int i=0;i<2;i++)
   {
-    temp2 = eeQA[i];
-    temp2->Print(fname);
+    temp = eeQA[i];
+    temp->Print(name);
   }
-  if(DEBUG) cout << "After Generic QA" << endl;
   for(int i=0;i<4;i++)
   {
-    temp2 = eIDCutEffic[i];
-    temp2->Print(fname);
+    temp = eIDCutEffic[i];
+    temp->Print(name);
   }
-  temp2 = efficOverlay;
-  temp2->Print(fname);
+  temp = efficOverlay;
+  temp->Print(name);
   for(int i=0;i<6;i++)
   {
-    temp2 = pElecCuts[i];
-    temp2->Print(fname);
+    temp = pElecCuts[i];
+    temp->Print(name);
   }
   for(int q=0; q<numCanvas; q++)
   {
-    temp2 = nSigEPt[q]; // print data canvases
-    temp2->Print(fname);
+    temp = nSigEPt[q]; // print data canvases
+    temp->Print(name);
   }
-  temp2 = nSigMeanSig;
-  temp2->Print(fname);
-  if(DEBUG) cout << "After Effic Canvas" << endl;
+  temp = nSigMeanSig;
+  temp->Print(name);
   for(int q=0; q<numCanvas; q++)
   {
-    temp2 = twoGaus[q]; 
-    temp2->Print(fname);
+    temp = twoGaus[q]; 
+    temp->Print(name);
   }
   for(int q=0; q<numCanvas; q++)
   {
-    temp2 = nSigEff[q];
-    temp2->Print(fname);
+    temp = nSigEff[q];
+    temp->Print(name);
   }
-  temp2 = nSigCutPlot;
-  temp2->Print(fname);
-  temp2 = eeOriginQA;
-  temp2->Print(fname);
+  temp = nSigCutPlot;
+  temp->Print(name);
+  temp = eeOriginQA;
+  temp->Print(name);
 
-  sprintf(fname, "%s.pdf]", fileName);
-  temp2->Print(fname);
-  if(DEBUG) cout << "End PDF Make" << endl;
+  sprintf(name, "%s.pdf]", fileName);
+  temp->Print(name);
 }
 
 TH1F* rebinVariableBins(TH1F* h, int nbins, const float* bins, TString name)
@@ -1450,4 +1645,29 @@ TH1D* rebinVariableBins(TH1D* h, int nbins, const float* bins, TString name)
   for(int ii=0;ii<nbins;ii++) xbins[ii] = bins[ii];
   TH1D* newH = (TH1D*)h->Rebin(segs,name,xbins);
   return newH;
+}
+
+TH1F* convertToHist(TGraphAsymmErrors* gr,TString hname)
+{
+  TH1D* h1 = new TH1D(hname,"",200,0,20);
+  TH1F* h = (TH1F*)rebinVariableBins(h1,numPtBinsEFF2,lowptEFF2,hname);
+  for(Int_t i=0;i<numPtBinsEFF2;i++)
+  {
+    Double_t x=0, y=0, y_err=0;
+    gr->GetPoint(i,x,y);
+    y_err=gr->GetErrorY(i);
+
+    h->SetBinContent(i+1,y);
+    h->SetBinError(i+1,y_err);
+  }
+  return h;
+}
+
+void setFONLLStyle(TGraphErrors* g,int linestyle,int color)
+{
+  g->SetMarkerSize(0);
+  g->SetMarkerStyle(1);
+  g->SetLineStyle(linestyle);
+  g->SetLineWidth(1);
+  g->SetLineColor(color);
 }

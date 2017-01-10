@@ -105,9 +105,11 @@ class StMyAnaTreeMaker : public StMaker {
       void fillMuonHists(StMuonTrack*);
       void fillEEHists(StEEPair*);
       void fillPhoEEHists(StPhoEEPair*);
+      void fillZaochenEff(StPhoEEPair*);
       void fillEMuHists(StEMuPair*);
       void fillMuMuHists(StMuMuPair*);
       void fillRunIndexHists(StElectronTrack*);
+      bool isBadRun(int);
 
       bool passPartEQuality(double, int, int, double);
       bool partEIDCuts(StPartElectronTrack*);
@@ -320,6 +322,18 @@ class StMyAnaTreeMaker : public StMaker {
       TH1F *hSMDMatchedTracks[2];
       TH1F *hSMDIdTracks[2];
 
+      //Partner Electron Hists for Zaochen Eff
+      TH2F *hNSigEPartElecz[2];
+      TH2F *hEvpPartElecz[2];
+      TH2F *hzDistPartElecz[2];
+      TH2F *hphiDistPartElecz[2];
+      TH1F *hTPCTracksz[2];
+      TH1F *hEMCMatchedTracksz[2];
+      TH1F *hEMCIdTracksz[2];
+      TH1F *hBEMCIdTracksz[2];
+      TH1F *hTOFMatchedTracksz[2];
+      TH1F *hTOFIdTracksz[2];
+
       //RunIndex
       TH2F* hPvEvsRunIndex;
       TH2F* hnEtavsRunIndex;
@@ -330,6 +344,7 @@ class StMyAnaTreeMaker : public StMaker {
       TH2F* hbetavsRunIndex;
 
       TH1F *hTrigType;
+      TH2F *hPEnEtanPhi;
 
       TF1* refMvsZDCFit;
 
