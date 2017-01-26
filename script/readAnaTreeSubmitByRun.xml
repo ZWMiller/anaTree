@@ -27,8 +27,11 @@ mv -v $SCRATCH/${FILEBASENAME}_${JOBID}.log $EMLOGS/${FILEBASENAME}.log
     <File>file:./StRoot</File>
     <File>file:./runNumberList_run15pp</File>
 	</Package>
-</SandBox>
+ </SandBox>
 
+ <ResourceUsage>
+     <Priority>100</Priority>
+ </ResourceUsage>
 
 <!-- Define locations of ROOT files -->
 <output fromScratch="*.hists.root" toURL="$EMOUTPUT/"/>

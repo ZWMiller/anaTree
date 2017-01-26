@@ -829,7 +829,7 @@ void StPicoAnaTreeMaker::fillTracks() {
     int fElecFlag = 0;
     int isTofE = 0;
     int isEmcE = 0;
-    if(isTofElectron(t)) isTofE = 1;
+    //if(isTofElectron(t)) isTofE = 1;
     if(isEmcElectron(t)) isEmcE = 1;
     if(isTofE==1&&isEmcE==0) fElecFlag = 1;
     if(isTofE==0&&isEmcE==1) fElecFlag = 2;
@@ -837,6 +837,7 @@ void StPicoAnaTreeMaker::fillTracks() {
 
     //primary e
     if(fElecFlag>0){
+      electronTrackData(t);
       int counter = mAnaTreeArrays[anaTreeETrack]->GetEntries();
       new((*(mAnaTreeArrays[anaTreeETrack]))[counter]) StElectronTrack(mPicoDst,t,i);
     }
@@ -861,6 +862,58 @@ void StPicoAnaTreeMaker::fillTracks() {
     }
   }
 }
+void StPicoAnaTreeMaker::electronTrackData(StPicoTrack* t)
+{
+
+  double pt=0.,eta=-999.,ratio=0.;
+  int nHitsFit = 0, nHitsDedx = 0, nHitsMax = 0; 
+  int nHitsMapHFT = 0;
+
+  StThreeVectorF gMom = t->gMom(mPicoDst->event()->primaryVertex(),mPicoDst->event()->bField());
+  pt = gMom.perp();
+  eta = gMom.pseudoRapidity();
+  StPhysicalHelixD helix = t->helix();
+  StThreeVectorF vertexPos = mPicoDst->event()->primaryVertex();
+  Double_t thePath = helix.pathLength(vertexPos);
+  StThreeVectorF dcaPos = helix.at(thePath);
+  Float_t dca = (dcaPos-vertexPos).mag();
+  nHitsFit = t->nHitsFit();
+  nHitsMax = t->nHitsMax();
+  nHitsDedx = t->nHitsDedx();
+  ratio = 1.*t->nHitsFit()/nHitsMax;
+  //nHitsMapHFT = t->nHitsMapHFT();
+  bool isHFTTrack = t->isHFTTrack();
+
+  StThreeVectorF pMom = t->pMom();
+  double ppt = -999.,peta = -999.;
+  if(pMom.mag()>1e-5){ 
+    ppt = pMom.perp();
+    peta = pMom.pseudoRapidity();
+  }
+
+  int index2EmcPid = t->emcPidTraitsIndex();
+  Float_t e = -999., zDist = -999., phiDist = -999., nEta = 0, nPhi = 0;
+  Float_t p = t->gPtot();
+  if (index2EmcPid>=0){
+    StPicoEmcPidTraits *emcPid = mPicoDst->emcPidTraits(index2EmcPid);
+    e = emcPid->e0();
+    zDist = emcPid->zDist();
+    phiDist = emcPid->phiDist();
+    nEta = emcPid->nEta();
+    nPhi = emcPid->nPhi();
+  }
+  mhnTracks->Fill(14);
+
+  Float_t pve = 0;
+  Float_t evp = 0;
+  if(e>0.1) pve = p/e;
+  if(p>0.1) evp = e/p;
+
+  std::ofstream ofs ("anaElecTrack.txt", std::ofstream::app);
+  ofs << t->id()<<": " << pt << " " << eta << " " << dca << " " << nHitsFit << " " << nHitsDedx << " " << t->nSigmaElectron() << " " << pve << " " << zDist << " " << phiDist<< endl;
+  ofs.close();
+}
+
 //-----------------------------------------------------------------------
 void StPicoAnaTreeMaker::fillPairs() {
   /* fill ee pairs */
@@ -996,15 +1049,17 @@ Bool_t StPicoAnaTreeMaker::isGoodTrack(StPicoTrack* t)
     peta = pMom.pseudoRapidity();
   }
 
-  if((pt<mPtCut[0]||pt>mPtCut[1])&&(ppt<mPtCut[0]||ppt>mPtCut[1])) return false;
+  //if((pt<mPtCut[0]||pt>mPtCut[1])&&(ppt<mPtCut[0]||ppt>mPtCut[1])) return false;
+  if(pt<mPtCut[0]||pt>mPtCut[1]) return false;
   mhnTracks->Fill(1);
-  if((eta<mEtaCut[0]||eta>mEtaCut[1])&&(peta<mEtaCut[0]||peta>mEtaCut[1])) return false;
+  //if((eta<mEtaCut[0]||eta>mEtaCut[1])&&(peta<mEtaCut[0]||peta>mEtaCut[1])) return false;
+  if(eta<mEtaCut[0]||eta>mEtaCut[1]) return false;
   mhnTracks->Fill(2);
   if(dca<mDcaCut[0]||dca>mDcaCut[1]) return false;
   mhnTracks->Fill(3);
   if(nHitsFit<mnHitsFitCut[0]||nHitsFit>mnHitsFitCut[1]) return false;
   mhnTracks->Fill(4);
-  //if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
+  if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
   mhnTracks->Fill(5);
   if(ratio<mRatioCut[0]||ratio>mRatioCut[1]) return false;
   mhnTracks->Fill(6);
@@ -1166,18 +1221,18 @@ Bool_t StPicoAnaTreeMaker::isEmcElectron(StPicoTrack* t)
   mhEvPvsPt->Fill(pt,evp);
   mhPvEvsPt->Fill(pt,pve);
 
-  if((pt<mEmcEPtCut[0]||pt>mEmcEPtCut[1])&&(ppt<mEmcEPtCut[0]||ppt>mEmcEPtCut[1])) return false;
+  //if((pt<mEmcEPtCut[0]||pt>mEmcEPtCut[1])) return false; //&&(ppt<mEmcEPtCut[0]||ppt>mEmcEPtCut[1])) return false;
   mhnTracks->Fill(15);
   //if((eta<mEmcEEtaCut[0]||eta>mEmcEEtaCut[1])&&(peta<mEmcEEtaCut[0]||peta>mEmcEEtaCut[1])) return false;
   mhnTracks->Fill(16);
-  if((pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1])&&(ppve<mEmcEPveCut[0]||ppve>mEmcEPveCut[1])) return false;
+  if((pve<mEmcEPveCut[0]||pve>mEmcEPveCut[1])) return false;//&&(ppve<mEmcEPveCut[0]||ppve>mEmcEPveCut[1])) return false;
   mhnTracks->Fill(17);
-  //if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
+//  if(zDist<mEZDistCut[0] || zDist>mEZDistCut[1]) return false;
   //mhnTracks->Fill(18);
-  //if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
+//  if(phiDist<mEPhiDistCut[0] || phiDist>mEPhiDistCut[1]) return false;
   //mhnTracks->Fill(19);
-  int nHitsDedx = t->nHitsDedx();
-  if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
+  //int nHitsDedx = t->nHitsDedx();
+  //if(nHitsDedx<mnHitsDedxCut[0]||nHitsDedx>mnHitsDedxCut[1]) return false;
 
   mhEmcEnSigEvsPCut->Fill(p,nSigE);
   mhEmcEnSigEvsPtCut->Fill(pt,nSigE);

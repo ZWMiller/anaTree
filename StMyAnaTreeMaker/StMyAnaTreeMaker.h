@@ -109,12 +109,14 @@ class StMyAnaTreeMaker : public StMaker {
       void fillEMuHists(StEMuPair*);
       void fillMuMuHists(StMuMuPair*);
       void fillRunIndexHists(StElectronTrack*);
+      void electronTrackData(StElectronTrack*);
       bool isBadRun(int);
 
       bool passPartEQuality(double, int, int, double);
       bool partEIDCuts(StPartElectronTrack*);
       bool tagEEMCCuts(StElectronTrack*);
       bool tagEIDCuts(StElectronTrack*);
+      bool passEventCuts();
 
 		StPicoAnaTreeMaker *mPicoAnaTreeMaker;
 		StAnaTree          *mAnaTree;

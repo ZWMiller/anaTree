@@ -88,6 +88,7 @@ class StPicoElecPurityMaker : public StMaker {
 
      void addTrigger(int tr, int id) { triggers[id].push_back(tr); };
      void setRunMode(int md) { runMode = md; };
+     void electronTrackData(StPicoTrack*);
 
   private:
    StPicoDstMaker *mPicoDstMaker;

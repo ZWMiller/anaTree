@@ -483,6 +483,7 @@ Int_t StPicoElecPurityMaker::FillHistograms(Int_t trig, StPicoEvent* event)
 
 
 
+
     //   if(isGoodTrack_NoEta){ 
     //  hNTracks[trig]->Fill(2);
     Double_t meta,mpt,mphi,mcharge,mdedx;
@@ -567,7 +568,9 @@ Int_t StPicoElecPurityMaker::FillHistograms(Int_t trig, StPicoEvent* event)
 
     if((trig<4)&&passBEMCCuts(event, track, trig))
     {   	
-
+      if(nsige >= -1. && nsige <= 3.)
+        electronTrackData(track);
+      
       if(track->nSigmaElectron()<=3&&track->nSigmaElectron()>=-1.5)
         nsigmaE_Vs_pT_BEMC[trig]->Fill(track->gMom(event->primaryVertex(),event->bField()).perp(),track->nSigmaElectron());
 
@@ -753,6 +756,56 @@ Bool_t StPicoElecPurityMaker::isMB(StPicoEvent *event)
 }
 
 //------------------------------------------------------------- 
+void StPicoElecPurityMaker::electronTrackData(StPicoTrack* t)
+{
+
+  double pt=0.,eta=-999.,ratio=0.;
+  int nHitsFit = 0, nHitsDedx = 0, nHitsMax = 0; 
+  int nHitsMapHFT = 0;
+
+  StThreeVectorF gMom = t->gMom(mPicoDst->event()->primaryVertex(),mPicoDst->event()->bField());
+  pt = gMom.perp();
+  eta = gMom.pseudoRapidity();
+  StPhysicalHelixD helix = t->helix();
+  StThreeVectorF vertexPos = mPicoDst->event()->primaryVertex();
+  Double_t thePath = helix.pathLength(vertexPos);
+  StThreeVectorF dcaPos = helix.at(thePath);
+  Float_t dca = (dcaPos-vertexPos).mag();
+  nHitsFit = t->nHitsFit();
+  nHitsMax = t->nHitsMax();
+  nHitsDedx = t->nHitsDedx();
+  ratio = 1.*t->nHitsFit()/nHitsMax;
+  //nHitsMapHFT = t->nHitsMapHFT();
+  bool isHFTTrack = t->isHFTTrack();
+
+  StThreeVectorF pMom = t->pMom();
+  double ppt = -999.,peta = -999.;
+  if(pMom.mag()>1e-5){ 
+    ppt = pMom.perp();
+    peta = pMom.pseudoRapidity();
+  }
+
+  int index2EmcPid = t->emcPidTraitsIndex();
+  Float_t e = -999., zDist = -999., phiDist = -999., nEta = 0, nPhi = 0;
+  Float_t p = t->gPtot();
+  if (index2EmcPid>=0){
+    StPicoEmcPidTraits *emcPid = mPicoDst->emcPidTraits(index2EmcPid);
+    e = emcPid->e0();
+    zDist = emcPid->zDist();
+    phiDist = emcPid->phiDist();
+    nEta = emcPid->nEta();
+    nPhi = emcPid->nPhi();
+  }
+  Float_t pve = 0;
+  Float_t evp = 0;
+  if(e>0.1) pve = p/e;
+  if(p>0.1) evp = e/p;
+
+  std::ofstream ofs ("purElecTrack.txt", std::ofstream::app);
+  ofs << t->id()<<": " << pt << " " << eta << " " << dca << " " << nHitsFit << " " << nHitsDedx << " " << t->nSigmaElectron() << " " << pve << " " << zDist << " " << phiDist<< endl;
+  ofs.close();
+}
+
 
 Bool_t StPicoElecPurityMaker::passGoodTrack(StPicoEvent* event, StPicoTrack* track, int trig)
 {
@@ -790,8 +843,8 @@ Bool_t StPicoElecPurityMaker::passGoodTrack(StPicoEvent* event, StPicoTrack* tra
   double dcaXY= ( (dcaPoint-vertexPos).x()*dcaP.y()-(dcaPoint-vertexPos).y()*dcaP.x() )/dcaP.perp();
   double dcaZ= dcaPoint.z() - vertexPos.z();
   mdca = dcamag;
-
-  if(pt>PtCut && fhitsFit > nhitsFitCut && fhitsdEdx > nhitsdEdxCut && fithitfrac >= nhitsRatioCut && fithitfrac<=1.02   && fabs(feta) < etaCut && fabs(mdca) < dcaCut )
+  
+  if(pt>=PtCut && fhitsFit >= nhitsFitCut && fhitsdEdx >= nhitsdEdxCut && fithitfrac >= nhitsRatioCut && fithitfrac<=1.02   && fabs(feta) <= etaCut && fabs(mdca) <= dcaCut )
 
     return true;
 
@@ -889,6 +942,7 @@ Bool_t StPicoElecPurityMaker::passBEMCCuts(StPicoEvent* event, StPicoTrack* trac
 {
   // Get BEMC info
   Int_t emcpidtraitsid=track->emcPidTraitsIndex();
+  float p;
   double mpoe;
   int dsmadc = 1;
   int bemcId, btowId, nPhi,nEta;
@@ -905,7 +959,9 @@ Bool_t StPicoElecPurityMaker::passBEMCCuts(StPicoEvent* event, StPicoTrack* trac
     phiDist = emcpidtraits->phiDist();
     nEta = emcpidtraits->nEta();
     nPhi = emcpidtraits->nPhi();
-    mpoe = track->gMom(event->primaryVertex(),event->bField()).mag()/emcpidtraits->e0();
+    p = track->gPtot();
+    //mpoe = track->gMom(event->primaryVertex(),event->bField()).mag()/emcpidtraits->e0();
+    mpoe = p/emcpidtraits->e0();
     // Check if hot tower. If so, return BEMC failure
     int runId = event->runId();
     // if(checkHotTower(runId,btowId))
@@ -934,9 +990,10 @@ Bool_t StPicoElecPurityMaker::passBEMCCuts(StPicoEvent* event, StPicoTrack* trac
   }
 
   //cout << "pT: " << mpt << " p/E: " << mpoe << " e0: " << e0 << " dsmadc: " << dsmadc << endl;
-  if(mpt<=bemcPtCut) return true;
+  //if(mpt<=bemcPtCut) return true;
     //     if( mpt > bemcPtCut && mpoe > poeCutLow && mpoe < poeCutHigh && dsmadc > getDsmAdcCut(trig) )
-  if( mpt > bemcPtCut && mpoe > poeCutLow && mpoe < poeCutHigh && adc0>getadc0Cut(trig)&&dsmadc > getDsmAdcCut(trig) )
+  //if( mpt > bemcPtCut && mpoe > poeCutLow && mpoe < poeCutHigh && adc0>getadc0Cut(trig)&&dsmadc > getDsmAdcCut(trig) && fabs(zDist) < zDistCut2 && fabs(phiDist) < phiDistCut2)
+  if( mpt > bemcPtCut && mpoe > poeCutLow && mpoe < poeCutHigh && fabs(zDist) < zDistCut2 && fabs(phiDist) < phiDistCut2)
     return true;
   else 
     return false;
@@ -1088,7 +1145,7 @@ Bool_t StPicoElecPurityMaker::passEventCuts(StPicoEvent* event, int trig)
   Double_t vzvpd = event->vzVpd();
   Double_t vztpc = event->primaryVertex().z();
   Double_t dvz = vzvpd - vztpc;
-  if(trig!=3&&fabs(vztpc) < vZcut[trig] && fabs(dvz) < dvZcut[trig]) return true;
+  if(trig!=3&&fabs(vztpc) < vZcut[trig]&& fabs(dvz) < dvZcut[trig]) return true;
   if(trig==3&&fabs(vztpc) < vZcut[trig] ) return true;
   else return false;
 }
@@ -1128,7 +1185,7 @@ Double_t StPicoElecPurityMaker::RotatePhi(Double_t phi) const
 void StPicoElecPurityMaker::SetDefaultCuts()
 { 
   numTrigs = 4;
-  setNSigECuts(-1.5,3.0);
+  setNSigECuts(-1.0,3.0);
   setNSigPCuts(-20,20);
   setNSigKCuts(-20,20);
   setNSigPiCuts(-20,20);
@@ -1140,10 +1197,11 @@ void StPicoElecPurityMaker::SetDefaultCuts()
   setvZCutsHFT(1,30.0,6.0); // (vZ, delVz)
   setvZCutsHFT(2,30.0,6.0); // (vZ, delVz)
   setvZCutsHFT(3,30.0,6.0); // (vZ, delVz)
-  setPrimaryPtCut(3.0, 1.0); // pT < 3 (TOF), pT >1.5 (BEMC)
-  setPrimaryEtaCut(1.0); // |eta| < 1.0
+  setPrimaryPtCut(3.0, 2.0); // pT < 3 (TOF), pT >1.5 (BEMC)
+  setPrimaryEtaCut(0.7); // |eta| < 1.0
   setPrimaryDCACut(1.5); // eDCA < 1.5 cm
   setNhitsCuts(15.,20.,0.52); // nHitsdEdx >= 15, nHitsFit >= 20, nHitsRatio >= 0.52
+  //setNhitsCuts(10.,15.,0.52); // nHitsdEdx >= 15, nHitsFit >= 20, nHitsRatio >= 0.52
   setPoECut(0.3, 1.5); // 0.3 < p/E < 1.5
   setToFBetaCut(0.03); // |1/B -1| < 0.03
   setToFLocalyCut(1.8); // |tof_localy| < 1.8
@@ -1159,6 +1217,6 @@ void StPicoElecPurityMaker::SetDefaultCuts()
   setadc0Cut(2,300); // dsmADC cut sets ()
   setadc0Cut(3,400); // dsmADC cut sets ()
   setSMDCuts(0,0,3.,0.8); // nEta>=, nPhi>=, zDist<, phiDist< 
-  setSMDCuts2(1,1,3.,0.015); // nEta>=, nPhi>=, zDist<, phiDist< 
+  setSMDCuts2(1,1,3.,0.015); // nEta>=, nPhi>=, zDist<, phiDist<0.015 
 }
 

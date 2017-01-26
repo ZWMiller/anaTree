@@ -19,7 +19,7 @@ const float lowpt[numPtBins]  =
 const float highpt[numPtBins] = 
 { 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 7.0, 8.0, 10.0, 13.0, 20.0};
 
-const int colors[6] = {kBlack,kRed,kAzure+1,kMagenta,kOrange+9,kViolet+8};
+const int colors[9] = {kBlack,kRed,kAzure+1,kMagenta,kOrange+9,kViolet+8,kGreen+3,kPink+6,kOrange+1};
 
 
 const int numPtBinsEFF = 29;
@@ -57,6 +57,7 @@ TCanvas* nSigMeanSig;
 TCanvas* dndpt;
 TCanvas* zdcQA;
 TCanvas* efficiencies;
+TCanvas* efficiencies2;
 TCanvas* crossSection;
 TCanvas* npeYield;
 TCanvas* equivMB;
@@ -125,6 +126,8 @@ TH1F* effPHEReco;
 TH1F* effTrigger15[2];
 TH1F* effTracking15;
 TH1F* effPHEReco15;
+TH1F* effEID15;
+TH1F* effMomRes;
 TH1F* purityRun12;
 TH1F* purity[2];
 TH1F* puritypp[2];
@@ -133,6 +136,8 @@ TH1F* effTPCElecID;
 TH1F* effnSigE;
 TH1F* eff12nSigE;
 TH1F* efnSigE;
+float nSigEffMean;
+float nSigEffErr;
 TH1F* totalEff;
 TH1F* jpsiCorrection;
 TH1F* NPEYield;
@@ -141,6 +146,10 @@ TH1F* NPECrossSection;
 TH1F* npeDivPE;
 TH1F* xsRun12;
 TH1F* xsRun12sys;
+TH1F* effDedx;
+TH1F* effBemc;
+TH1F* MB_Nevents_Trg0;
+TH1F* MB_Nevents_Trg1;
 
 TH1F* refMult;
 TH1F* vertexZ;
@@ -203,6 +212,8 @@ void drawnSigMeanSig( const double*, const double*, const double*, const double*
 TH1F* rebinVariableBins(TH1F*, int, const float*, TString name="bob");
 TH1D* rebinVariableBins(TH1D*, int, const float*, TString name="bob");
 TH1F* convertToHist(TGraphAsymmErrors*, TString);
+TH1F* convertToHist(TGraphErrors*, TString);
+TH1D* get_bin_shift(int, TF1*, int, const float*);
 
 void setTitleAndAxisLabels(TH1*,TString,TString,TString);
 void setTitleAndAxisLabels(TH2*,TString,TString,TString);

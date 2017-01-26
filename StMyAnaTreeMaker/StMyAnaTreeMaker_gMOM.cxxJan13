@@ -34,7 +34,7 @@ ClassImp(StMyAnaTreeMaker)
   StMyAnaTreeMaker::StMyAnaTreeMaker(const char* name, StPicoAnaTreeMaker *treeMaker, const char* outName, bool mixedEvent=false)
 : StMaker(name)
 {
-  DEBUG = !false;
+  DEBUG = false;
   eventCounter = 0;
   mPicoAnaTreeMaker = treeMaker;
   mAnaTree = 0;
@@ -71,7 +71,7 @@ ClassImp(StMyAnaTreeMaker)
   mPEDcaCut[0] = 0.; mPEDcaCut[1] = 1.5;
 
   mEmcEPtCut[0] = 2.0; mEmcEPtCut[1] = 100;
-  mEmcEEtaCut[0] = -0.7; mEmcEEtaCut[1] = 0.7;
+  mEmcEEtaCut[0] = -1.; mEmcEEtaCut[1] = 1.;
   mEmcEPveCut[0] = 0.3; mEmcEPveCut[1] = 1.5;
   mEmcEDcaCut[0] = 0.; mEmcEDcaCut[1] = 1.5;
   mEmcEnHitsFitCut[0] = 20; mEmcEnHitsFitCut[1] = 50;
@@ -299,11 +299,16 @@ Int_t StMyAnaTreeMaker::Make() {
   StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
   hVzVpdVz->Fill(mPrimaryVertex.z(),vzVpd);
   hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
-  
+  if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return kStOK;
   hnEvents->Fill(3);
-  if(!passEventCuts()){
+  /*if(fabs(vzVpd) > 300)
+    {
+    if(DEBUG) cout << "No VPD Vz, skip dVz cut" << endl;
+    }
+    else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
+    return kStOK;*/
+  if(fabs(vzVpd) > mVzCut[1] || (vzVpd-mPrimaryVertex.z())<mVzDiffCut[0] || (vzVpd-mPrimaryVertex.z())>mVzDiffCut[1]) // force VPD cuts even if VPD doesn't exist
     return kStOK;
-  }
   hnEvents->Fill(4);
 
   hRefMultCut->Fill(mAnaTree->event()->grefMult());
@@ -339,6 +344,8 @@ Int_t StMyAnaTreeMaker::Make() {
     for(int i=0;i<nE;i++){
       if(DEBUG) cout << "Fill eTrk" << endl;
       StElectronTrack *eTrk = (StElectronTrack*)mAnaTree->eTrack(i);
+      // If the electron is in a photonic pair, don't count in inclusive
+      //if(isElectronInValidPair(eTrk,i)) continue; 
       fillElectronHists(eTrk);  
     }
   }
@@ -586,10 +593,9 @@ bool StMyAnaTreeMaker::passMuMuPairCuts(double y) {
 void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 {
   fillRunIndexHists(eTrk);
-  
   if(DEBUG) cout << "Fill eTrk2" << endl;
   int charge = eTrk->charge();
-  int qualFlag = 0, eHTflag = 0, eflag = 1, isTrgE = 0, 
+  int qualFlag = 0, eHTflag = 0, eflag = 0, isTrgE = 0, 
       etrgflag = 0, isInPair = 0;
   double pt = eTrk->gMom().perp();
   if(passHTEIDCuts(eTrk)) eHTflag = 1;
@@ -606,9 +612,8 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 
   float adc0 = eTrk->adc0();
   hEAdc0vsPt[0]->Fill(pt,adc0);
-   if(eHTflag) electronTrackData(eTrk);
 
-  if(!eHTflag || !isTrgE) return;
+  if(!eHTflag || !eflag || !isTrgE) return;
 
   hEAdc0vsPt[1]->Fill(pt,adc0);
   if(DEBUG) cout << "Fill eTrk4" << endl;
@@ -651,7 +656,6 @@ void StMyAnaTreeMaker::fillElectronHists(StElectronTrack* eTrk)
 
   // Hadron Comparisons only done for trigger electrons
   if(!eHTflag || !isTrgE) return;
-  if(DEBUG) cout << "Fill eTrk6" << endl;
   hEPt->Fill(pt); // need for normalization
   int nHad = mAnaTree->numberOfHTracks(); 
   for(int j=0; j < nHad; j++)
@@ -1864,38 +1868,20 @@ void StMyAnaTreeMaker::calculate_equivalent_minBias(int mTrigSelect, int runId)
   StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
   hVzVpdVz->Fill(mPrimaryVertex.z(),vzVpd);
   hVzdVz->Fill(mPrimaryVertex.z(), vzVpd-mPrimaryVertex.z());
-  if(!passEventCuts()){
-    return;
-  }
-
-  hVertexZCut_MB->Fill(mPrimaryVertex.z());
-  hVertexZCut_eqMB->Fill(mPrimaryVertex.z(),psScale);
-
-}
-
-bool StMyAnaTreeMaker::passEventCuts()
-{
-  /////////
-  // mAnaTree is already global by necessity
-  /////////
-  Double_t vzVpd=mAnaTree->event()->vzVpd();
-  StThreeVectorF mPrimaryVertex = mAnaTree->event()->primaryVertex();
+  if(mPrimaryVertex.z()<mVzCut[0]||mPrimaryVertex.z()>mVzCut[1]) return;
   /*if(fabs(vzVpd) > 300)
     {
     if(DEBUG) cout << "No VPD Vz, skip dVz cut" << endl;
     }
     else if(vzVpd-mPrimaryVertex.z()<mVzDiffCut[0] || vzVpd-mPrimaryVertex.z()>mVzDiffCut[1]) 
-    return false;*/
+    return;*/
 
-  if( vzVpd > mVzCut[1] || 
-      vzVpd < mVzCut[0] || 
-      (vzVpd-mPrimaryVertex.z())<mVzDiffCut[0] || 
-      (vzVpd-mPrimaryVertex.z())>mVzDiffCut[1] ) 
-  {
-    return false;
-  }
+  if(fabs(vzVpd) > mVzCut[1] || (vzVpd-mPrimaryVertex.z())<mVzDiffCut[0] || (vzVpd-mPrimaryVertex.z())>mVzDiffCut[1]) // force VPD cuts even if VPD doesn't exist
+    return;
 
-  return true;
+  hVertexZCut_MB->Fill(mPrimaryVertex.z());
+  hVertexZCut_eqMB->Fill(mPrimaryVertex.z(),psScale);
+
 }
 
 void StMyAnaTreeMaker::printCuts(){
@@ -2632,31 +2618,4 @@ bool StMyAnaTreeMaker::isBadRun(int runid)
       return true;
   }   
   return false;
-}
-
-void StMyAnaTreeMaker::electronTrackData(StElectronTrack* eTrk)
-{
-  double pt = eTrk->gMom().perp();
-  double p = eTrk->gMom().mag();
-  double eta = eTrk->gMom().pseudoRapidity();
-  double phi = eTrk->gMom().phi();
-  int nHitsFit = eTrk->nHitsFit();
-  int nHitsDedx = eTrk->nHitsDedx();
-  //int nHitsMax= eTrk->nHitsMax();
-  double beta = eTrk->beta();
-  double nSigE = eTrk->nSigmaElectron();
-  double dca = eTrk->dca();
-  double localY = eTrk->localY();
-  //double localZ = eTrk->localZ();
-  //double ratio = nHitsFit*1./nHitsMax;
-  double pve = eTrk->pve();
-  double adc0 = eTrk->adc0();
-  int nEta = eTrk->nEta();
-  int nPhi = eTrk->nPhi();
-  double zDist = eTrk->zDist();
-  double phiDist = eTrk->phiDist();
-
-  std::ofstream ofs ("myanaElecTrack.txt", std::ofstream::app);
-  ofs << eTrk->id()<<": " << pt << " " << eta << " " << dca << " " << nHitsFit << " " << nHitsDedx << " " << nSigE << " " << pve << " " << zDist << " " << phiDist << endl;
-  ofs.close();
 }

@@ -89,6 +89,7 @@ class StPicoAnaTreeMaker : public StMaker {
 		void fillPairs();
 		void fillEmcTrigger();
 		void fillMtdTrigger();
+      void electronTrackData(StPicoTrack*);
 
 		const float *getRecenterCor(int runId, int centrality);
 
